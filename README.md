@@ -81,3 +81,12 @@ This package upgrades the internal app screens so you can keep pushing and testi
 
 ## Humanized homepage update
 This package removes the visible em dash style treatments from the homepage labels, replaces the metadata title em dash, and tightens the landing page copy so it feels more natural and less templated.
+
+
+## Stage 3 package
+This stage adds the first real interactivity without needing a backend:
+- local draft invoice builder
+- dynamic milestones and payout members
+- local browser draft saving
+- invoices page that loads local drafts together with seeded demo data
+- overview notice showing saved draft count

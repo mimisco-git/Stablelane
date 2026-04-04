@@ -215,3 +215,6 @@ export const settingsCards = [
   { title: "Settlement mode", value: "Arc testnet preview" },
   { title: "Payout template", value: "Core studio split" },
 ];
+
+
+export const invoiceListBase = invoicesTable;
