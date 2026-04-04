@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { StatusPill } from "@/components/status-pill";
-import { readLocalInvoices } from "@/lib/storage";
-import { fetchRemoteInvoiceDraftById } from "@/lib/supabase-data";
+import { readLocalInvoices, removeLocalInvoice } from "@/lib/storage";
+import { deleteRemoteInvoiceDraft, fetchRemoteInvoiceDraftById } from "@/lib/supabase-data";
 import type { InvoiceDraft, RemoteInvoiceDraftRow } from "@/lib/types";
 
 type InvoiceDetailViewProps = {
@@ -44,8 +45,11 @@ function normalizeRemoteInvoice(row: RemoteInvoiceDraftRow): InvoiceDraft {
 }
 
 export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
+  const router = useRouter();
   const [invoice, setInvoice] = useState<InvoiceDraft | null>(null);
   const [source, setSource] = useState<"workspace" | "browser" | "sample" | "missing">("missing");
+  const [busy, setBusy] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -85,6 +89,27 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
     () => invoice?.splits.reduce((sum, item) => sum + Number(item.percent || 0), 0) || 0,
     [invoice]
   );
+
+  async function handleDelete() {
+    if (!invoice) return;
+    const confirmed = window.confirm("Delete this invoice draft?");
+    if (!confirmed) return;
+
+    setBusy(true);
+    setActionMessage("");
+    try {
+      if (source === "workspace") {
+        await deleteRemoteInvoiceDraft(invoice.id);
+      } else if (source === "browser") {
+        removeLocalInvoice(invoice.id);
+      }
+      router.push("/app/invoices");
+    } catch {
+      setActionMessage("Delete failed. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   if (!invoice) {
     return (
@@ -148,6 +173,14 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
             <Link href={`/app/invoices/${invoiceId}/edit`} className="rounded-full bg-[var(--accent)] px-4 py-3 text-left text-[0.92rem] font-bold text-[#08100b]">
               Edit draft
             </Link>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={handleDelete}
+              className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-70"
+            >
+              {busy ? "Deleting..." : "Delete draft"}
+            </button>
             <Link href="/app/invoices/new" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">
               Create another invoice
             </Link>
@@ -158,6 +191,11 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
               Open settings
             </Link>
           </div>
+          {actionMessage ? (
+            <div className="mt-4 rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-[0.84rem] text-[var(--muted)]">
+              {actionMessage}
+            </div>
+          ) : null}
 
           <div className="mt-4 rounded-2xl border border-white/8 bg-white/3 p-4">
             <div className="mb-2 font-semibold">Payout split total</div>

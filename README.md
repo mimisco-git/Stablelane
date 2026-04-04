@@ -155,3 +155,10 @@ This package fixes the missing `recentInvoices` reference on the overview page a
 
 ## Stage 8 fix 2
 This package fixes the `dashboard-live-stats` TypeScript state shape so it matches the data returned from `fetchDashboardStatsDetailed()`.
+
+
+## Stage 9 package
+This stage adds more real product control:
+- delete invoice drafts from workspace records or browser drafts
+- delete client records from the Clients page
+- updated Supabase policy for deleting clients

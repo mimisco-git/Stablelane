@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient, fetchClients } from "@/lib/supabase-data";
+import { createClient, deleteClientRecord, fetchClients } from "@/lib/supabase-data";
 import type { ClientRecord } from "@/lib/types";
 
 export function ClientsManager() {
@@ -30,6 +30,21 @@ export function ClientsManager() {
   useEffect(() => {
     loadClients();
   }, []);
+
+
+  async function onDeleteClient(clientId: string) {
+    const confirmed = window.confirm("Delete this client record?");
+    if (!confirmed) return;
+
+    setMessage("");
+    try {
+      await deleteClientRecord(clientId);
+      setMessage("Client deleted.");
+      await loadClients();
+    } catch {
+      setMessage("Client delete failed. Please try again.");
+    }
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -110,10 +125,21 @@ export function ClientsManager() {
           <div className="grid gap-3">
             {clients.map((client) => (
               <div key={client.id} className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                <div className="mb-1 font-semibold">{client.client_name}</div>
-                <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
-                  {client.client_email}
-                  {client.client_wallet ? ` · ${client.client_wallet}` : ""}
+                <div className="mb-2 flex items-start justify-between gap-3">
+                  <div>
+                    <div className="mb-1 font-semibold">{client.client_name}</div>
+                    <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
+                      {client.client_email}
+                      {client.client_wallet ? ` · ${client.client_wallet}` : ""}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onDeleteClient(client.id)}
+                    className="rounded-full border border-white/8 bg-white/3 px-3 py-2 text-[0.78rem] font-semibold text-[var(--text)]"
+                  >
+                    Delete
+                  </button>
                 </div>
                 {client.notes ? (
                   <div className="mt-2 text-[0.82rem] leading-6 text-[var(--muted)]">{client.notes}</div>

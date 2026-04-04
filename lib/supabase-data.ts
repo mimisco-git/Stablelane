@@ -280,3 +280,35 @@ export async function fetchDashboardStatsDetailed() {
     recent: rows.slice(0, 5),
   };
 }
+
+
+export async function deleteRemoteInvoiceDraft(draftId: string) {
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) return false;
+
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) return false;
+
+  const { error } = await supabase
+    .from("invoice_drafts")
+    .delete()
+    .eq("id", draftId)
+    .eq("owner_id", user.id);
+
+  if (error) throw error;
+  return true;
+}
+
+export async function deleteClientRecord(clientId: string) {
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) return false;
+
+  const { error } = await supabase
+    .from("clients")
+    .delete()
+    .eq("id", clientId);
+
+  if (error) throw error;
+  return true;
+}

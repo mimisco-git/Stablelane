@@ -129,3 +129,11 @@ with check (true);
 alter table public.invoice_drafts
   add column if not exists client_id uuid,
   add column if not exists workspace_name text;
+
+
+drop policy if exists "clients_delete_authenticated" on public.clients;
+create policy "clients_delete_authenticated"
+on public.clients
+for delete
+to authenticated
+using (true);
