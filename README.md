@@ -117,3 +117,11 @@ This stage moves Stablelane further out of demo mode:
 
 ## Stage 5 fix
 This package fixes the missing `@/lib/supabase-browser` module and aligns invoice draft queries with the real `owner_id` column from the Supabase schema.
+
+
+## Stage 6 package
+This stage upgrades the real-app feel even more:
+- fixes email confirmation redirect flow with a dedicated auth callback page
+- adds `NEXT_PUBLIC_SITE_URL` support for production redirects
+- lets invoice creation reuse saved clients from Supabase
+- makes the create-invoice flow feel faster and more connected to real workspace data

@@ -5,6 +5,7 @@ export const siteConfig = {
   waitlistEmail:
     process.env.NEXT_PUBLIC_WAITLIST_EMAIL || "you@example.com",
   appMode: process.env.NEXT_PUBLIC_APP_MODE || "testnet",
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
   arc: {
     rpcUrl:
       process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.testnet.arc.network",

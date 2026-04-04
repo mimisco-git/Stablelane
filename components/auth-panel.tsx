@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
+import { getBaseUrl } from "@/lib/url";
 
 type AuthMode = "signin" | "signup";
 
@@ -34,9 +35,12 @@ export function AuthPanel() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${getBaseUrl()}/auth/callback`,
+          },
         });
         if (error) throw error;
-        setMessage("Account created. If email confirmation is enabled, check your inbox before signing in.");
+        setMessage("Account created. Check your inbox for the confirmation email, then return here and sign in.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,

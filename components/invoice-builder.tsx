@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { addLocalInvoice } from "@/lib/storage";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
-import type { InvoiceDraft } from "@/lib/types";
+import { fetchClients } from "@/lib/supabase-data";
+import type { ClientRecord, InvoiceDraft } from "@/lib/types";
 
 type FormState = {
   title: string;
@@ -61,6 +63,8 @@ export function InvoiceBuilder() {
   const [message, setMessage] = useState("");
   const [previewMode, setPreviewMode] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [clients, setClients] = useState<ClientRecord[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState("");
 
   const totalSplit = useMemo(
     () => form.splits.reduce((sum, item) => sum + Number(item.percent || 0), 0),
@@ -70,6 +74,35 @@ export function InvoiceBuilder() {
   const totalMilestoneAmount = useMemo(() => {
     return form.milestones.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   }, [form.milestones]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadClients() {
+      try {
+        const data = await fetchClients();
+        if (mounted) setClients(data);
+      } catch {
+        if (mounted) setClients([]);
+      }
+    }
+
+    loadClients();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  function applySavedClient(clientId: string) {
+    setSelectedClientId(clientId);
+    const match = clients.find((item) => item.id === clientId);
+    if (!match) return;
+    setForm((prev) => ({
+      ...prev,
+      clientName: match.client_name,
+      clientEmail: match.client_email,
+    }));
+  }
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -252,6 +285,39 @@ export function InvoiceBuilder() {
                   <option>Direct payment</option>
                 </select>
               </label>
+            </div>
+
+            <div className="rounded-[20px] border border-white/8 bg-white/3 p-4">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-semibold">Saved clients</h3>
+                  <p className="text-[0.82rem] leading-6 text-[var(--muted)]">
+                    Pick an existing client to fill the invoice faster, or keep typing manually.
+                  </p>
+                </div>
+                <Link href="/app/clients" className="rounded-full border border-white/8 bg-white/3 px-4 py-2 text-[0.82rem] font-semibold text-[var(--text)]">
+                  Manage clients
+                </Link>
+              </div>
+
+              {clients.length ? (
+                <select
+                  value={selectedClientId}
+                  onChange={(e) => applySavedClient(e.target.value)}
+                  className="w-full rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-[var(--text)]"
+                >
+                  <option value="">Select a saved client</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.client_name} · {client.client_email}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-[0.84rem] text-[var(--muted)]">
+                  No saved clients yet. Add one in the Clients page to reuse it here.
+                </div>
+              )}
             </div>
 
             <label className="grid gap-2 text-[0.84rem] text-[var(--muted)]">
