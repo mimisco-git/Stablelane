@@ -102,24 +102,8 @@ export default function AppOverviewPage() {
               </Link>
             </div>
             <div className="grid gap-2.5">
-              {recentInvoices.map((invoice) => (
-                <div
-                  key={invoice.id}
-                  className="grid items-center gap-3 rounded-2xl border border-white/8 bg-white/3 p-3 md:grid-cols-[1fr_auto_auto]"
-                >
-                  <div>
-                    <strong className="mb-1 block">{invoice.client}</strong>
-                    <small className="text-[0.8rem] text-[var(--muted)]">
-                      {invoice.title} · {invoice.stage}
-                    </small>
-                  </div>
-                  <div className="text-[0.92rem] font-extrabold">{invoice.amount}</div>
-                  <StatusPill
-                    label={invoice.status}
-                    tone={invoice.status === "Released" ? "done" : invoice.status === "Awaiting escrow" ? "lock" : "live"}
-                  />
-                </div>
-              ))}
+              {/* live recent invoices */}
+              <RecentInvoicesLive />
             </div>
           </section>
 

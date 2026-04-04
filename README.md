@@ -147,3 +147,7 @@ This stage adds the first real draft editing flow:
 - invoice detail links to a dedicated edit page
 - invoice builder supports loading and updating existing drafts
 - overview metrics and recent invoices lean more on workspace data instead of static placeholders
+
+
+## Stage 8 fix
+This package fixes the missing `recentInvoices` reference on the overview page and replaces it with a real `RecentInvoicesLive` component.
