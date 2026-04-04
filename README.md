@@ -125,3 +125,13 @@ This stage upgrades the real-app feel even more:
 - adds `NEXT_PUBLIC_SITE_URL` support for production redirects
 - lets invoice creation reuse saved clients from Supabase
 - makes the create-invoice flow feel faster and more connected to real workspace data
+
+
+## Stage 7 package
+This stage pushes Stablelane closer to a real operating product:
+- workspace profile lookup fixed to the real `user_id` column
+- dashboard notice is now more database-driven
+- invoice drafts can store linked client and workspace metadata
+- invoice detail can load the actual saved record by ID from Supabase or browser storage
+- invoice list uses clearer source labels: browser, workspace, and sample
+- schema includes `client_id` and `workspace_name` on `invoice_drafts`

@@ -159,11 +159,15 @@ export function InvoiceBuilder() {
   }
 
   async function saveDraft() {
+    const selectedClient = clients.find((item) => item.id === selectedClientId) || null;
+
     const draft: InvoiceDraft = {
       id: makeId("inv"),
       title: form.title || "Untitled invoice",
       clientName: form.clientName || "Unnamed client",
       clientEmail: form.clientEmail || "",
+      clientId: selectedClient?.id || null,
+      workspaceName: selectedClient?.workspace_name || null,
       amount: form.amount || "0",
       currency: form.currency,
       paymentMode: form.paymentMode,
@@ -186,6 +190,8 @@ export function InvoiceBuilder() {
         if (session?.user) {
           const { error } = await supabase.from("invoice_drafts").insert({
             owner_id: session.user.id,
+            workspace_name: draft.workspaceName || null,
+            client_id: draft.clientId || null,
             title: draft.title,
             client_name: draft.clientName,
             client_email: draft.clientEmail,

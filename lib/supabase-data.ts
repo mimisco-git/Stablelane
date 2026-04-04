@@ -12,7 +12,7 @@ export async function ensureWorkspaceProfile() {
   const { data: existing } = await supabase
     .from("workspace_profiles")
     .select("*")
-    .eq("owner_id", user.id)
+    .eq("user_id", user.id)
     .single();
 
   if (existing) return existing as WorkspaceProfile;
@@ -48,7 +48,7 @@ export async function fetchWorkspaceProfile() {
   const { data } = await supabase
     .from("workspace_profiles")
     .select("*")
-    .eq("owner_id", user.id)
+    .eq("user_id", user.id)
     .single();
 
   return (data as WorkspaceProfile | null) || null;
@@ -160,5 +160,81 @@ export async function fetchDashboardStats() {
     clientCount: clientCount || 0,
     workspaceName: workspace?.workspace_name || "Workspace",
     defaultCurrency: workspace?.default_currency || "USDC",
+  };
+}
+
+
+import type { RemoteInvoiceDraftRow } from "@/lib/types";
+
+export async function fetchRemoteInvoiceDrafts() {
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) return [];
+
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) return [];
+
+  const { data } = await supabase
+    .from("invoice_drafts")
+    .select("*")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: false });
+
+  return (data as RemoteInvoiceDraftRow[] | null) || [];
+}
+
+export async function fetchRemoteInvoiceDraftById(id: string) {
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) return null;
+
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) return null;
+
+  const { data } = await supabase
+    .from("invoice_drafts")
+    .select("*")
+    .eq("owner_id", user.id)
+    .eq("id", id)
+    .single();
+
+  return (data as RemoteInvoiceDraftRow | null) || null;
+}
+
+export async function fetchDashboardStatsDetailed() {
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) return null;
+
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) return null;
+
+  const workspace = await fetchWorkspaceProfile();
+  if (!workspace) return null;
+
+  const [{ data: invoiceRows }, { count: clientCount }] = await Promise.all([
+    supabase
+      .from("invoice_drafts")
+      .select("amount,status")
+      .eq("owner_id", user.id),
+    supabase
+      .from("clients")
+      .select("*", { count: "exact", head: true })
+      .eq("workspace_name", workspace.workspace_name),
+  ]);
+
+  const rows = invoiceRows || [];
+  const draftValue = rows.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const draftCount = rows.length;
+  const sentOrReady = rows.filter((item) => item.status === "Draft").length;
+
+  return {
+    workspaceName: workspace.workspace_name,
+    defaultCurrency: workspace.default_currency,
+    roleType: workspace.role_type,
+    clientCount: clientCount || 0,
+    draftCount,
+    draftValue,
+    sentOrReady,
   };
 }

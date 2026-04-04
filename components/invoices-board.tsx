@@ -25,7 +25,7 @@ function draftToRow(draft: InvoiceDraft) {
     paymentMode: draft.paymentMode,
     funded: "Not funded yet",
     createdAt: draft.createdAt,
-    source: "local" as const,
+    source: "browser" as const,
   };
 }
 
@@ -42,7 +42,7 @@ function remoteToRow(row: RemoteInvoiceDraftRow) {
     paymentMode: row.payment_mode,
     funded: "Not funded yet",
     createdAt: row.created_at,
-    source: "supabase" as const,
+    source: "workspace" as const,
   };
 }
 
@@ -107,7 +107,7 @@ export function InvoicesBoard() {
     const merged = [
       ...remoteDrafts.map(remoteToRow),
       ...localDrafts.map(draftToRow),
-      ...invoicesTable.map((item) => ({ ...item, source: "mock" as const })),
+      ...invoicesTable.map((item) => ({ ...item, source: "sample" as const })),
     ];
 
     if (filter === "All") return merged;
@@ -182,7 +182,7 @@ export function InvoicesBoard() {
               <div className="font-semibold">{invoice.title}</div>
               <div className="text-[0.8rem] text-[var(--muted)]">Funded: {invoice.funded}</div>
             </div>
-            <div className="text-[0.8rem] text-[var(--muted)]">{invoice.source}</div>
+            <div className="text-[0.8rem] text-[var(--muted)]">{invoice.source === "browser" ? "browser" : invoice.source === "workspace" ? "workspace" : "sample"}</div>
             <div className="text-[var(--muted)]">{invoice.currency}</div>
             <div className="font-semibold">{invoice.total}</div>
             <div>

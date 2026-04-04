@@ -78,18 +78,21 @@ create table if not exists public.workspace_profiles (
 
 alter table public.workspace_profiles enable row level security;
 
+drop policy if exists "workspace_profiles_select_own" on public.workspace_profiles;
 create policy "workspace_profiles_select_own"
 on public.workspace_profiles
 for select
 to authenticated
 using (auth.uid() = user_id);
 
+drop policy if exists "workspace_profiles_insert_own" on public.workspace_profiles;
 create policy "workspace_profiles_insert_own"
 on public.workspace_profiles
 for insert
 to authenticated
 with check (auth.uid() = user_id);
 
+drop policy if exists "workspace_profiles_update_own" on public.workspace_profiles;
 create policy "workspace_profiles_update_own"
 on public.workspace_profiles
 for update
@@ -108,14 +111,21 @@ create table if not exists public.clients (
 
 alter table public.clients enable row level security;
 
+drop policy if exists "clients_select_authenticated" on public.clients;
 create policy "clients_select_authenticated"
 on public.clients
 for select
 to authenticated
 using (true);
 
+drop policy if exists "clients_insert_authenticated" on public.clients;
 create policy "clients_insert_authenticated"
 on public.clients
 for insert
 to authenticated
 with check (true);
+
+
+alter table public.invoice_drafts
+  add column if not exists client_id uuid,
+  add column if not exists workspace_name text;

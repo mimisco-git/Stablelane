@@ -3,6 +3,8 @@ export type InvoiceDraft = {
   title: string;
   clientName: string;
   clientEmail: string;
+  clientId?: string | null;
+  workspaceName?: string | null;
   amount: string;
   currency: "USDC" | "EURC";
   paymentMode: "Milestone escrow" | "Direct payment";
@@ -27,6 +29,8 @@ export type InvoiceDraft = {
 export type RemoteInvoiceDraftRow = {
   id: string;
   owner_id: string;
+  client_id?: string | null;
+  workspace_name?: string | null;
   title: string;
   client_name: string;
   client_email: string;
