@@ -113,3 +113,7 @@ This stage moves Stablelane further out of demo mode:
 - live workspace note on overview
 - settings page that saves workspace defaults
 - updated Supabase schema for workspace_profiles and clients
+
+
+## Stage 5 fix
+This package fixes the missing `@/lib/supabase-browser` module and aligns invoice draft queries with the real `owner_id` column from the Supabase schema.

@@ -75,6 +75,7 @@ export function InvoicesBoard() {
       const { data, error } = await supabase
         .from("invoice_drafts")
         .select("*")
+        .eq("owner_id", session.user.id)
         .order("created_at", { ascending: false });
 
       if (!active) return;

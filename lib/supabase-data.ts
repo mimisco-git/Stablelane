@@ -12,7 +12,7 @@ export async function ensureWorkspaceProfile() {
   const { data: existing } = await supabase
     .from("workspace_profiles")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("owner_id", user.id)
     .single();
 
   if (existing) return existing as WorkspaceProfile;
@@ -48,7 +48,7 @@ export async function fetchWorkspaceProfile() {
   const { data } = await supabase
     .from("workspace_profiles")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("owner_id", user.id)
     .single();
 
   return (data as WorkspaceProfile | null) || null;
@@ -136,7 +136,7 @@ export async function fetchInvoiceDraftsCount() {
   const { count } = await supabase
     .from("invoice_drafts")
     .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id);
+    .eq("owner_id", user.id);
 
   return count || 0;
 }
@@ -150,7 +150,7 @@ export async function fetchDashboardStats() {
   if (!user) return null;
 
   const [{ count: invoiceCount }, { count: clientCount }, workspace] = await Promise.all([
-    supabase.from("invoice_drafts").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("invoice_drafts").select("*", { count: "exact", head: true }).eq("owner_id", user.id),
     supabase.from("clients").select("*", { count: "exact", head: true }),
     fetchWorkspaceProfile(),
   ]);

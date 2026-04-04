@@ -23,7 +23,8 @@ export function OverviewDraftNotice() {
 
       const { count } = await supabase
         .from("invoice_drafts")
-        .select("*", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true })
+        .eq("owner_id", session.user.id);
 
       if (!active) return;
       setRemoteCount(count || 0);
