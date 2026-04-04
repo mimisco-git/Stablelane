@@ -67,3 +67,17 @@ The starter is pre-configured for:
 
 ## Homepage update package
 This package includes an upgraded `app/page.tsx` for the premium Stablelane homepage inside the existing Next.js starter.
+
+
+## Next stage package
+This package upgrades the internal app screens so you can keep pushing and testing:
+- richer overview dashboard
+- invoices list with summary cards
+- create invoice screen
+- stronger invoice detail
+- stronger escrow detail
+- richer payouts and settings screens
+
+
+## Humanized homepage update
+This package removes the visible em dash style treatments from the homepage labels, replaces the metadata title em dash, and tightens the landing page copy so it feels more natural and less templated.

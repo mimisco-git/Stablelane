@@ -1,4 +1,5 @@
 import { DashboardShell } from "@/components/dashboard-shell";
+import { settingsCards } from "@/lib/mock-data";
 import { siteConfig } from "@/lib/site";
 
 export default function SettingsPage() {
@@ -6,37 +7,37 @@ export default function SettingsPage() {
     <DashboardShell
       currentPath="/app/settings"
       title="Settings"
-      description="This page is where workspace details, wallet settings, payout templates, and environment configuration will live."
+      description="Settings now look like a real configuration area for workspace defaults, network configuration, and payout behavior."
       badge="Workspace config"
     >
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
         <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
-          <h2 className="mb-3 text-base font-bold tracking-normal">Workspace defaults</h2>
-          <div className="grid gap-3 text-[0.9rem] text-[var(--muted)]">
-            <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-              Default currencies: USDC, EURC
-            </div>
-            <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-              Environment: {siteConfig.appMode}
-            </div>
-            <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-              Waitlist email for testing: {siteConfig.waitlistEmail}
-            </div>
+          <h2 className="mb-4 text-base font-bold tracking-normal">Workspace defaults</h2>
+          <div className="grid gap-3">
+            {settingsCards.map((item) => (
+              <div key={item.title} className="rounded-2xl border border-white/8 bg-white/3 p-4">
+                <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">{item.title}</div>
+                <div className="font-semibold">{item.value}</div>
+              </div>
+            ))}
           </div>
         </section>
 
         <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
-          <h2 className="mb-3 text-base font-bold tracking-normal">Arc configuration</h2>
-          <div className="grid gap-3 text-[0.9rem] text-[var(--muted)]">
-            <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-              RPC: {siteConfig.arc.rpcUrl}
-            </div>
-            <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-              Chain ID: {siteConfig.arc.chainId}
-            </div>
-            <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-              Explorer: {siteConfig.arc.explorerUrl}
-            </div>
+          <h2 className="mb-4 text-base font-bold tracking-normal">Arc configuration</h2>
+          <div className="grid gap-3">
+            {[
+              ["RPC", siteConfig.arc.rpcUrl],
+              ["Chain ID", String(siteConfig.arc.chainId)],
+              ["Explorer", siteConfig.arc.explorerUrl],
+              ["Gas token", siteConfig.arc.gasToken],
+              ["Waitlist email", siteConfig.waitlistEmail],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-2xl border border-white/8 bg-white/3 p-4">
+                <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">{label}</div>
+                <div className="font-semibold">{value}</div>
+              </div>
+            ))}
           </div>
         </section>
       </div>

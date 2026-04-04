@@ -254,9 +254,8 @@ export default function HomePage() {
         <section className="mx-auto w-[min(calc(100%-36px),1280px)] px-0 pb-14 pt-24">
           <div className="grid items-center gap-7 lg:grid-cols-[1.06fr_.94fr]">
             <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/3 px-4 py-2 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-                <span className="block h-px w-[18px] bg-[var(--accent)]" />
-                Stablecoin Revenue OS
+              <div className="mb-4 inline-flex items-center rounded-full border border-[var(--line)] bg-white/3 px-4 py-2 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
+                Stablecoin revenue OS
               </div>
 
               <h1 className="mb-5 max-w-[11ch] font-[family-name:var(--font-cormorant)] text-[clamp(3.5rem,6vw,6.1rem)] leading-[0.94] tracking-[-0.06em] text-[var(--text)]">
@@ -309,7 +308,7 @@ export default function HomePage() {
                     Live revenue flow
                   </div>
                   <p className="max-w-xl text-[0.86rem] leading-6 text-[var(--muted)]">
-                    A premium first impression for the exact workflow Stablelane is meant to own.
+                    A simple look at how money should move inside Stablelane, from invoice to funded escrow to payout.
                   </p>
                 </div>
                 <div className="rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-3 py-2 text-[0.72rem] font-extrabold uppercase tracking-[0.08em] text-[var(--accent)]">
@@ -362,20 +361,18 @@ export default function HomePage() {
             <article className="rounded-[30px] border border-white/8 bg-[linear-gradient(180deg,rgba(14,25,18,.9),rgba(10,18,13,.84))] p-6 shadow-[0_28px_90px_rgba(0,0,0,.38)] backdrop-blur-xl">
               <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <div className="mb-2 inline-flex items-center gap-2 text-[0.75rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-                    <span className="block h-px w-4 bg-[var(--accent)]" />
+                  <div className="mb-2 inline-flex items-center text-[0.75rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
                     Product preview
                   </div>
                   <h2 className="mb-2 font-[family-name:var(--font-cormorant)] text-[2.15rem] leading-none tracking-[-0.05em]">
-                    Landing page plus app shell
+                    Landing page and product shell
                   </h2>
                   <p className="max-w-2xl text-[0.92rem] leading-7 text-[var(--muted)]">
-                    This is the bridge from concept to software. The page now shows users how Stablelane will actually feel
-                    once they move from marketing into the product.
+                    This section bridges the gap between the story and the software. It shows what the first real Stablelane workspace can look like once a user moves past the landing page.
                   </p>
                 </div>
                 <div className="rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-3 py-2 text-[0.73rem] font-extrabold uppercase tracking-[0.08em] text-[var(--accent)]">
-                  Homepage update
+                  Homepage v2
                 </div>
               </div>
 
@@ -474,25 +471,23 @@ export default function HomePage() {
 
             <article className="rounded-[30px] border border-white/8 bg-[linear-gradient(180deg,rgba(14,25,18,.9),rgba(10,18,13,.84))] p-6 shadow-[0_28px_90px_rgba(0,0,0,.38)] backdrop-blur-xl">
               <div className="mb-5">
-                <div className="mb-2 inline-flex items-center gap-2 text-[0.75rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-                  <span className="block h-px w-4 bg-[var(--accent)]" />
+                <div className="mb-2 inline-flex items-center text-[0.75rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
                   Why this stage matters
                 </div>
                 <h2 className="mb-2 font-[family-name:var(--font-cormorant)] text-[2.05rem] leading-none tracking-[-0.05em]">
-                  Better story, better product momentum
+                  A clearer story and a clearer product
                 </h2>
                 <p className="text-[0.92rem] leading-7 text-[var(--muted)]">
-                  A premium landing page builds belief. A visible app shell builds trust. Together they make Stablelane easier to pitch,
-                  easier to test, and easier to keep evolving.
+                  A polished landing page gets attention. A believable product shell keeps that attention. Together they make Stablelane easier to explain, easier to test, and easier to keep building.
                 </p>
               </div>
 
               <div className="grid gap-3">
                 {[
-                  ["01", "The page now sells the workflow", "Invoice, escrow, payout routing, and business credibility feel connected instead of abstract."],
-                  ["02", "The product shape is visible", "Users can already picture the dashboard, invoice queue, and payout logic before the backend is complete."],
-                  ["03", "The next screens become obvious", "Overview, invoices, escrow detail, payout setup, and settings are now clear next steps instead of vague ideas."],
-                  ["04", "It is stronger for ecosystem sharing", "This version is much better for early waitlist testing, screenshots, and explaining the product inside Arc conversations."],
+                  ["01", "The page now explains the workflow", "Invoice, escrow, payout routing, and business credibility now feel connected instead of abstract."],
+                  ["02", "The product now feels tangible", "Users can already picture the dashboard, invoice queue, and payout logic before the backend is complete."],
+                  ["03", "The next screens are easier to build", "Overview, invoices, escrow detail, payout setup, and settings are now clear next steps instead of vague ideas."],
+                  ["04", "It is stronger for demos and sharing", "This version is much better for early waitlist testing, screenshots, and explaining the product inside Arc conversations."],
                 ].map(([no, title, desc]) => (
                   <div key={title} className="rounded-[20px] border border-white/8 bg-white/3 p-4">
                     <div className="mb-2 text-[0.74rem] font-extrabold uppercase tracking-[0.1em] text-[var(--accent)]">
@@ -530,8 +525,7 @@ export default function HomePage() {
         <section className="mx-auto w-[min(calc(100%-36px),1280px)]">
           <div className="mb-8 grid items-end gap-6 lg:grid-cols-[.95fr_1.05fr]">
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 text-[0.75rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-                <span className="block h-px w-4 bg-[var(--accent)]" />
+              <div className="mb-3 inline-flex items-center text-[0.75rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
                 The problem
               </div>
               <h2 className="font-[family-name:var(--font-cormorant)] text-[clamp(2.5rem,4vw,3.8rem)] leading-[0.98] tracking-[-0.05em]">
@@ -602,8 +596,7 @@ export default function HomePage() {
         <section id="features" className="mx-auto w-[min(calc(100%-36px),1280px)]">
           <div className="mb-8 grid items-end gap-6 lg:grid-cols-[.95fr_1.05fr]">
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 text-[0.75rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-                <span className="block h-px w-4 bg-[var(--accent)]" />
+              <div className="mb-3 inline-flex items-center text-[0.75rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
                 What you get
               </div>
               <h2 className="font-[family-name:var(--font-cormorant)] text-[clamp(2.5rem,4vw,3.8rem)] leading-[0.98] tracking-[-0.05em]">
@@ -697,8 +690,7 @@ export default function HomePage() {
               Make getting paid feel like running a <em className="text-[var(--accent)]">real business</em>.
             </h2>
             <p className="mx-auto mb-7 max-w-3xl text-[1rem] leading-8 text-[var(--muted)]">
-              Join the early list for Stablelane. The first version is focused on freelancers, small agencies, and remote teams
-              who want invoicing, escrow, and payout flow in one place.
+              Join the early list for Stablelane. The first version is for freelancers, small agencies, and remote teams that want invoicing, escrow, and payout flow in one place.
             </p>
 
             <div className="mx-auto w-full max-w-[760px] rounded-[30px] border border-white/8 bg-[linear-gradient(180deg,rgba(14,25,18,.9),rgba(10,18,13,.84))] p-6 shadow-[0_28px_90px_rgba(0,0,0,.38)] backdrop-blur-xl">
@@ -717,8 +709,7 @@ export default function HomePage() {
                 </a>
               </div>
               <p className="mb-5 text-[0.82rem] leading-6 text-[var(--muted)]">
-                This homepage update now carries both the market story and a real product shape. The next build is the fully designed
-                dashboard, invoices, escrow detail, payouts, and settings screens.
+                This homepage now carries both the market story and a believable product shape. Next we move deeper into the working dashboard, invoices, escrow detail, payouts, and settings screens.
               </p>
 
               <div className="grid gap-2 sm:grid-cols-2">

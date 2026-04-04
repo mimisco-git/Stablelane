@@ -15,7 +15,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: `${siteConfig.name} — Revenue OS for Freelancers & Agencies`,
+  title: `${siteConfig.name} | Revenue OS for Freelancers & Agencies`,
   description: siteConfig.description,
 };
 

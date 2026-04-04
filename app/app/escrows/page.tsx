@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { StatusPill } from "@/components/status-pill";
 import { escrows } from "@/lib/mock-data";
 
 export default function EscrowsPage() {
@@ -7,7 +8,7 @@ export default function EscrowsPage() {
     <DashboardShell
       currentPath="/app/escrows"
       title="Escrows"
-      description="Escrow state is where Stablelane proves trust. This page is ready to become the funding and release control center."
+      description="Escrow state is where Stablelane proves trust. This view now behaves more like a real funding and release control center."
       badge="Milestone escrow"
     >
       <div className="grid gap-3">
@@ -19,12 +20,18 @@ export default function EscrowsPage() {
           >
             <div>
               <div className="mb-1 font-semibold">{escrow.title}</div>
-              <div className="text-[0.84rem] text-[var(--muted)]">{escrow.milestones}</div>
+              <div className="text-[0.84rem] text-[var(--muted)]">
+                {escrow.milestones} · {escrow.nextAction}
+              </div>
             </div>
-            <div className="text-[0.84rem] text-[var(--muted)]">Funded <strong className="ml-1 text-[var(--text)]">{escrow.funded}</strong></div>
-            <div className="text-[0.84rem] text-[var(--muted)]">Released <strong className="ml-1 text-[var(--text)]">{escrow.released}</strong></div>
-            <div className="rounded-full bg-[rgba(201,255,96,.11)] px-3 py-2 text-[0.72rem] font-extrabold uppercase tracking-[0.08em] text-[var(--accent)]">
-              {escrow.status}
+            <div className="text-[0.84rem] text-[var(--muted)]">
+              Funded <strong className="ml-1 text-[var(--text)]">{escrow.funded}</strong>
+            </div>
+            <div className="text-[0.84rem] text-[var(--muted)]">
+              Released <strong className="ml-1 text-[var(--text)]">{escrow.released}</strong>
+            </div>
+            <div>
+              <StatusPill label={escrow.status} tone={escrow.status === "Active" ? "live" : "done"} />
             </div>
           </Link>
         ))}
