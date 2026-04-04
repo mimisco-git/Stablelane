@@ -63,3 +63,7 @@ The starter is pre-configured for:
 - Chain ID: 5042002
 - Explorer: https://testnet.arcscan.app
 - Gas token: USDC
+
+
+## Homepage update package
+This package includes an upgraded `app/page.tsx` for the premium Stablelane homepage inside the existing Next.js starter.
