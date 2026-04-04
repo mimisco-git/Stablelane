@@ -77,7 +77,7 @@ function normalizeRemoteInvoice(row: RemoteInvoiceDraftRow): InvoiceDraft {
     milestones: Array.isArray(row.milestones) ? row.milestones : [],
     splits: Array.isArray(row.splits) ? row.splits : [],
     createdAt: row.created_at,
-    status: "Draft",
+    status: row.status,
   };
 }
 
@@ -117,6 +117,13 @@ export function InvoiceBuilder({ draftId }: InvoiceBuilderProps) {
   const totalMilestoneAmount = useMemo(() => {
     return form.milestones.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   }, [form.milestones]);
+
+  const resolvedClientLink = useMemo(() => {
+    const selected = clients.find((item) => item.id === selectedClientId);
+    if (selected) return selected;
+    const byEmail = clients.find((item) => item.client_email.toLowerCase() === form.clientEmail.toLowerCase());
+    return byEmail || null;
+  }, [clients, selectedClientId, form.clientEmail]);
 
   useEffect(() => {
     let mounted = true;
@@ -230,7 +237,7 @@ export function InvoiceBuilder({ draftId }: InvoiceBuilderProps) {
   }
 
   async function saveDraft() {
-    const selectedClient = clients.find((item) => item.id === selectedClientId) || null;
+    const selectedClient = resolvedClientLink;
 
     const draft: InvoiceDraft = {
       id: activeDraft?.id || makeId("inv"),
@@ -248,7 +255,7 @@ export function InvoiceBuilder({ draftId }: InvoiceBuilderProps) {
       milestones: form.milestones,
       splits: form.splits,
       createdAt: activeDraft?.createdAt || new Date().toISOString(),
-      status: "Draft",
+      status: activeDraft?.status || "Draft",
     };
 
     setSaving(true);
@@ -395,6 +402,29 @@ export function InvoiceBuilder({ draftId }: InvoiceBuilderProps) {
               ) : (
                 <div className="rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-[0.84rem] text-[var(--muted)]">
                   No saved clients yet. Add one in the Clients page to reuse it here.
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-[20px] border border-white/8 bg-white/3 p-4">
+              <div className="mb-2 text-[0.9rem] font-semibold text-[var(--text)]">Client link</div>
+              {resolvedClientLink ? (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="font-semibold text-[var(--text)]">{resolvedClientLink.client_name}</div>
+                    <div className="text-[0.82rem] text-[var(--muted)]">{resolvedClientLink.client_email}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedClientId("")}
+                    className="rounded-full border border-white/8 bg-white/3 px-3 py-2 text-[0.78rem] font-semibold text-[var(--text)]"
+                  >
+                    Clear link
+                  </button>
+                </div>
+              ) : (
+                <div className="text-[0.84rem] text-[var(--muted)]">
+                  This invoice is currently unlinked. Select a saved client above, or use an email that matches an existing client record.
                 </div>
               )}
             </div>

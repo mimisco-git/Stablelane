@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SiteNav } from "@/components/site-nav";
+import { SharePreviewGallery } from "@/components/share-preview-gallery";
 import { siteConfig } from "@/lib/site";
 
 const productFlow = [
@@ -679,6 +680,8 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        <SharePreviewGallery />
 
         <section id="waitlist" className="mx-auto w-[min(calc(100%-36px),1280px)]">
           <div className="text-center">

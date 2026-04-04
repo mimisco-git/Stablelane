@@ -137,3 +137,37 @@ on public.clients
 for delete
 to authenticated
 using (true);
+
+
+alter table public.invoice_drafts
+  add column if not exists escrow_status text not null default 'draft',
+  add column if not exists escrow_address text,
+  add column if not exists funding_tx_hash text,
+  add column if not exists release_tx_hash text;
+
+
+create table if not exists public.invoice_history_logs (
+  id uuid primary key default gen_random_uuid(),
+  invoice_id uuid not null,
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  event_type text not null,
+  detail text not null,
+  metadata jsonb,
+  created_at timestamptz not null default now()
+);
+
+alter table public.invoice_history_logs enable row level security;
+
+drop policy if exists "invoice_history_select_own" on public.invoice_history_logs;
+create policy "invoice_history_select_own"
+on public.invoice_history_logs
+for select
+to authenticated
+using (auth.uid() = owner_id);
+
+drop policy if exists "invoice_history_insert_own" on public.invoice_history_logs;
+create policy "invoice_history_insert_own"
+on public.invoice_history_logs
+for insert
+to authenticated
+with check (auth.uid() = owner_id);

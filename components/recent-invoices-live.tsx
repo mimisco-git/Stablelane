@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { StatusPill } from "@/components/status-pill";
+import { EmptyState } from "@/components/ui-state";
 import { fetchRemoteInvoiceDrafts } from "@/lib/supabase-data";
 import { readLocalInvoices } from "@/lib/storage";
 import type { InvoiceDraft, RemoteInvoiceDraftRow } from "@/lib/types";
@@ -74,9 +75,18 @@ export function RecentInvoicesLive() {
 
   if (!items.length) {
     return (
-      <div className="rounded-2xl border border-white/8 bg-white/3 p-4 text-[0.84rem] text-[var(--muted)]">
-        No saved invoices yet. Create one to see it appear here.
-      </div>
+      <EmptyState
+        title="No invoices yet"
+        detail="No saved invoices were found in the workspace or this browser yet."
+        action={{
+          <Link
+            href="/app/invoices/new"
+            className="inline-flex rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]"
+          >
+            Create invoice
+          </Link>
+        }}
+      />
     );
   }
 

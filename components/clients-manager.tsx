@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient, deleteClientRecord, fetchClients } from "@/lib/supabase-data";
 import type { ClientRecord } from "@/lib/types";
+import { EmptyState, LoadingState } from "@/components/ui-state";
 
 export function ClientsManager() {
   const [clients, setClients] = useState<ClientRecord[]>([]);
@@ -120,7 +121,7 @@ export function ClientsManager() {
       <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
         <h2 className="mb-4 text-base font-bold tracking-normal">Clients</h2>
         {loading ? (
-          <div className="text-[0.9rem] text-[var(--muted)]">Loading clients...</div>
+          <LoadingState title="Loading clients" detail="Stablelane is checking your saved client records." />
         ) : clients.length ? (
           <div className="grid gap-3">
             {clients.map((client) => (
@@ -148,7 +149,10 @@ export function ClientsManager() {
             ))}
           </div>
         ) : (
-          <div className="text-[0.9rem] text-[var(--muted)]">No clients saved yet.</div>
+          <EmptyState
+            title="No clients saved yet"
+            detail="Add your first client here so invoice creation can reuse it later."
+          />
         )}
       </section>
     </div>

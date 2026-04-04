@@ -171,3 +171,49 @@ This package adds a premium Stablelane branding layer:
 - 4K PNG exports for social and marketing use
 - favicon, Apple touch icon, and Open Graph image
 - logo component wired into the Next.js app
+
+
+## Stage 11 package
+This package rolls several product and brand upgrades together:
+- wallet connect and Arc testnet network state
+- mobile navigation polish
+- contract-ready escrow workbench with timeline and explorer links
+- cleaner loading and empty states
+- branded share preview gallery on the homepage
+- new social preview images for dashboard and escrow updates
+
+
+## Stage 12 package
+This stage introduces the premium environment layer:
+- environment switcher for testnet and mainnet
+- guarded mainnet mode with config-aware write protection
+- wallet panel now follows the selected environment
+- escrow center now respects environment guardrails
+- settings page now exposes the environment switch as a first-class control
+- `.env.example` now includes mainnet configuration placeholders
+
+
+## Stage 13 package
+This stage moves Stablelane into more real product behavior:
+- fully database-driven dashboard cards
+- real invoice status transitions saved back to Supabase
+- first true wallet-driven escrow transaction wiring
+- invoice detail now shows escrow metadata and transaction hashes
+- schema adds escrow fields directly to `invoice_drafts`
+
+
+## Stage 14 package
+This stage focuses on the next real product layer:
+- stronger client-linked invoice creation with auto-linking by saved client email
+- a dedicated analytics page driven by real workspace data
+- a clearer escrow contract path panel with environment-specific address readiness
+- settings now expose contract placeholders for the next escrow integration step
+- `.env.example` now includes escrow contract address placeholders for testnet and mainnet
+
+
+## Stage 15 package
+This stage adds the next layer of real product behavior:
+- remote invoice edit history saved to Supabase
+- stricter client-scoped invoice filtering on the invoices page
+- contract-address-aware escrow writes that respect configured factory, implementation, and release module addresses
+- invoice detail now shows the remote history timeline for workspace records

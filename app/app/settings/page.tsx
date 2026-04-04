@@ -1,5 +1,6 @@
 import { DashboardShell } from "@/components/dashboard-shell";
 import { WorkspaceSettingsForm } from "@/components/workspace-settings-form";
+import { EnvironmentSwitcher } from "@/components/environment-switcher";
 import { siteConfig } from "@/lib/site";
 
 export default function SettingsPage() {
@@ -10,7 +11,10 @@ export default function SettingsPage() {
       description="Settings now save real workspace preferences to Supabase so Stablelane can stop feeling like a demo and start behaving like a real app."
       badge="Workspace config"
     >
-      <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+      <div className="grid gap-4">
+        <EnvironmentSwitcher />
+
+        <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
         <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
           <h2 className="mb-4 text-base font-bold tracking-normal">Workspace defaults</h2>
           <WorkspaceSettingsForm />
@@ -26,6 +30,8 @@ export default function SettingsPage() {
               ["Gas token", siteConfig.arc.gasToken],
               ["Waitlist email", siteConfig.waitlistEmail],
               ["App mode", siteConfig.appMode],
+              ["Testnet escrow factory", process.env.NEXT_PUBLIC_TESTNET_ESCROW_FACTORY_ADDRESS || "Not configured"],
+              ["Mainnet escrow factory", process.env.NEXT_PUBLIC_MAINNET_ESCROW_FACTORY_ADDRESS || "Not configured"],
             ].map(([label, value]) => (
               <div key={label} className="rounded-2xl border border-white/8 bg-white/3 p-4">
                 <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">{label}</div>

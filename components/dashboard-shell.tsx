@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { AuthBanner } from "@/components/auth-banner";
+import { EnvironmentBadge } from "@/components/environment-badge";
 
 type DashboardShellProps = {
   currentPath: string;
@@ -36,8 +37,11 @@ export function DashboardShell({
                   {description}
                 </p>
               </div>
-              <div className="rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-3 py-2 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-                {badge}
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <EnvironmentBadge />
+                <div className="rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-3 py-2 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
+                  {badge}
+                </div>
               </div>
             </div>
             {children}

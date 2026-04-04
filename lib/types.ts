@@ -1,3 +1,5 @@
+export type InvoiceWorkflowStatus = "Draft" | "Sent" | "In escrow" | "Completed";
+
 export type InvoiceDraft = {
   id: string;
   title: string;
@@ -6,6 +8,10 @@ export type InvoiceDraft = {
   clientId?: string | null;
   workspaceName?: string | null;
   amount: string;
+  escrowStatus?: "draft" | "created" | "awaiting_funding" | "funded" | "release_requested" | "released";
+  escrowAddress?: string | null;
+  fundingTxHash?: string | null;
+  releaseTxHash?: string | null;
   currency: "USDC" | "EURC";
   paymentMode: "Milestone escrow" | "Direct payment";
   dueDate: string;
@@ -23,7 +29,7 @@ export type InvoiceDraft = {
     percent: number;
   }>;
   createdAt: string;
-  status: "Draft";
+  status: InvoiceWorkflowStatus;
 };
 
 export type RemoteInvoiceDraftRow = {
@@ -31,6 +37,10 @@ export type RemoteInvoiceDraftRow = {
   owner_id: string;
   client_id?: string | null;
   workspace_name?: string | null;
+  escrow_status?: "draft" | "created" | "awaiting_funding" | "funded" | "release_requested" | "released";
+  escrow_address?: string | null;
+  funding_tx_hash?: string | null;
+  release_tx_hash?: string | null;
   title: string;
   client_name: string;
   client_email: string;
@@ -42,11 +52,20 @@ export type RemoteInvoiceDraftRow = {
   description: string | null;
   milestones: InvoiceDraft["milestones"];
   splits: InvoiceDraft["splits"];
-  status: string;
+  status: InvoiceWorkflowStatus;
   created_at: string;
   updated_at: string;
 };
 
+export type InvoiceHistoryRecord = {
+  id: string;
+  invoice_id: string;
+  owner_id: string;
+  event_type: string;
+  detail: string;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+};
 
 export type ClientRecord = {
   id: string;

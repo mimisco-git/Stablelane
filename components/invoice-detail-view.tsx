@@ -4,6 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { StatusPill } from "@/components/status-pill";
+import { InvoiceStatusTransitionPanel } from "@/components/invoice-status-transition-panel";
+import { EscrowTransactionPanel } from "@/components/escrow-transaction-panel";
+import { ContractPathPanel } from "@/components/contract-path-panel";
+import { InvoiceHistoryPanel } from "@/components/invoice-history-panel";
 import { readLocalInvoices, removeLocalInvoice } from "@/lib/storage";
 import { deleteRemoteInvoiceDraft, fetchRemoteInvoiceDraftById } from "@/lib/supabase-data";
 import type { InvoiceDraft, RemoteInvoiceDraftRow } from "@/lib/types";
@@ -33,6 +37,10 @@ function normalizeRemoteInvoice(row: RemoteInvoiceDraftRow): InvoiceDraft {
     workspaceName: row.workspace_name || null,
     amount: String(row.amount ?? 0),
     currency: row.currency,
+    escrowStatus: row.escrow_status || "draft",
+    escrowAddress: row.escrow_address || null,
+    fundingTxHash: row.funding_tx_hash || null,
+    releaseTxHash: row.release_tx_hash || null,
     paymentMode: row.payment_mode,
     dueDate: row.due_date || "Not set",
     reference: row.reference || "",
@@ -40,7 +48,7 @@ function normalizeRemoteInvoice(row: RemoteInvoiceDraftRow): InvoiceDraft {
     milestones: Array.isArray(row.milestones) ? row.milestones : [],
     splits: Array.isArray(row.splits) ? row.splits : [],
     createdAt: row.created_at,
-    status: "Draft",
+    status: row.status,
   };
 }
 
@@ -159,6 +167,21 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
             ))}
           </div>
 
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+              <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Escrow state</div>
+              <div className="font-semibold">{invoice.escrowStatus || "draft"}</div>
+            </div>
+            <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+              <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Funding tx</div>
+              <div className="font-semibold">{invoice.fundingTxHash ? `${invoice.fundingTxHash.slice(0, 8)}...${invoice.fundingTxHash.slice(-6)}` : "Not set"}</div>
+            </div>
+            <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+              <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Release tx</div>
+              <div className="font-semibold">{invoice.releaseTxHash ? `${invoice.releaseTxHash.slice(0, 8)}...${invoice.releaseTxHash.slice(-6)}` : "Not set"}</div>
+            </div>
+          </div>
+
           <div className="mt-4 rounded-2xl border border-white/8 bg-white/3 p-4">
             <div className="mb-2 font-semibold">Scope and notes</div>
             <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
@@ -184,6 +207,9 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
             <Link href="/app/invoices/new" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">
               Create another invoice
             </Link>
+            <Link href={`/app/escrows/${invoiceId}`} className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">
+              Open escrow center
+            </Link>
             <Link href="/app/clients" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">
               Open clients
             </Link>
@@ -206,6 +232,20 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
           </div>
         </section>
       </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+        <InvoiceStatusTransitionPanel invoiceId={invoiceId} currentStatus={invoice.status} />
+        <EscrowTransactionPanel
+          invoiceId={invoiceId}
+          invoiceAmount={invoice.amount}
+          escrowAddress={invoice.escrowAddress || null}
+          currentEscrowStatus={invoice.escrowStatus || "draft"}
+        />
+      </div>
+
+      <ContractPathPanel />
+
+      {source === "workspace" ? <InvoiceHistoryPanel invoiceId={invoiceId} /> : null}
 
       <div className="grid gap-4 xl:grid-cols-[1.02fr_.98fr]">
         <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">

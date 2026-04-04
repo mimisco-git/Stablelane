@@ -1,5 +1,11 @@
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
-import type { ClientRecord, InvoiceDraft, RemoteInvoiceDraftRow, WorkspaceProfile } from "@/lib/types";
+import type {
+  ClientRecord,
+  InvoiceDraft,
+  InvoiceHistoryRecord,
+  RemoteInvoiceDraftRow,
+  WorkspaceProfile,
+} from "@/lib/types";
 
 function toRemoteDraftPayload(draft: InvoiceDraft, ownerId: string) {
   return {
@@ -18,16 +24,62 @@ function toRemoteDraftPayload(draft: InvoiceDraft, ownerId: string) {
     milestones: draft.milestones,
     splits: draft.splits,
     status: draft.status,
+    escrow_status: draft.escrowStatus || "draft",
+    escrow_address: draft.escrowAddress || null,
+    funding_tx_hash: draft.fundingTxHash || null,
+    release_tx_hash: draft.releaseTxHash || null,
   };
 }
 
-export async function ensureWorkspaceProfile() {
+async function getSignedInUser() {
   const supabase = createSupabaseBrowserClient();
-  if (!supabase) return null;
-
+  if (!supabase) return { supabase: null, user: null };
   const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return null;
+  return { supabase, user: auth.user };
+}
+
+export async function appendInvoiceHistory(
+  invoiceId: string,
+  eventType: string,
+  detail: string,
+  metadata?: Record<string, unknown>
+) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const { data, error } = await supabase
+    .from("invoice_history_logs")
+    .insert({
+      invoice_id: invoiceId,
+      owner_id: user.id,
+      event_type: eventType,
+      detail,
+      metadata: metadata || null,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data as InvoiceHistoryRecord;
+}
+
+export async function fetchInvoiceHistory(invoiceId: string) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return [];
+
+  const { data } = await supabase
+    .from("invoice_history_logs")
+    .select("*")
+    .eq("invoice_id", invoiceId)
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: false });
+
+  return (data as InvoiceHistoryRecord[] | null) || [];
+}
+
+export async function ensureWorkspaceProfile() {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
 
   const { data: existing } = await supabase
     .from("workspace_profiles")
@@ -59,12 +111,8 @@ export async function ensureWorkspaceProfile() {
 }
 
 export async function fetchWorkspaceProfile() {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return null;
-
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return null;
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
 
   const { data } = await supabase
     .from("workspace_profiles")
@@ -81,7 +129,7 @@ export async function saveWorkspaceProfile(payload: {
   default_currency: "USDC" | "EURC";
   wallet_address: string | null;
 }) {
-  const supabase = createSupabaseBrowserClient();
+  const { supabase } = await getSignedInUser();
   if (!supabase) return null;
 
   const existing = await ensureWorkspaceProfile();
@@ -99,7 +147,7 @@ export async function saveWorkspaceProfile(payload: {
 }
 
 export async function fetchClients() {
-  const supabase = createSupabaseBrowserClient();
+  const { supabase } = await getSignedInUser();
   if (!supabase) return [];
 
   const workspace = await ensureWorkspaceProfile();
@@ -120,7 +168,7 @@ export async function createClient(input: {
   client_wallet?: string;
   notes?: string;
 }) {
-  const supabase = createSupabaseBrowserClient();
+  const { supabase } = await getSignedInUser();
   if (!supabase) return null;
 
   const workspace = await ensureWorkspaceProfile();
@@ -142,13 +190,22 @@ export async function createClient(input: {
   return data as ClientRecord;
 }
 
-export async function fetchRemoteInvoiceDrafts() {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return [];
+export async function deleteClientRecord(clientId: string) {
+  const { supabase } = await getSignedInUser();
+  if (!supabase) return false;
 
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return [];
+  const { error } = await supabase
+    .from("clients")
+    .delete()
+    .eq("id", clientId);
+
+  if (error) throw error;
+  return true;
+}
+
+export async function fetchRemoteInvoiceDrafts() {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return [];
 
   const { data } = await supabase
     .from("invoice_drafts")
@@ -160,12 +217,8 @@ export async function fetchRemoteInvoiceDrafts() {
 }
 
 export async function fetchRemoteInvoiceDraftById(id: string) {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return null;
-
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return null;
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
 
   const { data } = await supabase
     .from("invoice_drafts")
@@ -178,12 +231,8 @@ export async function fetchRemoteInvoiceDraftById(id: string) {
 }
 
 export async function saveRemoteInvoiceDraft(draft: InvoiceDraft) {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return null;
-
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return null;
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
 
   const payload = toRemoteDraftPayload(draft, user.id);
 
@@ -194,16 +243,19 @@ export async function saveRemoteInvoiceDraft(draft: InvoiceDraft) {
     .single();
 
   if (error) throw error;
+
+  await appendInvoiceHistory(data.id, "invoice_created", "Invoice draft created.", {
+    clientName: data.client_name,
+    amount: data.amount,
+    currency: data.currency,
+  });
+
   return data as RemoteInvoiceDraftRow;
 }
 
 export async function updateRemoteInvoiceDraft(draftId: string, draft: InvoiceDraft) {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return null;
-
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return null;
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
 
   const payload = toRemoteDraftPayload(draft, user.id);
 
@@ -216,16 +268,96 @@ export async function updateRemoteInvoiceDraft(draftId: string, draft: InvoiceDr
     .single();
 
   if (error) throw error;
+
+  await appendInvoiceHistory(draftId, "invoice_updated", "Invoice draft updated.", {
+    clientName: data.client_name,
+    amount: data.amount,
+    currency: data.currency,
+  });
+
   return data as RemoteInvoiceDraftRow;
 }
 
-export async function fetchInvoiceDraftsCount() {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return 0;
+export async function patchRemoteInvoiceDraft(
+  draftId: string,
+  updates: Partial<{
+    status: string;
+    escrow_status: string;
+    escrow_address: string | null;
+    funding_tx_hash: string | null;
+    release_tx_hash: string | null;
+    client_id: string | null;
+  }>
+) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
 
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return 0;
+  const { data, error } = await supabase
+    .from("invoice_drafts")
+    .update(updates)
+    .eq("id", draftId)
+    .eq("owner_id", user.id)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data as RemoteInvoiceDraftRow;
+}
+
+export async function updateInvoiceWorkflowState(
+  draftId: string,
+  next: {
+    status?: string;
+    escrow_status?: string;
+    escrow_address?: string | null;
+    funding_tx_hash?: string | null;
+    release_tx_hash?: string | null;
+  },
+  history?: {
+    eventType?: string;
+    detail?: string;
+    metadata?: Record<string, unknown>;
+  }
+) {
+  const updated = await patchRemoteInvoiceDraft(draftId, next);
+  if (!updated) return null;
+
+  await appendInvoiceHistory(
+    draftId,
+    history?.eventType || "workflow_updated",
+    history?.detail || "Invoice workflow updated.",
+    history?.metadata || next
+  );
+
+  return updated;
+}
+
+export async function deleteRemoteInvoiceDraft(draftId: string) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return false;
+
+  const existing = await fetchRemoteInvoiceDraftById(draftId);
+  if (existing) {
+    await appendInvoiceHistory(draftId, "invoice_deleted", "Invoice draft deleted.", {
+      clientName: existing.client_name,
+      amount: existing.amount,
+      currency: existing.currency,
+    });
+  }
+
+  const { error } = await supabase
+    .from("invoice_drafts")
+    .delete()
+    .eq("id", draftId)
+    .eq("owner_id", user.id);
+
+  if (error) throw error;
+  return true;
+}
+
+export async function fetchInvoiceDraftsCount() {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return 0;
 
   const { count } = await supabase
     .from("invoice_drafts")
@@ -236,12 +368,8 @@ export async function fetchInvoiceDraftsCount() {
 }
 
 export async function fetchDashboardStatsDetailed() {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return null;
-
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return null;
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
 
   const workspace = await fetchWorkspaceProfile();
   if (!workspace) return null;
@@ -281,34 +409,73 @@ export async function fetchDashboardStatsDetailed() {
   };
 }
 
+export async function fetchWorkspaceAnalytics() {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
 
-export async function deleteRemoteInvoiceDraft(draftId: string) {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return false;
+  const workspace = await fetchWorkspaceProfile();
+  if (!workspace) return null;
 
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return false;
+  const [{ data: invoiceRows }, { data: clientRows }] = await Promise.all([
+    supabase
+      .from("invoice_drafts")
+      .select("id,title,client_name,client_id,amount,currency,status,escrow_status,created_at")
+      .eq("owner_id", user.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("clients")
+      .select("*")
+      .eq("workspace_name", workspace.workspace_name)
+      .order("created_at", { ascending: false }),
+  ]);
 
-  const { error } = await supabase
-    .from("invoice_drafts")
-    .delete()
-    .eq("id", draftId)
-    .eq("owner_id", user.id);
+  const invoices = (invoiceRows || []) as Array<{
+    id: string;
+    title: string;
+    client_name: string;
+    client_id: string | null;
+    amount: number | null;
+    currency: "USDC" | "EURC";
+    status: string;
+    escrow_status: string | null;
+    created_at: string;
+  }>;
+  const clients = (clientRows || []) as ClientRecord[];
 
-  if (error) throw error;
-  return true;
-}
+  const clientTotals = invoices.reduce<Record<string, { count: number; value: number }>>((acc, row) => {
+    const key = row.client_name || "Unnamed client";
+    if (!acc[key]) acc[key] = { count: 0, value: 0 };
+    acc[key].count += 1;
+    acc[key].value += Number(row.amount || 0);
+    return acc;
+  }, {});
 
-export async function deleteClientRecord(clientId: string) {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return false;
+  const statusTotals = invoices.reduce<Record<string, number>>((acc, row) => {
+    const key = row.status || "Unknown";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
 
-  const { error } = await supabase
-    .from("clients")
-    .delete()
-    .eq("id", clientId);
+  const escrowTotals = invoices.reduce<Record<string, number>>((acc, row) => {
+    const key = row.escrow_status || "draft";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
 
-  if (error) throw error;
-  return true;
+  return {
+    workspaceName: workspace.workspace_name,
+    roleType: workspace.role_type,
+    defaultCurrency: workspace.default_currency,
+    totalInvoices: invoices.length,
+    totalClients: clients.length,
+    totalValue: invoices.reduce((sum, row) => sum + Number(row.amount || 0), 0),
+    linkedInvoices: invoices.filter((row) => Boolean(row.client_id)).length,
+    unlinkedInvoices: invoices.filter((row) => !row.client_id).length,
+    clientTotals: Object.entries(clientTotals)
+      .map(([name, value]) => ({ name, ...value }))
+      .sort((a, b) => b.value - a.value),
+    statusTotals,
+    escrowTotals,
+    recentInvoices: invoices.slice(0, 6),
+  };
 }

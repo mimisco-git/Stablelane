@@ -12,6 +12,8 @@ import { OverviewDraftNotice } from "@/components/overview-draft-notice";
 import { DashboardLiveStats } from "@/components/dashboard-live-stats";
 import { DashboardMetricCards } from "@/components/dashboard-metric-cards";
 import { RecentInvoicesLive } from "@/components/recent-invoices-live";
+import { WalletConnectPanel } from "@/components/wallet-connect-panel";
+import { LiveDashboardCards } from "@/components/live-dashboard-cards";
 
 export default function AppOverviewPage() {
   return (
@@ -19,11 +21,12 @@ export default function AppOverviewPage() {
       currentPath="/app"
       title="Overview"
       description="Stablelane is now laid out as a proper product preview. This overview screen should help you test the shape of the app before real invoice creation, escrow state syncing, and payout routing logic land."
-      badge={`${siteConfig.appMode} · ${siteConfig.arc.gasToken} gas`}
+      badge="Workspace overview"
     >
       <div className="grid gap-4">
         <OverviewDraftNotice />
         <DashboardLiveStats />
+        <WalletConnectPanel />
         <DashboardMetricCards />
 
         <div className="grid gap-3 xl:grid-cols-[1.05fr_.95fr]">
