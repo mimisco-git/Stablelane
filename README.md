@@ -151,3 +151,7 @@ This stage adds the first real draft editing flow:
 
 ## Stage 8 fix
 This package fixes the missing `recentInvoices` reference on the overview page and replaces it with a real `RecentInvoicesLive` component.
+
+
+## Stage 8 fix 2
+This package fixes the `dashboard-live-stats` TypeScript state shape so it matches the data returned from `fetchDashboardStatsDetailed()`.

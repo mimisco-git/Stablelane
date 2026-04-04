@@ -10,8 +10,15 @@ export function DashboardLiveStats() {
     roleType: string;
     clientCount: number;
     draftCount: number;
-    draftValue: number;
-    sentOrReady: number;
+    totalDraftValue: number;
+    recent: Array<{
+      amount: number | null;
+      title: string;
+      client_name: string;
+      status: string;
+      created_at: string;
+      currency: "USDC" | "EURC";
+    }>;
   }>(null);
 
   useEffect(() => {
@@ -28,7 +35,7 @@ export function DashboardLiveStats() {
 
   const formattedValue = new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 2,
-  }).format(stats.draftValue);
+  }).format(stats.totalDraftValue);
 
   return (
     <div className="rounded-[20px] border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4 text-[0.84rem] leading-6 text-[var(--accent)]">
