@@ -23,3 +23,9 @@ export function addLocalInvoice(invoice: InvoiceDraft) {
   const current = readLocalInvoices();
   writeLocalInvoices([invoice, ...current]);
 }
+
+export function upsertLocalInvoice(invoice: InvoiceDraft) {
+  const current = readLocalInvoices();
+  const filtered = current.filter((item) => item.id !== invoice.id);
+  writeLocalInvoices([invoice, ...filtered]);
+}

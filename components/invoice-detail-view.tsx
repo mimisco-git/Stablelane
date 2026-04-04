@@ -145,7 +145,10 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
         <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
           <h2 className="mb-4 text-base font-bold tracking-normal">Actions</h2>
           <div className="grid gap-3">
-            <Link href="/app/invoices/new" className="rounded-full bg-[var(--accent)] px-4 py-3 text-left text-[0.92rem] font-bold text-[#08100b]">
+            <Link href={`/app/invoices/${invoiceId}/edit`} className="rounded-full bg-[var(--accent)] px-4 py-3 text-left text-[0.92rem] font-bold text-[#08100b]">
+              Edit draft
+            </Link>
+            <Link href="/app/invoices/new" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">
               Create another invoice
             </Link>
             <Link href="/app/clients" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">

@@ -1,5 +1,25 @@
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
-import type { ClientRecord, WorkspaceProfile } from "@/lib/types";
+import type { ClientRecord, InvoiceDraft, RemoteInvoiceDraftRow, WorkspaceProfile } from "@/lib/types";
+
+function toRemoteDraftPayload(draft: InvoiceDraft, ownerId: string) {
+  return {
+    owner_id: ownerId,
+    client_id: draft.clientId || null,
+    workspace_name: draft.workspaceName || null,
+    title: draft.title,
+    client_name: draft.clientName,
+    client_email: draft.clientEmail,
+    amount: Number(draft.amount || 0),
+    currency: draft.currency,
+    payment_mode: draft.paymentMode,
+    due_date: draft.dueDate && draft.dueDate !== "Not set" ? draft.dueDate : null,
+    reference: draft.reference || null,
+    description: draft.description || null,
+    milestones: draft.milestones,
+    splits: draft.splits,
+    status: draft.status,
+  };
+}
 
 export async function ensureWorkspaceProfile() {
   const supabase = createSupabaseBrowserClient();
@@ -13,13 +33,14 @@ export async function ensureWorkspaceProfile() {
     .from("workspace_profiles")
     .select("*")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   if (existing) return existing as WorkspaceProfile;
 
   const inferredName =
-    (user.email?.split("@")[0] || "stablelane").replace(/[._-]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) +
-    " Workspace";
+    (user.email?.split("@")[0] || "stablelane")
+      .replace(/[._-]+/g, " ")
+      .replace(/\b\w/g, (m) => m.toUpperCase()) + " Workspace";
 
   const { data, error } = await supabase
     .from("workspace_profiles")
@@ -49,7 +70,7 @@ export async function fetchWorkspaceProfile() {
     .from("workspace_profiles")
     .select("*")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   return (data as WorkspaceProfile | null) || null;
 }
@@ -62,10 +83,6 @@ export async function saveWorkspaceProfile(payload: {
 }) {
   const supabase = createSupabaseBrowserClient();
   if (!supabase) return null;
-
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return null;
 
   const existing = await ensureWorkspaceProfile();
   if (!existing) return null;
@@ -125,47 +142,6 @@ export async function createClient(input: {
   return data as ClientRecord;
 }
 
-export async function fetchInvoiceDraftsCount() {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return 0;
-
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return 0;
-
-  const { count } = await supabase
-    .from("invoice_drafts")
-    .select("*", { count: "exact", head: true })
-    .eq("owner_id", user.id);
-
-  return count || 0;
-}
-
-export async function fetchDashboardStats() {
-  const supabase = createSupabaseBrowserClient();
-  if (!supabase) return null;
-
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return null;
-
-  const [{ count: invoiceCount }, { count: clientCount }, workspace] = await Promise.all([
-    supabase.from("invoice_drafts").select("*", { count: "exact", head: true }).eq("owner_id", user.id),
-    supabase.from("clients").select("*", { count: "exact", head: true }),
-    fetchWorkspaceProfile(),
-  ]);
-
-  return {
-    invoiceCount: invoiceCount || 0,
-    clientCount: clientCount || 0,
-    workspaceName: workspace?.workspace_name || "Workspace",
-    defaultCurrency: workspace?.default_currency || "USDC",
-  };
-}
-
-
-import type { RemoteInvoiceDraftRow } from "@/lib/types";
-
 export async function fetchRemoteInvoiceDrafts() {
   const supabase = createSupabaseBrowserClient();
   if (!supabase) return [];
@@ -196,9 +172,67 @@ export async function fetchRemoteInvoiceDraftById(id: string) {
     .select("*")
     .eq("owner_id", user.id)
     .eq("id", id)
-    .single();
+    .maybeSingle();
 
   return (data as RemoteInvoiceDraftRow | null) || null;
+}
+
+export async function saveRemoteInvoiceDraft(draft: InvoiceDraft) {
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) return null;
+
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) return null;
+
+  const payload = toRemoteDraftPayload(draft, user.id);
+
+  const { data, error } = await supabase
+    .from("invoice_drafts")
+    .insert(payload)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data as RemoteInvoiceDraftRow;
+}
+
+export async function updateRemoteInvoiceDraft(draftId: string, draft: InvoiceDraft) {
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) return null;
+
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) return null;
+
+  const payload = toRemoteDraftPayload(draft, user.id);
+
+  const { data, error } = await supabase
+    .from("invoice_drafts")
+    .update(payload)
+    .eq("id", draftId)
+    .eq("owner_id", user.id)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data as RemoteInvoiceDraftRow;
+}
+
+export async function fetchInvoiceDraftsCount() {
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) return 0;
+
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) return 0;
+
+  const { count } = await supabase
+    .from("invoice_drafts")
+    .select("*", { count: "exact", head: true })
+    .eq("owner_id", user.id);
+
+  return count || 0;
 }
 
 export async function fetchDashboardStatsDetailed() {
@@ -215,18 +249,26 @@ export async function fetchDashboardStatsDetailed() {
   const [{ data: invoiceRows }, { count: clientCount }] = await Promise.all([
     supabase
       .from("invoice_drafts")
-      .select("amount,status")
-      .eq("owner_id", user.id),
+      .select("amount,status,created_at,title,client_name,currency")
+      .eq("owner_id", user.id)
+      .order("created_at", { ascending: false }),
     supabase
       .from("clients")
       .select("*", { count: "exact", head: true })
       .eq("workspace_name", workspace.workspace_name),
   ]);
 
-  const rows = invoiceRows || [];
-  const draftValue = rows.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const rows = (invoiceRows || []) as Array<{
+    amount: number | null;
+    status: string;
+    created_at: string;
+    title: string;
+    client_name: string;
+    currency: "USDC" | "EURC";
+  }>;
+
+  const totalDraftValue = rows.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const draftCount = rows.length;
-  const sentOrReady = rows.filter((item) => item.status === "Draft").length;
 
   return {
     workspaceName: workspace.workspace_name,
@@ -234,7 +276,7 @@ export async function fetchDashboardStatsDetailed() {
     roleType: workspace.role_type,
     clientCount: clientCount || 0,
     draftCount,
-    draftValue,
-    sentOrReady,
+    totalDraftValue,
+    recent: rows.slice(0, 5),
   };
 }

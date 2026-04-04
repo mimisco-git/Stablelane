@@ -6,6 +6,7 @@ import { StatusPill } from "@/components/status-pill";
 import { invoicesTable } from "@/lib/mock-data";
 import { readLocalInvoices } from "@/lib/storage";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
+import { fetchRemoteInvoiceDrafts } from "@/lib/supabase-data";
 import type { InvoiceDraft, RemoteInvoiceDraftRow } from "@/lib/types";
 
 type FilterKey = "All" | "Draft" | "Sent" | "In escrow" | "Completed";
@@ -17,14 +18,11 @@ function draftToRow(draft: InvoiceDraft) {
   return {
     id: draft.id,
     title: `${draft.clientName} · ${draft.title}`,
-    client: draft.clientName,
     currency: draft.currency,
     total: `${symbol}${draft.amount || "0"}`,
     status: "Draft",
     dueDate: draft.dueDate || "Not set",
-    paymentMode: draft.paymentMode,
     funded: "Not funded yet",
-    createdAt: draft.createdAt,
     source: "browser" as const,
   };
 }
@@ -34,14 +32,11 @@ function remoteToRow(row: RemoteInvoiceDraftRow) {
   return {
     id: row.id,
     title: `${row.client_name} · ${row.title}`,
-    client: row.client_name,
     currency: row.currency,
     total: `${symbol}${row.amount ?? 0}`,
     status: "Draft",
     dueDate: row.due_date || "Not set",
-    paymentMode: row.payment_mode,
     funded: "Not funded yet",
-    createdAt: row.created_at,
     source: "workspace" as const,
   };
 }
@@ -62,25 +57,23 @@ export function InvoicesBoard() {
 
     async function loadRemote() {
       if (!supabase) return;
-
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
       if (!active) return;
-
       setSessionEmail(session?.user?.email || "");
-      if (!session?.user) return;
+      if (!session?.user) {
+        setRemoteDrafts([]);
+        return;
+      }
 
-      const { data, error } = await supabase
-        .from("invoice_drafts")
-        .select("*")
-        .eq("owner_id", session.user.id)
-        .order("created_at", { ascending: false });
-
-      if (!active) return;
-      if (error) return;
-      setRemoteDrafts((data || []) as RemoteInvoiceDraftRow[]);
+      try {
+        const data = await fetchRemoteInvoiceDrafts();
+        if (active) setRemoteDrafts(data);
+      } catch {
+        if (active) setRemoteDrafts([]);
+      }
     }
 
     loadRemote();
@@ -118,10 +111,10 @@ export function InvoicesBoard() {
     <div className="grid gap-4">
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "Supabase drafts", value: String(remoteDrafts.length) },
-          { label: "Local drafts", value: String(localDrafts.length) },
+          { label: "Workspace drafts", value: String(remoteDrafts.length) },
+          { label: "Browser drafts", value: String(localDrafts.length) },
           { label: "All invoices", value: String(remoteDrafts.length + localDrafts.length + invoicesTable.length) },
-          { label: "Waiting on action", value: String(invoicesTable.filter((item) => item.status === "Sent" || item.status === "In escrow").length) },
+          { label: "Sample rows", value: String(invoicesTable.length) },
         ].map((card) => (
           <div key={card.label} className="rounded-[18px] border border-white/8 bg-white/3 p-4">
             <div className="mb-2 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">{card.label}</div>
@@ -154,11 +147,11 @@ export function InvoicesBoard() {
 
       {sessionEmail ? (
         <div className="rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-4 py-3 text-[0.84rem] leading-6 text-[var(--accent)]">
-          Signed in as {sessionEmail}. Supabase draft invoices are loaded first, then local browser drafts, then seeded demo rows.
+          Signed in as {sessionEmail}. Workspace drafts load first, then browser drafts, then sample rows.
         </div>
       ) : localDrafts.length ? (
         <div className="rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-4 py-3 text-[0.84rem] leading-6 text-[var(--accent)]">
-          Local draft invoices are loaded from your browser in this test build. Sign in to start saving them to Supabase.
+          Browser drafts are only visible on this device. Sign in to save the next ones to your workspace.
         </div>
       ) : null}
 
@@ -182,7 +175,7 @@ export function InvoicesBoard() {
               <div className="font-semibold">{invoice.title}</div>
               <div className="text-[0.8rem] text-[var(--muted)]">Funded: {invoice.funded}</div>
             </div>
-            <div className="text-[0.8rem] text-[var(--muted)]">{invoice.source === "browser" ? "browser" : invoice.source === "workspace" ? "workspace" : "sample"}</div>
+            <div className="text-[0.8rem] text-[var(--muted)]">{invoice.source}</div>
             <div className="text-[var(--muted)]">{invoice.currency}</div>
             <div className="font-semibold">{invoice.total}</div>
             <div>
@@ -202,7 +195,7 @@ export function InvoicesBoard() {
             <div className="text-[var(--muted)]">{invoice.dueDate}</div>
             <div className="text-right">
               <Link
-                href={invoice.source === "sample" ? `/app/invoices/${invoice.id}` : "/app/invoices/new"}
+                href={`/app/invoices/${invoice.id}`}
                 className="text-[0.82rem] font-semibold text-[var(--accent)]"
               >
                 Open

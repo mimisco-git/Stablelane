@@ -3,15 +3,15 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { StatusPill } from "@/components/status-pill";
 import {
   activityTimeline,
-  dashboardMetrics,
   payoutSplits,
   readinessChecklist,
-  recentInvoices,
   releaseQueue,
 } from "@/lib/mock-data";
 import { siteConfig } from "@/lib/site";
 import { OverviewDraftNotice } from "@/components/overview-draft-notice";
 import { DashboardLiveStats } from "@/components/dashboard-live-stats";
+import { DashboardMetricCards } from "@/components/dashboard-metric-cards";
+import { RecentInvoicesLive } from "@/components/recent-invoices-live";
 
 export default function AppOverviewPage() {
   return (
@@ -24,19 +24,7 @@ export default function AppOverviewPage() {
       <div className="grid gap-4">
         <OverviewDraftNotice />
         <DashboardLiveStats />
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {dashboardMetrics.map((metric) => (
-            <div key={metric.label} className="rounded-[18px] border border-white/8 bg-white/3 p-4">
-              <div className="mb-2 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">
-                {metric.label}
-              </div>
-              <strong className="mb-1 block font-[family-name:var(--font-cormorant)] text-[1.9rem] tracking-[-0.04em]">
-                {metric.value}
-              </strong>
-              <p className="text-[0.8rem] leading-6 text-[var(--muted)]">{metric.note}</p>
-            </div>
-          ))}
-        </div>
+        <DashboardMetricCards />
 
         <div className="grid gap-3 xl:grid-cols-[1.05fr_.95fr]">
           <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">

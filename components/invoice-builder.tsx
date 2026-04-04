@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { addLocalInvoice } from "@/lib/storage";
+import { upsertLocalInvoice, readLocalInvoices } from "@/lib/storage";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
-import { fetchClients } from "@/lib/supabase-data";
-import type { ClientRecord, InvoiceDraft } from "@/lib/types";
+import { fetchClients, fetchRemoteInvoiceDraftById, saveRemoteInvoiceDraft, updateRemoteInvoiceDraft } from "@/lib/supabase-data";
+import type { ClientRecord, InvoiceDraft, RemoteInvoiceDraftRow } from "@/lib/types";
 
 type FormState = {
   title: string;
@@ -29,6 +29,10 @@ type FormState = {
     member: string;
     percent: number;
   }>;
+};
+
+type InvoiceBuilderProps = {
+  draftId?: string;
 };
 
 const initialState: FormState = {
@@ -56,15 +60,54 @@ function makeId(prefix: string) {
   return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export function InvoiceBuilder() {
+function normalizeRemoteInvoice(row: RemoteInvoiceDraftRow): InvoiceDraft {
+  return {
+    id: row.id,
+    title: row.title,
+    clientName: row.client_name,
+    clientEmail: row.client_email,
+    clientId: row.client_id || null,
+    workspaceName: row.workspace_name || null,
+    amount: String(row.amount ?? 0),
+    currency: row.currency,
+    paymentMode: row.payment_mode,
+    dueDate: row.due_date || "Not set",
+    reference: row.reference || "",
+    description: row.description || "",
+    milestones: Array.isArray(row.milestones) ? row.milestones : [],
+    splits: Array.isArray(row.splits) ? row.splits : [],
+    createdAt: row.created_at,
+    status: "Draft",
+  };
+}
+
+function invoiceToForm(invoice: InvoiceDraft): FormState {
+  return {
+    title: invoice.title,
+    clientName: invoice.clientName,
+    clientEmail: invoice.clientEmail,
+    amount: invoice.amount,
+    currency: invoice.currency,
+    paymentMode: invoice.paymentMode,
+    dueDate: invoice.dueDate === "Not set" ? "" : invoice.dueDate,
+    reference: invoice.reference || "",
+    description: invoice.description || "",
+    milestones: invoice.milestones?.length ? invoice.milestones : initialState.milestones,
+    splits: invoice.splits?.length ? invoice.splits : initialState.splits,
+  };
+}
+
+export function InvoiceBuilder({ draftId }: InvoiceBuilderProps) {
   const router = useRouter();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [form, setForm] = useState<FormState>(initialState);
   const [message, setMessage] = useState("");
   const [previewMode, setPreviewMode] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingDraft, setLoadingDraft] = useState(Boolean(draftId));
   const [clients, setClients] = useState<ClientRecord[]>([]);
   const [selectedClientId, setSelectedClientId] = useState("");
+  const [activeDraft, setActiveDraft] = useState<InvoiceDraft | null>(null);
 
   const totalSplit = useMemo(
     () => form.splits.reduce((sum, item) => sum + Number(item.percent || 0), 0),
@@ -78,20 +121,48 @@ export function InvoiceBuilder() {
   useEffect(() => {
     let mounted = true;
 
-    async function loadClients() {
+    async function loadClientsAndDraft() {
       try {
         const data = await fetchClients();
         if (mounted) setClients(data);
       } catch {
         if (mounted) setClients([]);
       }
+
+      if (!draftId) {
+        if (mounted) setLoadingDraft(false);
+        return;
+      }
+
+      let loaded: InvoiceDraft | null = null;
+      try {
+        const remote = await fetchRemoteInvoiceDraftById(draftId);
+        if (remote) loaded = normalizeRemoteInvoice(remote);
+      } catch {
+        // ignore and fall back
+      }
+
+      if (!loaded) {
+        loaded = readLocalInvoices().find((item) => item.id === draftId) || null;
+      }
+
+      if (mounted) {
+        if (loaded) {
+          setActiveDraft(loaded);
+          setForm(invoiceToForm(loaded));
+          if (loaded.clientId) setSelectedClientId(loaded.clientId);
+        } else {
+          setMessage("Draft could not be found. You can create a new invoice instead.");
+        }
+        setLoadingDraft(false);
+      }
     }
 
-    loadClients();
+    loadClientsAndDraft();
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [draftId]);
 
   function applySavedClient(clientId: string) {
     setSelectedClientId(clientId);
@@ -162,12 +233,12 @@ export function InvoiceBuilder() {
     const selectedClient = clients.find((item) => item.id === selectedClientId) || null;
 
     const draft: InvoiceDraft = {
-      id: makeId("inv"),
+      id: activeDraft?.id || makeId("inv"),
       title: form.title || "Untitled invoice",
       clientName: form.clientName || "Unnamed client",
       clientEmail: form.clientEmail || "",
-      clientId: selectedClient?.id || null,
-      workspaceName: selectedClient?.workspace_name || null,
+      clientId: selectedClient?.id || activeDraft?.clientId || null,
+      workspaceName: selectedClient?.workspace_name || activeDraft?.workspaceName || null,
       amount: form.amount || "0",
       currency: form.currency,
       paymentMode: form.paymentMode,
@@ -176,7 +247,7 @@ export function InvoiceBuilder() {
       description: form.description || "",
       milestones: form.milestones,
       splits: form.splits,
-      createdAt: new Date().toISOString(),
+      createdAt: activeDraft?.createdAt || new Date().toISOString(),
       status: "Draft",
     };
 
@@ -188,35 +259,25 @@ export function InvoiceBuilder() {
         } = await supabase.auth.getSession();
 
         if (session?.user) {
-          const { error } = await supabase.from("invoice_drafts").insert({
-            owner_id: session.user.id,
-            workspace_name: draft.workspaceName || null,
-            client_id: draft.clientId || null,
-            title: draft.title,
-            client_name: draft.clientName,
-            client_email: draft.clientEmail,
-            amount: Number(draft.amount || 0),
-            currency: draft.currency,
-            payment_mode: draft.paymentMode,
-            due_date: draft.dueDate && draft.dueDate !== "Not set" ? draft.dueDate : null,
-            reference: draft.reference || null,
-            description: draft.description || null,
-            milestones: draft.milestones,
-            splits: draft.splits,
-            status: draft.status,
-          });
-
-          if (error) throw error;
-
-          setMessage("Draft saved to Supabase. Open the invoices page to review it.");
+          if (activeDraft?.id) {
+            await updateRemoteInvoiceDraft(activeDraft.id, draft);
+            setMessage("Draft updated in Supabase.");
+          } else {
+            await saveRemoteInvoiceDraft(draft);
+            setMessage("Draft saved to Supabase.");
+          }
+          setActiveDraft(draft);
           setTimeout(() => setMessage(""), 3200);
+          router.push("/app/invoices");
           return;
         }
       }
 
-      addLocalInvoice(draft);
-      setMessage("Draft saved locally. Sign in to store it in Supabase instead.");
+      upsertLocalInvoice(draft);
+      setActiveDraft(draft);
+      setMessage(activeDraft ? "Draft updated in your browser." : "Draft saved in your browser.");
       setTimeout(() => setMessage(""), 3200);
+      router.push("/app/invoices");
     } catch (error) {
       const text = error instanceof Error ? error.message : "Saving failed.";
       setMessage(text);
@@ -225,14 +286,26 @@ export function InvoiceBuilder() {
     }
   }
 
+  if (loadingDraft) {
+    return (
+      <div className="rounded-[20px] border border-white/8 bg-white/3 p-5 text-[0.9rem] text-[var(--muted)]">
+        Loading draft...
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-4 xl:grid-cols-[1.06fr_.94fr]">
       <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h2 className="mb-1 text-base font-bold tracking-normal">Invoice details</h2>
+            <h2 className="mb-1 text-base font-bold tracking-normal">
+              {activeDraft ? "Edit invoice draft" : "Invoice details"}
+            </h2>
             <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-              This stage turns the invoice screen into a working draft builder with Supabase saving when you are signed in.
+              {activeDraft
+                ? "Update the draft, refine milestones, or adjust payout splits before connecting it to escrow."
+                : "This stage turns the invoice screen into a working draft builder with Supabase saving when you are signed in."}
             </p>
           </div>
           <button
@@ -437,7 +510,7 @@ export function InvoiceBuilder() {
                 disabled={saving}
                 className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b] disabled:opacity-70"
               >
-                {saving ? "Saving..." : "Save draft"}
+                {saving ? "Saving..." : activeDraft ? "Update draft" : "Save draft"}
               </button>
               <button
                 type="button"
@@ -524,9 +597,11 @@ export function InvoiceBuilder() {
         <h2 className="mb-4 text-base font-bold tracking-normal">Builder notes</h2>
         <div className="grid gap-3">
           {[
-            "When you are signed in, this screen now attempts to save invoice drafts to Supabase.",
-            "If there is no session yet, it falls back to local browser drafts so testing never blocks.",
-            "The next backend stage will add real clients, workspaces, and richer invoice statuses.",
+            activeDraft
+              ? "You are editing an existing draft. Saving now updates the same record instead of creating a new one."
+              : "New drafts save to Supabase when you are signed in, or to browser storage when you are not.",
+            "Saved clients now feed directly into invoice creation so the workflow feels closer to a real workspace product.",
+            "The next step after this is connecting approved invoices to real Arc testnet escrow contracts.",
           ].map((note) => (
             <div key={note} className="rounded-2xl border border-white/8 bg-white/3 p-4 text-[0.84rem] leading-6 text-[var(--muted)]">
               {note}

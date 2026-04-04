@@ -139,3 +139,11 @@ This stage pushes Stablelane closer to a real operating product:
 
 ## Stage 7 fix
 This package fixes the TypeScript source-label comparison in `components/invoices-board.tsx` so Vercel can complete the build.
+
+
+## Stage 8 package
+This stage adds the first real draft editing flow:
+- saved invoice drafts now open a real detail page
+- invoice detail links to a dedicated edit page
+- invoice builder supports loading and updating existing drafts
+- overview metrics and recent invoices lean more on workspace data instead of static placeholders
