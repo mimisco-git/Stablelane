@@ -15,12 +15,20 @@ export function SiteNav() {
           </li>
         ))}
       </ul>
-      <Link
-        href="#waitlist"
-        className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]"
-      >
-        Join waitlist
-      </Link>
+      <div className="flex items-center gap-2">
+        <Link
+          href="/auth"
+          className="hidden rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.92rem] font-semibold text-[var(--text)] sm:inline-flex"
+        >
+          Sign in
+        </Link>
+        <Link
+          href="/app"
+          className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]"
+        >
+          Open app
+        </Link>
+      </div>
     </nav>
   );
 }

@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { writeLocalInvoices, readLocalInvoices } from "@/lib/storage";
+import { addLocalInvoice } from "@/lib/storage";
+import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 import type { InvoiceDraft } from "@/lib/types";
 
 type FormState = {
@@ -55,9 +56,11 @@ function makeId(prefix: string) {
 
 export function InvoiceBuilder() {
   const router = useRouter();
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [form, setForm] = useState<FormState>(initialState);
   const [message, setMessage] = useState("");
   const [previewMode, setPreviewMode] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const totalSplit = useMemo(
     () => form.splits.reduce((sum, item) => sum + Number(item.percent || 0), 0),
@@ -122,7 +125,7 @@ export function InvoiceBuilder() {
     }));
   }
 
-  function saveDraft() {
+  async function saveDraft() {
     const draft: InvoiceDraft = {
       id: makeId("inv"),
       title: form.title || "Untitled invoice",
@@ -140,10 +143,47 @@ export function InvoiceBuilder() {
       status: "Draft",
     };
 
-    const existing = readLocalInvoices();
-    writeLocalInvoices([draft, ...existing]);
-    setMessage("Draft saved locally. Open the invoices page to review it.");
-    setTimeout(() => setMessage(""), 2800);
+    setSaving(true);
+    try {
+      if (supabase) {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (session?.user) {
+          const { error } = await supabase.from("invoice_drafts").insert({
+            owner_id: session.user.id,
+            title: draft.title,
+            client_name: draft.clientName,
+            client_email: draft.clientEmail,
+            amount: Number(draft.amount || 0),
+            currency: draft.currency,
+            payment_mode: draft.paymentMode,
+            due_date: draft.dueDate && draft.dueDate !== "Not set" ? draft.dueDate : null,
+            reference: draft.reference || null,
+            description: draft.description || null,
+            milestones: draft.milestones,
+            splits: draft.splits,
+            status: draft.status,
+          });
+
+          if (error) throw error;
+
+          setMessage("Draft saved to Supabase. Open the invoices page to review it.");
+          setTimeout(() => setMessage(""), 3200);
+          return;
+        }
+      }
+
+      addLocalInvoice(draft);
+      setMessage("Draft saved locally. Sign in to store it in Supabase instead.");
+      setTimeout(() => setMessage(""), 3200);
+    } catch (error) {
+      const text = error instanceof Error ? error.message : "Saving failed.";
+      setMessage(text);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -153,7 +193,7 @@ export function InvoiceBuilder() {
           <div>
             <h2 className="mb-1 text-base font-bold tracking-normal">Invoice details</h2>
             <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-              This stage turns the invoice screen into a working local draft builder so you can test flow and layout now.
+              This stage turns the invoice screen into a working draft builder with Supabase saving when you are signed in.
             </p>
           </div>
           <button
@@ -319,8 +359,13 @@ export function InvoiceBuilder() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button type="button" onClick={saveDraft} className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]">
-                Save draft locally
+              <button
+                type="button"
+                onClick={saveDraft}
+                disabled={saving}
+                className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b] disabled:opacity-70"
+              >
+                {saving ? "Saving..." : "Save draft"}
               </button>
               <button
                 type="button"
@@ -407,9 +452,9 @@ export function InvoiceBuilder() {
         <h2 className="mb-4 text-base font-bold tracking-normal">Builder notes</h2>
         <div className="grid gap-3">
           {[
-            "Drafts save locally in the browser so you can keep testing without a backend yet.",
-            "The next build should replace local drafts with Supabase records and real invoice states.",
-            "After data persistence, we connect invoice funding and milestone release to Arc testnet contracts.",
+            "When you are signed in, this screen now attempts to save invoice drafts to Supabase.",
+            "If there is no session yet, it falls back to local browser drafts so testing never blocks.",
+            "The next backend stage will add real clients, workspaces, and richer invoice statuses.",
           ].map((note) => (
             <div key={note} className="rounded-2xl border border-white/8 bg-white/3 p-4 text-[0.84rem] leading-6 text-[var(--muted)]">
               {note}

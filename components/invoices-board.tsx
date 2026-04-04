@@ -5,7 +5,8 @@ import Link from "next/link";
 import { StatusPill } from "@/components/status-pill";
 import { invoicesTable } from "@/lib/mock-data";
 import { readLocalInvoices } from "@/lib/storage";
-import type { InvoiceDraft } from "@/lib/types";
+import { getSupabaseBrowserClient } from "@/lib/supabase-client";
+import type { InvoiceDraft, RemoteInvoiceDraftRow } from "@/lib/types";
 
 type FilterKey = "All" | "Draft" | "Sent" | "In escrow" | "Completed";
 
@@ -28,27 +29,97 @@ function draftToRow(draft: InvoiceDraft) {
   };
 }
 
+function remoteToRow(row: RemoteInvoiceDraftRow) {
+  const symbol = row.currency === "EURC" ? "€" : "$";
+  return {
+    id: row.id,
+    title: `${row.client_name} · ${row.title}`,
+    client: row.client_name,
+    currency: row.currency,
+    total: `${symbol}${row.amount ?? 0}`,
+    status: "Draft",
+    dueDate: row.due_date || "Not set",
+    paymentMode: row.payment_mode,
+    funded: "Not funded yet",
+    createdAt: row.created_at,
+    source: "supabase" as const,
+  };
+}
+
 export function InvoicesBoard() {
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [filter, setFilter] = useState<FilterKey>("All");
   const [localDrafts, setLocalDrafts] = useState<InvoiceDraft[]>([]);
+  const [remoteDrafts, setRemoteDrafts] = useState<RemoteInvoiceDraftRow[]>([]);
+  const [sessionEmail, setSessionEmail] = useState("");
 
   useEffect(() => {
     setLocalDrafts(readLocalInvoices());
   }, []);
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadRemote() {
+      if (!supabase) return;
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!active) return;
+
+      setSessionEmail(session?.user?.email || "");
+      if (!session?.user) return;
+
+      const { data, error } = await supabase
+        .from("invoice_drafts")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!active) return;
+      if (error) return;
+      setRemoteDrafts((data || []) as RemoteInvoiceDraftRow[]);
+    }
+
+    loadRemote();
+
+    if (!supabase) {
+      return () => {
+        active = false;
+      };
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      loadRemote();
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
   const rows = useMemo(() => {
-    const merged = [...localDrafts.map(draftToRow), ...invoicesTable.map((item) => ({ ...item, source: "mock" as const }))];
+    const merged = [
+      ...remoteDrafts.map(remoteToRow),
+      ...localDrafts.map(draftToRow),
+      ...invoicesTable.map((item) => ({ ...item, source: "mock" as const })),
+    ];
+
     if (filter === "All") return merged;
     return merged.filter((item) => item.status === filter);
-  }, [filter, localDrafts]);
+  }, [filter, localDrafts, remoteDrafts]);
 
   return (
     <div className="grid gap-4">
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {[
+          { label: "Supabase drafts", value: String(remoteDrafts.length) },
           { label: "Local drafts", value: String(localDrafts.length) },
-          { label: "All invoices", value: String([...localDrafts, ...invoicesTable].length) },
-          { label: "Escrow-linked", value: String(invoicesTable.filter((item) => item.paymentMode.includes("escrow")).length) },
+          { label: "All invoices", value: String(remoteDrafts.length + localDrafts.length + invoicesTable.length) },
           { label: "Waiting on action", value: String(invoicesTable.filter((item) => item.status === "Sent" || item.status === "In escrow").length) },
         ].map((card) => (
           <div key={card.label} className="rounded-[18px] border border-white/8 bg-white/3 p-4">
@@ -80,14 +151,18 @@ export function InvoicesBoard() {
         </Link>
       </div>
 
-      {localDrafts.length ? (
+      {sessionEmail ? (
         <div className="rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-4 py-3 text-[0.84rem] leading-6 text-[var(--accent)]">
-          Local draft invoices are loaded from your browser in this test build. They are only visible on this device until Supabase is connected.
+          Signed in as {sessionEmail}. Supabase draft invoices are loaded first, then local browser drafts, then seeded demo rows.
+        </div>
+      ) : localDrafts.length ? (
+        <div className="rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-4 py-3 text-[0.84rem] leading-6 text-[var(--accent)]">
+          Local draft invoices are loaded from your browser in this test build. Sign in to start saving them to Supabase.
         </div>
       ) : null}
 
       <div className="overflow-hidden rounded-[22px] border border-white/8 bg-white/3">
-        <div className="grid gap-3 border-b border-white/8 px-4 py-3 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)] md:grid-cols-[1.55fr_.45fr_.55fr_.7fr_.6fr_.65fr_.45fr]">
+        <div className="grid gap-3 border-b border-white/8 px-4 py-3 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)] md:grid-cols-[1.55fr_.55fr_.55fr_.7fr_.6fr_.65fr_.45fr]">
           <div>Invoice</div>
           <div>Source</div>
           <div>Currency</div>
@@ -100,7 +175,7 @@ export function InvoicesBoard() {
         {rows.map((invoice) => (
           <div
             key={invoice.id}
-            className="grid gap-3 border-b border-white/8 px-4 py-4 last:border-b-0 hover:bg-white/3 md:grid-cols-[1.55fr_.45fr_.55fr_.7fr_.6fr_.65fr_.45fr]"
+            className="grid gap-3 border-b border-white/8 px-4 py-4 last:border-b-0 hover:bg-white/3 md:grid-cols-[1.55fr_.55fr_.55fr_.7fr_.6fr_.65fr_.45fr]"
           >
             <div>
               <div className="font-semibold">{invoice.title}</div>
@@ -126,7 +201,7 @@ export function InvoicesBoard() {
             <div className="text-[var(--muted)]">{invoice.dueDate}</div>
             <div className="text-right">
               <Link
-                href={invoice.source === "local" ? "/app/invoices/new" : `/app/invoices/${invoice.id}`}
+                href={invoice.source === "mock" ? `/app/invoices/${invoice.id}` : "/app/invoices/new"}
                 className="text-[0.82rem] font-semibold text-[var(--accent)]"
               >
                 Open

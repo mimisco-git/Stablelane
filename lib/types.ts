@@ -23,3 +23,22 @@ export type InvoiceDraft = {
   createdAt: string;
   status: "Draft";
 };
+
+export type RemoteInvoiceDraftRow = {
+  id: string;
+  owner_id: string;
+  title: string;
+  client_name: string;
+  client_email: string;
+  amount: number | null;
+  currency: "USDC" | "EURC";
+  payment_mode: "Milestone escrow" | "Direct payment";
+  due_date: string | null;
+  reference: string | null;
+  description: string | null;
+  milestones: InvoiceDraft["milestones"];
+  splits: InvoiceDraft["splits"];
+  status: string;
+  created_at: string;
+  updated_at: string;
+};

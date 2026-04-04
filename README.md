@@ -94,3 +94,13 @@ This stage adds the first real interactivity without needing a backend:
 
 ## Stage 3 fix
 This package fixes the client component directive on the interactive stage 3 files so the Next.js build can complete.
+
+
+## Stage 4 package
+This stage adds the first Supabase-backed foundation:
+- email sign in and sign up page
+- Supabase client helper
+- SQL schema for invoice drafts with row level security
+- invoice builder saves to Supabase when signed in
+- invoices page loads Supabase draft records and local fallback drafts
+- auth banner across app screens

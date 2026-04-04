@@ -18,3 +18,8 @@ export function writeLocalInvoices(invoices: InvoiceDraft[]) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(LOCAL_INVOICES_KEY, JSON.stringify(invoices));
 }
+
+export function addLocalInvoice(invoice: InvoiceDraft) {
+  const current = readLocalInvoices();
+  writeLocalInvoices([invoice, ...current]);
+}

@@ -13,6 +13,14 @@ export const siteConfig = {
       process.env.NEXT_PUBLIC_ARC_EXPLORER_URL || "https://testnet.arcscan.app",
     gasToken: process.env.NEXT_PUBLIC_ARC_GAS_TOKEN || "USDC",
   },
+  supabase: {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+    publishableKey:
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      "",
+  },
 };
 
 export const navLinks = [
