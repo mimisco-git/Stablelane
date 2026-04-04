@@ -11,6 +11,7 @@ import {
 } from "@/lib/mock-data";
 import { siteConfig } from "@/lib/site";
 import { OverviewDraftNotice } from "@/components/overview-draft-notice";
+import { DashboardLiveStats } from "@/components/dashboard-live-stats";
 
 export default function AppOverviewPage() {
   return (
@@ -22,6 +23,7 @@ export default function AppOverviewPage() {
     >
       <div className="grid gap-4">
         <OverviewDraftNotice />
+        <DashboardLiveStats />
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {dashboardMetrics.map((metric) => (
             <div key={metric.label} className="rounded-[18px] border border-white/8 bg-white/3 p-4">

@@ -104,3 +104,12 @@ This stage adds the first Supabase-backed foundation:
 - invoice builder saves to Supabase when signed in
 - invoices page loads Supabase draft records and local fallback drafts
 - auth banner across app screens
+
+
+## Stage 5 package
+This stage moves Stablelane further out of demo mode:
+- real workspace profile creation in Supabase
+- real clients page and client records in Supabase
+- live workspace note on overview
+- settings page that saves workspace defaults
+- updated Supabase schema for workspace_profiles and clients

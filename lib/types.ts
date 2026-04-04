@@ -42,3 +42,24 @@ export type RemoteInvoiceDraftRow = {
   created_at: string;
   updated_at: string;
 };
+
+
+export type ClientRecord = {
+  id: string;
+  workspace_name: string;
+  client_name: string;
+  client_email: string;
+  client_wallet: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type WorkspaceProfile = {
+  id: string;
+  user_id: string;
+  workspace_name: string;
+  role_type: "Freelancer" | "Agency";
+  default_currency: "USDC" | "EURC";
+  wallet_address: string | null;
+  created_at: string;
+};
