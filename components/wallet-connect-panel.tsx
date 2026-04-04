@@ -12,18 +12,17 @@ type EthereumProvider = {
   removeListener?: (event: string, handler: (...args: unknown[]) => void) => void;
 };
 
-declare global {
-  interface Window {
-    ethereum?: EthereumProvider;
-  }
-}
-
 function shortAddress(value: string) {
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
 }
 
 function toHexChainId(id: number) {
   return `0x${id.toString(16)}`;
+}
+
+function getEthereumProvider(): EthereumProvider | undefined {
+  if (typeof window === "undefined") return undefined;
+  return (window as Window & { ethereum?: EthereumProvider }).ethereum;
 }
 
 export function WalletConnectPanel() {
@@ -34,21 +33,22 @@ export function WalletConnectPanel() {
   const [busy, setBusy] = useState(false);
 
   const { ready, network, environment } = useAppEnvironment();
-  const installed = typeof window !== "undefined" && Boolean(window.ethereum);
+  const installed = Boolean(getEthereumProvider());
   const onExpectedNetwork = chainId === network.chainId;
 
   useEffect(() => {
     let mounted = true;
 
     async function syncWallet() {
-      if (!window.ethereum) {
+      const provider = getEthereumProvider();
+      if (!provider) {
         if (mounted) setChecking(false);
         return;
       }
 
       try {
-        const accounts = (await window.ethereum.request({ method: "eth_accounts" })) as string[];
-        const currentChain = (await window.ethereum.request({ method: "eth_chainId" })) as string;
+        const accounts = (await provider.request({ method: "eth_accounts" })) as string[];
+        const currentChain = (await provider.request({ method: "eth_chainId" })) as string;
         if (!mounted) return;
         setWalletAddress(accounts?.[0] || "");
         setChainId(currentChain ? parseInt(currentChain, 16) : null);
@@ -70,24 +70,25 @@ export function WalletConnectPanel() {
 
     syncWallet();
 
-    window.ethereum?.on?.("accountsChanged", handleAccountsChanged);
-    window.ethereum?.on?.("chainChanged", handleChainChanged);
+    getEthereumProvider()?.on?.("accountsChanged", handleAccountsChanged);
+    getEthereumProvider()?.on?.("chainChanged", handleChainChanged);
 
     return () => {
       mounted = false;
-      window.ethereum?.removeListener?.("accountsChanged", handleAccountsChanged);
-      window.ethereum?.removeListener?.("chainChanged", handleChainChanged);
+      getEthereumProvider()?.removeListener?.("accountsChanged", handleAccountsChanged);
+      getEthereumProvider()?.removeListener?.("chainChanged", handleChainChanged);
     };
   }, []);
 
   async function connectWallet() {
-    if (!window.ethereum) return;
+    const provider = getEthereumProvider();
+    if (!provider) return;
     setBusy(true);
     setMessage("");
     try {
-      const accounts = (await window.ethereum.request({ method: "eth_requestAccounts" })) as string[];
+      const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
       setWalletAddress(accounts?.[0] || "");
-      const currentChain = (await window.ethereum.request({ method: "eth_chainId" })) as string;
+      const currentChain = (await provider.request({ method: "eth_chainId" })) as string;
       setChainId(currentChain ? parseInt(currentChain, 16) : null);
       setMessage("Wallet connected.");
     } catch {
@@ -98,11 +99,12 @@ export function WalletConnectPanel() {
   }
 
   async function switchNetwork() {
-    if (!window.ethereum) return;
+    const provider = getEthereumProvider();
+    if (!provider) return;
     setBusy(true);
     setMessage("");
     try {
-      await window.ethereum.request({
+      await provider.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: toHexChainId(network.chainId) }],
       });
@@ -110,7 +112,7 @@ export function WalletConnectPanel() {
       setMessage("Selected environment is now active in your wallet.");
     } catch {
       try {
-        await window.ethereum.request({
+        await provider.request({
           method: "wallet_addEthereumChain",
           params: [
             {

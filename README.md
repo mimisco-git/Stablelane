@@ -232,3 +232,7 @@ This package fixes the TypeScript currency mismatch in `components/invoices-boar
 
 ## Stage 15 fix v3
 This package restores the missing `fetchInvoiceStatusSummary` export required by `components/live-dashboard-cards.tsx`.
+
+
+## Stage 15 fix v4
+This package fixes the conflicting `window.ethereum` type declaration by removing the duplicate global augmentation from `wallet-connect-panel.tsx` and using a local provider getter instead.
