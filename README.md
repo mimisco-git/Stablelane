@@ -90,3 +90,7 @@ This stage adds the first real interactivity without needing a backend:
 - local browser draft saving
 - invoices page that loads local drafts together with seeded demo data
 - overview notice showing saved draft count
+
+
+## Stage 3 fix
+This package fixes the client component directive on the interactive stage 3 files so the Next.js build can complete.
