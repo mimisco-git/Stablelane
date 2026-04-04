@@ -78,14 +78,14 @@ export function RecentInvoicesLive() {
       <EmptyState
         title="No invoices yet"
         detail="No saved invoices were found in the workspace or this browser yet."
-        action={{
+        action={
           <Link
             href="/app/invoices/new"
             className="inline-flex rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]"
           >
             Create invoice
           </Link>
-        }}
+        }
       />
     );
   }

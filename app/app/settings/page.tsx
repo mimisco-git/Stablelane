@@ -15,7 +15,7 @@ export default function SettingsPage() {
         <EnvironmentSwitcher />
 
         <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
-        <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
+          <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
           <h2 className="mb-4 text-base font-bold tracking-normal">Workspace defaults</h2>
           <WorkspaceSettingsForm />
         </section>
@@ -40,6 +40,7 @@ export default function SettingsPage() {
             ))}
           </div>
         </section>
+        </div>
       </div>
     </DashboardShell>
   );

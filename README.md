@@ -217,3 +217,10 @@ This stage adds the next layer of real product behavior:
 - stricter client-scoped invoice filtering on the invoices page
 - contract-address-aware escrow writes that respect configured factory, implementation, and release module addresses
 - invoice detail now shows the remote history timeline for workspace records
+
+
+## Stage 15 final fix
+This package includes the Stage 15 feature set plus fixes for:
+- settings page JSX nesting
+- recent invoices empty-state action syntax
+- TypeScript validation passing after those fixes
