@@ -162,3 +162,12 @@ This stage adds more real product control:
 - delete invoice drafts from workspace records or browser drafts
 - delete client records from the Clients page
 - updated Supabase policy for deleting clients
+
+
+## Stage 10 branding update
+This package adds a premium Stablelane branding layer:
+- vector brand mark for the app
+- full lockup logo asset
+- 4K PNG exports for social and marketing use
+- favicon, Apple touch icon, and Open Graph image
+- logo component wired into the Next.js app

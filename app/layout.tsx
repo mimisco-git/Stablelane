@@ -15,8 +15,24 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.siteUrl),
   title: `${siteConfig.name} | Revenue OS for Freelancers & Agencies`,
   description: siteConfig.description,
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    title: `${siteConfig.name} | Revenue OS for Freelancers & Agencies`,
+    description: siteConfig.description,
+    images: ["/og/stablelane-og.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${siteConfig.name} | Revenue OS for Freelancers & Agencies`,
+    description: siteConfig.description,
+    images: ["/og/stablelane-og.png"],
+  },
 };
 
 export default function RootLayout({
