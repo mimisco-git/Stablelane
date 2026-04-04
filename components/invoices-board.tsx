@@ -202,7 +202,7 @@ export function InvoicesBoard() {
             <div className="text-[var(--muted)]">{invoice.dueDate}</div>
             <div className="text-right">
               <Link
-                href={invoice.source === "mock" ? `/app/invoices/${invoice.id}` : "/app/invoices/new"}
+                href={invoice.source === "sample" ? `/app/invoices/${invoice.id}` : "/app/invoices/new"}
                 className="text-[0.82rem] font-semibold text-[var(--accent)]"
               >
                 Open

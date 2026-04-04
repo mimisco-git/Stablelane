@@ -135,3 +135,7 @@ This stage pushes Stablelane closer to a real operating product:
 - invoice detail can load the actual saved record by ID from Supabase or browser storage
 - invoice list uses clearer source labels: browser, workspace, and sample
 - schema includes `client_id` and `workspace_name` on `invoice_drafts`
+
+
+## Stage 7 fix
+This package fixes the TypeScript source-label comparison in `components/invoices-board.tsx` so Vercel can complete the build.
