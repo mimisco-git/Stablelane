@@ -137,7 +137,7 @@ export function InvoicesBoard() {
         title: item.title,
         clientName: item.client,
         clientId: null,
-        currency: item.currency,
+        currency: (item.currency === "EURC" ? "EURC" : "USDC") as "USDC" | "EURC",
         total: item.total,
         status: item.status as FilterKey,
         dueDate: item.dueDate,
@@ -164,7 +164,10 @@ export function InvoicesBoard() {
         {[
           { label: "Workspace drafts", value: String(remoteDrafts.length) },
           { label: "Browser drafts", value: String(localDrafts.length) },
-          { label: "Linked to clients", value: String([...remoteDrafts, ...localDrafts].filter((item) => Boolean(("client_id" in item ? item.client_id : item.clientId) || null)).length) },
+          { label: "Linked to clients", value: String([
+            ...remoteDrafts.filter((item) => Boolean(item.client_id)),
+            ...localDrafts.filter((item) => Boolean(item.clientId)),
+          ].length) },
           { label: "Client records", value: String(clients.length) },
         ].map((card) => (
           <div key={card.label} className="rounded-[18px] border border-white/8 bg-white/3 p-4">

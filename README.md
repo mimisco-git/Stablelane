@@ -224,3 +224,7 @@ This package includes the Stage 15 feature set plus fixes for:
 - settings page JSX nesting
 - recent invoices empty-state action syntax
 - TypeScript validation passing after those fixes
+
+
+## Stage 15 fix v2
+This package fixes the TypeScript currency mismatch in `components/invoices-board.tsx` for sample rows, so Vercel can complete the build.
