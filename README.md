@@ -228,3 +228,7 @@ This package includes the Stage 15 feature set plus fixes for:
 
 ## Stage 15 fix v2
 This package fixes the TypeScript currency mismatch in `components/invoices-board.tsx` for sample rows, so Vercel can complete the build.
+
+
+## Stage 15 fix v3
+This package restores the missing `fetchInvoiceStatusSummary` export required by `components/live-dashboard-cards.tsx`.

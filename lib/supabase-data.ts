@@ -479,3 +479,28 @@ export async function fetchWorkspaceAnalytics() {
     recentInvoices: invoices.slice(0, 6),
   };
 }
+
+
+export async function fetchInvoiceStatusSummary() {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const { data } = await supabase
+    .from("invoice_drafts")
+    .select("status,amount")
+    .eq("owner_id", user.id);
+
+  const rows = (data || []) as Array<{
+    status: string;
+    amount: number | null;
+  }>;
+
+  return {
+    total: rows.length,
+    draft: rows.filter((row) => row.status === "Draft").length,
+    sent: rows.filter((row) => row.status === "Sent").length,
+    escrow: rows.filter((row) => row.status === "In escrow").length,
+    completed: rows.filter((row) => row.status === "Completed").length,
+    totalValue: rows.reduce((sum, row) => sum + Number(row.amount || 0), 0),
+  };
+}
