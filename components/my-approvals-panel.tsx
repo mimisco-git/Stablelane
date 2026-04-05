@@ -9,6 +9,7 @@ import {
 } from "@/lib/supabase-data";
 import type { ReleaseApprovalRequest, RemoteInvoiceDraftRow } from "@/lib/types";
 import { EmptyState, InlineNotice, LoadingState } from "@/components/ui-state";
+import { fetchRealAccessContext, labelForAccessSource } from "@/lib/workspace-access";
 import { StatusPill } from "@/components/status-pill";
 
 type ApprovalRow = ReleaseApprovalRequest & {
@@ -27,6 +28,8 @@ export function MyApprovalsPanel() {
   const [note, setNote] = useState("");
   const [busyId, setBusyId] = useState("");
   const [message, setMessage] = useState("");
+  const [accessLabel, setAccessLabel] = useState("Preview mode");
+  const [resolvedRole, setResolvedRole] = useState<"Owner" | "Admin" | "Operator" | "Viewer">("Viewer");
 
   async function loadRows() {
     setLoading(true);
@@ -51,7 +54,25 @@ export function MyApprovalsPanel() {
   }
 
   useEffect(() => {
-    loadRows();
+    let mounted = true;
+
+    async function boot() {
+      try {
+        const access = await fetchRealAccessContext();
+        if (mounted) {
+          setAccessLabel(labelForAccessSource(access.source));
+          setResolvedRole(access.role);
+        }
+      } catch {
+        // ignore
+      }
+      await loadRows();
+    }
+
+    boot();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const summary = useMemo(() => {
@@ -106,11 +127,17 @@ export function MyApprovalsPanel() {
       </div>
 
       <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
-        <div className="mb-4">
-          <h2 className="mb-1 text-base font-bold tracking-normal">Approver inbox</h2>
-          <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-            This page is designed for the signed-in approver, not only the workspace owner. Approve or reject directly from here.
-          </p>
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="mb-1 text-base font-bold tracking-normal">Approver inbox</h2>
+            <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
+              This page is designed for the signed-in approver, not only the workspace owner. Approve or reject directly from here.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusPill label={resolvedRole} tone={resolvedRole === "Owner" ? "done" : resolvedRole === "Admin" ? "live" : resolvedRole === "Operator" ? "lock" : "neutral"} />
+            <StatusPill label={accessLabel} tone="neutral" />
+          </div>
         </div>
 
         <label className="mb-4 grid gap-2 text-[0.82rem] text-[var(--muted)]">

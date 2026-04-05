@@ -7,6 +7,7 @@ import { sendNativeTransaction, ensureSelectedNetwork, getActiveWalletAddress } 
 import { useAppEnvironment } from "@/lib/use-app-environment";
 import { getEscrowContractConfig, getEscrowExplorerLink } from "@/lib/contracts";
 import { canFinalizeRelease, canPrepareFunding, readActingRole } from "@/lib/role-session";
+import { fetchRealAccessContext } from "@/lib/workspace-access";
 import { InlineNotice } from "@/components/ui-state";
 import { pushActivityItem } from "@/lib/activity-feed";
 
@@ -36,6 +37,8 @@ export function EscrowTransactionPanel({
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [actingRole, setActingRole] = useState("Owner");
+  const [realRole, setRealRole] = useState<"Owner" | "Admin" | "Operator" | "Viewer" | "">("");
+  const effectiveRole = (realRole || actingRole) as "Owner" | "Admin" | "Operator" | "Viewer";
   const [approvalGate, setApprovalGate] = useState({
     total: 0,
     pending: 0,
@@ -55,16 +58,33 @@ export function EscrowTransactionPanel({
   }
 
   useEffect(() => {
-    setActingRole(readActingRole());
-    loadGate();
+    let mounted = true;
+
+    async function boot() {
+      setActingRole(readActingRole());
+      try {
+        const access = await fetchRealAccessContext();
+        if (mounted && access.hasDatabaseWorkspace) {
+          setRealRole(access.role);
+        }
+      } catch {
+        // ignore role resolution failure and keep preview fallback
+      }
+      await loadGate();
+    }
+
+    boot();
+    return () => {
+      mounted = false;
+    };
   }, [invoiceId]);
 
   async function createEscrowRecord() {
     setBusy(true);
     setMessage("");
     try {
-      if (!canPrepareFunding(readActingRole())) {
-        throw new Error(`${readActingRole()} cannot create escrow records in this preview.`);
+      if (!canPrepareFunding(effectiveRole)) {
+        throw new Error(`${effectiveRole} cannot create escrow records in this access state.`);
       }
       if (!contractConfig.ready) {
         throw new Error("Configure the escrow factory, implementation, and release module addresses first.");
@@ -105,8 +125,8 @@ export function EscrowTransactionPanel({
     setBusy(true);
     setMessage("");
     try {
-      if (!canPrepareFunding(readActingRole())) {
-        throw new Error(`${readActingRole()} cannot prepare escrow funding in this preview.`);
+      if (!canPrepareFunding(effectiveRole)) {
+        throw new Error(`${effectiveRole} cannot prepare escrow funding in this access state.`);
       }
       if (!contractConfig.ready) throw new Error("Contract addresses are not configured yet.");
       const targetAddress = escrowAddress || contractConfig.implementationAddress;
@@ -163,8 +183,8 @@ export function EscrowTransactionPanel({
     setBusy(true);
     setMessage("");
     try {
-      if (!canFinalizeRelease(readActingRole())) {
-        throw new Error(`${readActingRole()} cannot request release in this preview.`);
+      if (!canFinalizeRelease(effectiveRole)) {
+        throw new Error(`${effectiveRole} cannot request release in this access state.`);
       }
       if (!contractConfig.ready) throw new Error("Contract addresses are not configured yet.");
 
@@ -194,8 +214,8 @@ export function EscrowTransactionPanel({
     setBusy(true);
     setMessage("");
     try {
-      if (!canFinalizeRelease(readActingRole())) {
-        throw new Error(`${readActingRole()} cannot finalize release in this preview.`);
+      if (!canFinalizeRelease(effectiveRole)) {
+        throw new Error(`${effectiveRole} cannot finalize release in this access state.`);
       }
       if (!contractConfig.ready) throw new Error("Contract addresses are not configured yet.");
       if (!approvalGate.allApproved) {
@@ -243,6 +263,7 @@ export function EscrowTransactionPanel({
   return (
     <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
       <div className="mb-4">
+        <div className="mb-2 flex flex-wrap items-center gap-2"><span className="rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-3 py-2 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">Resolved role: {effectiveRole}</span></div>
         <h2 className="mb-1 text-base font-bold tracking-normal">Escrow transaction wiring</h2>
         <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
           This layer now uses the configured contract path so funding and release state are tied to real environment addresses, not only placeholders.

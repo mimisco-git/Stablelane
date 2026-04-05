@@ -23,7 +23,7 @@ export function ActingRoleSwitcher() {
       <div className="mb-4">
         <h2 className="mb-1 text-base font-bold tracking-normal">Acting role preview</h2>
         <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-          Preview how approval and release controls behave for different workspace roles before full server-enforced permissions are added.
+          Preview how approval and release controls behave for different roles. When Stablelane can resolve a real database-backed membership, that real role should take priority over this preview.
         </p>
       </div>
 

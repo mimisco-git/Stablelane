@@ -10,6 +10,7 @@ import {
   updateReleaseApprovalRequest,
 } from "@/lib/supabase-data";
 import { canCreateApprovals, readActingRole } from "@/lib/role-session";
+import { fetchRealAccessContext } from "@/lib/workspace-access";
 import { EmptyState, InlineNotice, LoadingState } from "@/components/ui-state";
 import { StatusPill } from "@/components/status-pill";
 
@@ -45,6 +46,8 @@ export function ReleaseApprovalPanel({
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [actingRole, setActingRole] = useState("Owner");
+  const [realRole, setRealRole] = useState<"Owner" | "Admin" | "Operator" | "Viewer" | "">("");
+  const effectiveRole = (realRole || actingRole) as "Owner" | "Admin" | "Operator" | "Viewer";
   const [gateSummary, setGateSummary] = useState({
     total: 0,
     pending: 0,
@@ -73,8 +76,25 @@ export function ReleaseApprovalPanel({
   }
 
   useEffect(() => {
-    setActingRole(readActingRole());
-    loadAll();
+    let mounted = true;
+
+    async function boot() {
+      setActingRole(readActingRole());
+      try {
+        const access = await fetchRealAccessContext();
+        if (mounted && access.hasDatabaseWorkspace) {
+          setRealRole(access.role);
+        }
+      } catch {
+        // ignore role resolution failure and keep preview fallback
+      }
+      await loadAll();
+    }
+
+    boot();
+    return () => {
+      mounted = false;
+    };
   }, [invoiceId]);
 
   const pendingCount = useMemo(() => requests.filter((item) => item.status === "Pending").length, [requests]);
@@ -85,8 +105,8 @@ export function ReleaseApprovalPanel({
   }
 
   async function createRequestSet() {
-    if (!canCreateApprovals(readActingRole())) {
-      setMessage(`${readActingRole()} cannot create release approvals in this preview.`);
+    if (!canCreateApprovals(effectiveRole)) {
+      setMessage(`${effectiveRole} cannot create release approvals in this access state.`);
       return;
     }
 
@@ -128,8 +148,8 @@ export function ReleaseApprovalPanel({
   }
 
   async function decide(requestId: string, nextStatus: "Approved" | "Rejected") {
-    if (!canCreateApprovals(readActingRole())) {
-      setMessage(`${readActingRole()} cannot decide release approvals in this preview.`);
+    if (!canCreateApprovals(effectiveRole)) {
+      setMessage(`${effectiveRole} cannot decide release approvals in this access state.`);
       return;
     }
 
@@ -169,7 +189,7 @@ export function ReleaseApprovalPanel({
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill label={`${pendingCount} pending`} tone={pendingCount ? "lock" : "neutral"} />
           <StatusPill label={`${approvedCount} approved`} tone={approvedCount ? "done" : "neutral"} />
-          <StatusPill label={`acting as ${actingRole}`} tone={actingRole === "Viewer" ? "neutral" : actingRole === "Operator" ? "lock" : "live"} />
+          <StatusPill label={`role ${effectiveRole}`} tone={effectiveRole === "Viewer" ? "neutral" : effectiveRole === "Operator" ? "lock" : "live"} />
         </div>
       </div>
 
