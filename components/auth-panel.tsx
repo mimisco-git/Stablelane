@@ -39,19 +39,86 @@ function getEthereumProvider(): EthereumProvider | undefined {
   return (window as Window & { ethereum?: EthereumProvider }).ethereum;
 }
 
-function WalletIcon({ label }: { label: string }) {
-  const base = "flex h-9 w-9 items-center justify-center rounded-full text-[0.82rem] font-black";
-  if (label.toLowerCase().includes("meta")) return <div className={`${base} bg-[rgba(249,115,22,.16)] text-[#fb923c]`}>M</div>;
-  if (label.toLowerCase().includes("coin")) return <div className={`${base} bg-[rgba(59,130,246,.16)] text-[#60a5fa]`}>C</div>;
-  return <div className={`${base} bg-[rgba(168,85,247,.16)] text-[#c084fc]`}>W</div>;
+/* ── icon helpers ──────────────────────────────────────────────── */
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4"/>
+      <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853"/>
+      <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/>
+      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#EA4335"/>
+    </svg>
+  );
 }
 
-function SocialIcon({ label }: { label: "Google" | "Apple" | "X" }) {
-  const base = "flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[.04] text-sm font-black";
-  if (label === "Google") return <div className={`${base} text-[#fbbc05]`}>G</div>;
-  if (label === "Apple") return <div className={`${base} text-white`}></div>;
-  return <div className={`${base} text-white`}>X</div>;
+function AppleIcon() {
+  return (
+    <svg width="16" height="18" viewBox="0 0 16 18" fill="currentColor">
+      <path d="M13.173 9.545c-.022-2.177 1.775-3.23 1.856-3.28-1.014-1.48-2.588-1.682-3.143-1.704-1.334-.135-2.61.78-3.286.78-.674 0-1.713-.762-2.82-.74C4.2 4.623 2.7 5.576 1.875 7.062.183 10.076 1.443 14.57 3.073 17.03c.812 1.207 1.775 2.559 3.042 2.51 1.22-.05 1.683-.797 3.156-.797 1.474 0 1.887.797 3.173.773 1.313-.022 2.144-1.23 2.948-2.443.934-1.402 1.313-2.775 1.335-2.845-.03-.012-2.545-.983-2.554-3.683Z"/>
+      <path d="M10.905 2.835C11.563 2.027 12.01.93 11.882 0c-.951.04-2.121.64-2.804 1.43-.61.7-1.15 1.83-1.005 2.905 1.065.082 2.156-.543 2.832-1.5Z"/>
+    </svg>
+  );
 }
+
+function XIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M9.294 6.928 14.818 0h-1.309L8.7 6.031 4.548 0H0l5.8 8.445L0 15.169h1.309l5.072-5.9 4.053 5.9H16L9.294 6.928ZM7.01 8.521l-.588-.84-4.676-6.69h2.014l3.775 5.4.588.84 4.906 7.016H10.83L7.01 8.521Z"/>
+    </svg>
+  );
+}
+
+function MetaMaskIcon() {
+  return (
+    <svg width="20" height="18" viewBox="0 0 20 18" fill="none">
+      <path d="M18.7 0 11.04 5.8l1.44-3.42L18.7 0Z" fill="#E17726"/>
+      <path d="M1.3 0l7.6 5.86L7.52 2.38 1.3 0Z" fill="#E27625"/>
+      <path d="M16.02 12.84l-2.04 3.12 4.36 1.2 1.25-4.25-3.57-.07ZM.43 12.91l1.24 4.25 4.35-1.2-2.04-3.12-3.55.07Z" fill="#E27625"/>
+      <path d="M5.8 7.82 4.6 9.64l4.31.2-.15-4.63L5.8 7.82ZM14.2 7.82l-3-2.67-.1 4.69 4.31-.2-1.21-1.82Z" fill="#E27625"/>
+      <path d="M6.02 15.96l2.58-1.24-2.22-1.73-.36 2.97ZM11.4 14.72l2.58 1.24-.36-2.97-2.22 1.73Z" fill="#E27625"/>
+    </svg>
+  );
+}
+
+function WalletIcon({ label }: { label: string }) {
+  if (label.toLowerCase().includes("meta")) return <MetaMaskIcon />;
+  if (label.toLowerCase().includes("coin")) {
+    return (
+      <span style={{ display: "flex", width: 20, height: 20, borderRadius: "50%", background: "#0052FF", alignItems: "center", justifyContent: "center" }}>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="white"><circle cx="5" cy="5" r="4" fill="white"/><circle cx="5" cy="5" r="2" fill="#0052FF"/></svg>
+      </span>
+    );
+  }
+  return (
+    <span style={{ display: "flex", width: 20, height: 20, borderRadius: "50%", background: "#3B99FC", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "white" }}>W</span>
+  );
+}
+
+function EyeIcon({ open }: { open: boolean }) {
+  return open ? (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  ) : (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+/* ── main component ────────────────────────────────────────────── */
 
 export function AuthPanel() {
   const router = useRouter();
@@ -59,6 +126,7 @@ export function AuthPanel() {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const socialProviders = useMemo(() => getSocialProviderOptions().filter((item) => item.enabled), []);
   const walletProviders = useMemo(() => getWalletProviderOptions(), []);
+
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -69,6 +137,7 @@ export function AuthPanel() {
   const [activeEmail, setActiveEmail] = useState("");
   const [loading, setLoading] = useState("");
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
 
   const nextPath = sanitizeNextPath(searchParams.get("next") || "/app");
 
@@ -97,11 +166,7 @@ export function AuthPanel() {
 
     load();
 
-    if (!supabase) {
-      return () => {
-        mounted = false;
-      };
-    }
+    if (!supabase) return () => { mounted = false; };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setActiveEmail(session?.user?.email || "");
@@ -109,22 +174,17 @@ export function AuthPanel() {
       setVerifiedWallet(readVerifiedWallet());
     });
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => { mounted = false; subscription.unsubscribe(); };
   }, [nextPath, supabase]);
 
-  async function handlePasswordSubmit() {
-    if (!supabase) {
-      setMessage("Supabase environment variables are missing. Add them first.");
-      return;
-    }
+  function showMessage(text: string, type: "success" | "error" = "success") {
+    setMessage(text);
+    setMessageType(type);
+  }
 
-    if (!email || !password) {
-      setMessage("Enter your email and password first.");
-      return;
-    }
+  async function handlePasswordSubmit() {
+    if (!supabase) { showMessage("Authentication is not configured. Add your Supabase environment variables.", "error"); return; }
+    if (!email || !password) { showMessage("Please enter your email and password.", "error"); return; }
 
     setLoading("password");
     setMessage("");
@@ -133,47 +193,30 @@ export function AuthPanel() {
 
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${getBaseUrl()}/auth/callback`,
-          },
-        });
+        const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${getBaseUrl()}/auth/callback` } });
         if (error) throw error;
         writeAccessMode("email");
         writePreviewAccessEnabled(false);
-        setMessage("Account created. Check your email to confirm the account, then come back and continue.");
+        showMessage("Account created. Check your inbox to confirm, then sign in.", "success");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         writeAccessMode("email");
         writePreviewAccessEnabled(false);
         try { await saveLinkedAuthMethod("email_password"); } catch {}
-        setMessage("Signed in successfully. Redirecting to your workspace...");
+        showMessage("Signed in. Taking you to your workspace...", "success");
         setTimeout(() => router.push(nextPath), 700);
       }
     } catch (error) {
-      const text = error instanceof Error ? error.message : "Authentication failed.";
-      setMessage(text);
+      showMessage(error instanceof Error ? error.message : "Authentication failed.", "error");
     } finally {
       setLoading("");
     }
   }
 
   async function handleMagicLink() {
-    if (!supabase) {
-      setMessage("Supabase environment variables are missing. Add them first.");
-      return;
-    }
-
-    if (!email) {
-      setMessage("Enter your email first.");
-      return;
-    }
+    if (!supabase) { showMessage("Authentication is not configured. Add your Supabase environment variables.", "error"); return; }
+    if (!email) { showMessage("Enter your email address first.", "error"); return; }
 
     setLoading("magic");
     setMessage("");
@@ -181,33 +224,20 @@ export function AuthPanel() {
     writePostAuthNextPath(nextPath);
 
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${getBaseUrl()}/auth/callback`,
-        },
-      });
+      const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${getBaseUrl()}/auth/callback` } });
       if (error) throw error;
       writeAccessMode("email");
       writePreviewAccessEnabled(false);
-      setMessage(
-        mode === "signup"
-          ? "Magic signup link sent. Open your email to finish joining."
-          : "Magic sign-in link sent. Open your email to continue securely."
-      );
+      showMessage("Magic link sent. Check your inbox and click the link to continue.", "success");
     } catch (error) {
-      const text = error instanceof Error ? error.message : "Magic link failed.";
-      setMessage(text);
+      showMessage(error instanceof Error ? error.message : "Could not send magic link.", "error");
     } finally {
       setLoading("");
     }
   }
 
   async function handleOAuth(provider: SocialProviderKey) {
-    if (!supabase) {
-      setMessage("Supabase environment variables are missing. Add them first.");
-      return;
-    }
+    if (!supabase) { showMessage("Authentication is not configured.", "error"); return; }
 
     setLoading(provider);
     setMessage("");
@@ -215,29 +245,19 @@ export function AuthPanel() {
     writePostAuthNextPath(nextPath);
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${getBaseUrl()}/auth/callback`,
-        },
-      });
+      const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${getBaseUrl()}/auth/callback` } });
       if (error) throw error;
       writeAccessMode("email");
       writePreviewAccessEnabled(false);
     } catch (error) {
-      const text = error instanceof Error ? error.message : "OAuth sign-in failed.";
-      setMessage(text);
+      showMessage(error instanceof Error ? error.message : "OAuth sign-in failed.", "error");
       setLoading("");
     }
   }
 
   async function handleWalletVerify() {
     const provider = getEthereumProvider();
-
-    if (!provider) {
-      setMessage("No supported browser wallet was detected. Use email or preview mode, or install a wallet first.");
-      return;
-    }
+    if (!provider) { showMessage("No browser wallet detected. Install MetaMask or Coinbase Wallet and try again.", "error"); return; }
 
     setLoading("wallet");
     setMessage("");
@@ -247,46 +267,22 @@ export function AuthPanel() {
     try {
       const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
       const selected = accounts?.[0] || "";
-      if (!selected) throw new Error("No wallet account was returned.");
+      if (!selected) throw new Error("No account returned from wallet.");
 
       const chainIdHex = (await provider.request({ method: "eth_chainId" })) as string;
       const chainId = Number.parseInt(chainIdHex, 16);
 
-      const nonceResponse = await fetch("/api/wallet-auth/nonce", {
-        method: "POST",
-      });
+      const nonceResponse = await fetch("/api/wallet-auth/nonce", { method: "POST" });
       const challenge = await nonceResponse.json();
 
       if (!challenge?.nonce || !challenge?.issuedAt || !challenge?.domain || !challenge?.uri) {
-        throw new Error("Wallet challenge could not be created.");
+        throw new Error("Could not create wallet challenge.");
       }
 
-      const messageToSign = buildWalletAuthMessage({
-        address: selected,
-        nonce: challenge.nonce,
-        domain: challenge.domain,
-        uri: challenge.uri,
-        chainId,
-        issuedAt: challenge.issuedAt,
-      });
+      const messageToSign = buildWalletAuthMessage({ address: selected, nonce: challenge.nonce, domain: challenge.domain, uri: challenge.uri, chainId, issuedAt: challenge.issuedAt });
+      const signature = (await provider.request({ method: "personal_sign", params: [messageToSign, selected] })) as string;
 
-      const signature = (await provider.request({
-        method: "personal_sign",
-        params: [messageToSign, selected],
-      })) as string;
-
-      const verifyResponse = await fetch("/api/wallet-auth/verify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          address: selected,
-          signature,
-          chainId,
-        }),
-      });
-
+      const verifyResponse = await fetch("/api/wallet-auth/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ address: selected, signature, chainId }) });
       const verifyJson = await verifyResponse.json();
 
       if (!verifyResponse.ok || !verifyJson?.ok || !verifyJson?.address) {
@@ -299,11 +295,10 @@ export function AuthPanel() {
       writeVerifiedWallet(verifyJson.address);
       setWalletHint(selected);
       setVerifiedWallet(verifyJson.address);
-      setMessage(`Wallet verified as ${shortWallet(verifyJson.address)}. This is now stronger than a plain wallet connect step.`);
+      showMessage(`Wallet verified. Redirecting to your workspace...`, "success");
       setTimeout(() => router.push(nextPath), 700);
     } catch (error) {
-      const text = error instanceof Error ? error.message : "Wallet verification failed.";
-      setMessage(text);
+      showMessage(error instanceof Error ? error.message : "Wallet verification failed.", "error");
     } finally {
       setLoading("");
     }
@@ -315,236 +310,396 @@ export function AuthPanel() {
   }
 
   const currentAccess = activeEmail || verifiedWallet || walletHint;
+  const isLoading = Boolean(loading);
 
+  /* ── render ──────────────────────────────────────────────────── */
   return (
-    <div className="grid gap-4 xl:grid-cols-[1.04fr_.96fr]">
-      <section className="rounded-[30px] border border-white/8 bg-[linear-gradient(180deg,rgba(16,27,20,.94),rgba(10,18,13,.86))] p-6 shadow-[0_24px_80px_rgba(0,0,0,.3)]">
-        <div className="mb-4 inline-flex items-center rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-3 py-2 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-          Unified access
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr",
+        gap: 0,
+        minHeight: "calc(100vh - 6rem)",
+      }}
+      className="xl:grid-cols-[1fr_520px]"
+    >
+      {/* LEFT: branding panel */}
+      <div
+        className="hidden xl:flex"
+        style={{
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "3rem",
+          borderRadius: "28px 0 0 28px",
+          border: "0.5px solid rgba(255,255,255,0.07)",
+          borderRight: "none",
+          background: "linear-gradient(160deg, rgba(15,26,18,0.98) 0%, rgba(8,14,10,0.96) 100%)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Background glow */}
+        <div style={{ position: "absolute", top: "-80px", left: "-80px", width: "320px", height: "320px", borderRadius: "50%", background: "radial-gradient(circle, rgba(201,255,96,0.07), transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "-60px", right: "-40px", width: "280px", height: "280px", borderRadius: "50%", background: "radial-gradient(circle, rgba(103,213,138,0.06), transparent 70%)", pointerEvents: "none" }} />
+
+        {/* Logo */}
+        <div style={{ position: "relative" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "3rem" }}>
+            <span style={{ fontFamily: "var(--font-cormorant), Georgia, serif", fontSize: "1.6rem", fontWeight: 600, letterSpacing: "-0.02em", color: "#ecf4ec" }}>
+              Stablelane<span style={{ color: "#c9ff60" }}>.</span>
+            </span>
+          </div>
+
+          <p style={{ fontFamily: "var(--font-cormorant), Georgia, serif", fontSize: "clamp(2rem, 3.5vw, 3rem)", fontWeight: 300, lineHeight: 1.08, letterSpacing: "-0.04em", color: "#ecf4ec", maxWidth: "380px", marginBottom: "2rem" }}>
+            The revenue OS for<br /><em style={{ color: "#c9ff60", fontStyle: "italic" }}>internet-native</em><br />businesses.
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {[
+              "Invoice clients in USDC or EURC",
+              "Lock funds in milestone escrow",
+              "Split payouts to collaborators automatically",
+              "Build a revenue trail that unlocks credit",
+            ].map((item) => (
+              <div key={item} style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(201,255,96,0.12)", border: "0.5px solid rgba(201,255,96,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#c9ff60" }}>
+                  <CheckIcon />
+                </div>
+                <span style={{ fontSize: "0.875rem", color: "#a5b4aa", lineHeight: 1.5 }}>{item}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <h1 className="mb-3 font-[family-name:var(--font-cormorant)] text-[clamp(2.8rem,5vw,4.5rem)] leading-none tracking-[-0.055em] text-[var(--text)]">
-          One premium login, now with production-ready flow recovery.
-        </h1>
-        <p className="mb-6 max-w-2xl text-[0.96rem] leading-7 text-[var(--muted)]">
-          Email, wallet, and social entry now live on one screen, and the auth flow now remembers where the user wanted to go after successful access.
-        </p>
-
-        <div className="mb-5 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setMode("signin")}
-            className={`rounded-full px-4 py-2 text-[0.86rem] font-semibold ${
-              mode === "signin"
-                ? "border border-[var(--line)] bg-[rgba(201,255,96,.08)] text-[var(--accent)]"
-                : "border border-white/8 bg-white/3 text-[var(--muted)]"
-            }`}
-          >
-            Sign in
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("signup")}
-            className={`rounded-full px-4 py-2 text-[0.86rem] font-semibold ${
-              mode === "signup"
-                ? "border border-[var(--line)] bg-[rgba(201,255,96,.08)] text-[var(--accent)]"
-                : "border border-white/8 bg-white/3 text-[var(--muted)]"
-            }`}
-          >
-            Create account
-          </button>
+        {/* Bottom stat */}
+        <div style={{ position: "relative", padding: "1.25rem 1.5rem", borderRadius: "16px", border: "0.5px solid rgba(201,255,96,0.14)", background: "rgba(201,255,96,0.04)" }}>
+          <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#c9ff60", marginBottom: "0.4rem" }}>Built on Arc</div>
+          <p style={{ fontSize: "0.85rem", color: "#a5b4aa", lineHeight: 1.6 }}>
+            Sub-second finality. ~$0.01 gas fees. USDC as native gas. Multichain settlement via Circle CCTP.
+          </p>
         </div>
+      </div>
 
+      {/* RIGHT: auth form */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          padding: "2.5rem",
+          borderRadius: "28px",
+          border: "0.5px solid rgba(255,255,255,0.07)",
+          background: "linear-gradient(180deg, rgba(16,27,20,0.94) 0%, rgba(10,18,13,0.9) 100%)",
+          backdropFilter: "blur(20px)",
+        }}
+        className="xl:rounded-l-none xl:rounded-r-[28px]"
+      >
+        {/* Existing session card */}
         {currentAccess ? (
-          <div className="mb-5 rounded-[22px] border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4">
-            <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--accent)]">Current access</div>
-            <div className="mb-2 text-lg font-semibold text-[var(--text)]">
+          <div style={{ marginBottom: "1.5rem", padding: "1rem 1.25rem", borderRadius: "16px", border: "0.5px solid rgba(201,255,96,0.2)", background: "rgba(201,255,96,0.05)" }}>
+            <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#c9ff60", marginBottom: "0.3rem" }}>Active session</div>
+            <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "#ecf4ec", marginBottom: "0.75rem" }}>
               {activeEmail || shortWallet(verifiedWallet || walletHint)}
             </div>
-            <p className="mb-3 text-[0.84rem] leading-6 text-[var(--accent)]">
-              {activeEmail
-                ? "You already have an active email session. Continue straight into the workspace."
-                : verifiedWallet
-                  ? "A verified wallet session already exists in this browser."
-                  : "A wallet hint exists in this browser, but wallet verification is still better for stronger access."}
-            </p>
             <button
               type="button"
               onClick={continueExistingSession}
-              className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]"
+              style={{ width: "100%", padding: "0.7rem 1rem", borderRadius: "10px", background: "#c9ff60", border: "none", color: "#08100b", fontSize: "0.875rem", fontWeight: 700, cursor: "pointer", letterSpacing: "0.01em" }}
             >
               Continue to workspace
             </button>
           </div>
         ) : null}
 
-        <div className="grid gap-3">
-          <label className="grid gap-2 text-[0.84rem] text-[var(--muted)]">
-            <span>Email</span>
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@company.com"
-              className="rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-[var(--text)] outline-none placeholder:text-[var(--muted-2)]"
-            />
-          </label>
-
-          <label className="grid gap-2 text-[0.84rem] text-[var(--muted)]">
-            <span>Password</span>
-            <div className="flex items-center gap-2 rounded-2xl border border-white/8 bg-white/3 px-3 py-2">
-              <input
-                type={passwordVisible ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={mode === "signup" ? "Create a secure password" : "Enter your password"}
-                className="w-full bg-transparent px-1 py-1 text-[var(--text)] outline-none placeholder:text-[var(--muted-2)]"
-              />
-              <button
-                type="button"
-                onClick={() => setPasswordVisible((value) => !value)}
-                className="rounded-full border border-white/8 bg-white/3 px-3 py-2 text-[0.75rem] font-semibold text-[var(--text)]"
-              >
-                {passwordVisible ? "Hide" : "Show"}
-              </button>
-            </div>
-          </label>
-
-          <label className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-[0.82rem] text-[var(--muted)]">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-            />
-            <span>{rememberMe ? "Keep this workspace remembered on this device" : "Use a lighter session on this device"}</span>
-          </label>
-
-          <button
-            type="button"
-            onClick={handlePasswordSubmit}
-            disabled={Boolean(loading)}
-            className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.96rem] font-bold text-[#08100b] disabled:opacity-70"
-          >
-            {loading === "password" ? "Working..." : mode === "signup" ? "Create account" : "Sign in"}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleMagicLink}
-            disabled={Boolean(loading)}
-            className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.9rem] font-semibold text-[var(--text)] disabled:opacity-70"
-          >
-            {loading === "magic" ? "Sending..." : mode === "signup" ? "Join with magic link" : "Sign in with magic link"}
-          </button>
-
-          <div className="relative py-1">
-            <div className="absolute inset-x-0 top-1/2 h-px bg-white/10" />
-            <div className="relative mx-auto flex w-fit items-center justify-center bg-[rgb(12,18,14)] px-4 text-[0.82rem] text-[var(--muted)]">
-              or continue with
-            </div>
-          </div>
-
-          {walletProviders.length ? (
-            <div className="grid gap-2 md:grid-cols-2">
-              {walletProviders.map((wallet) => (
-                <button
-                  key={wallet.key}
-                  type="button"
-                  onClick={handleWalletVerify}
-                  disabled={Boolean(loading)}
-                  className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-left transition hover:bg-white/5 disabled:opacity-70"
-                >
-                  <WalletIcon label={wallet.label} />
-                  <div>
-                    <div className="text-[0.9rem] font-semibold text-[var(--text)]">{wallet.label}</div>
-                    <div className="text-[0.72rem] text-[var(--muted)]">Verified wallet access</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-white/8 bg-white/3 p-4 text-[0.84rem] leading-6 text-[var(--muted)]">
-              No supported browser wallet is detected on this device right now.
-            </div>
-          )}
-
-          {socialProviders.length ? (
-            <div className="grid gap-2 md:grid-cols-3">
-              {socialProviders.map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => handleOAuth(item.key)}
-                  disabled={Boolean(loading)}
-                  className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-left transition hover:bg-white/5 disabled:opacity-70"
-                >
-                  <SocialIcon label={item.label} />
-                  <div>
-                    <div className="text-[0.9rem] font-semibold text-[var(--text)]">Continue with {item.label}</div>
-                    <div className="text-[0.72rem] text-[var(--muted)]">Enabled provider</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-white/8 bg-white/3 p-4 text-[0.84rem] leading-6 text-[var(--muted)]">
-              No social providers are enabled yet. Turn them on in Supabase and Vercel first.
-            </div>
-          )}
-
-          <div className="flex flex-wrap gap-2">
-            <Link href="/app" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.86rem] font-semibold text-[var(--text)]">
-              Browse in preview
-            </Link>
-            <Link href="/app/identity" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.86rem] font-semibold text-[var(--text)]">
-              Open identity center
-            </Link>
-          </div>
-
-          {message ? (
-            <div className={`rounded-2xl px-4 py-3 text-[0.84rem] leading-6 ${
-              message.toLowerCase().includes("failed") || message.toLowerCase().includes("missing") || message.toLowerCase().includes("no supported")
-                ? "border border-white/8 bg-white/3 text-[var(--muted)]"
-                : "border border-[var(--line)] bg-[rgba(201,255,96,.08)] text-[var(--accent)]"
-            }`}>
-              {message}
-            </div>
-          ) : null}
-        </div>
-      </section>
-
-      <aside className="rounded-[30px] border border-white/8 bg-white/3 p-6">
-        <div className="mb-4 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-          Production readiness
-        </div>
-
-        <div className="grid gap-3">
-          <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-            <div className="mb-2 font-semibold text-[var(--text)]">Post-login recovery</div>
-            <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
-              The auth flow now remembers where the user was trying to go before sign-in, then routes them back after callback completion.
-            </div>
-          </div>
-          <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-            <div className="mb-2 font-semibold text-[var(--text)]">Callback finalization</div>
-            <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
-              Magic link and OAuth methods are now finalized after callback, not only before redirect, so linked methods are tracked more reliably.
-            </div>
-          </div>
-          <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-            <div className="mb-2 font-semibold text-[var(--text)]">Preview is explicit</div>
-            <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
-              The workspace gate now treats preview mode as an explicit browser-level choice instead of silently allowing access without any state.
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4">
-          <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--accent)]">Next destination</div>
-          <p className="text-[0.84rem] leading-6 text-[var(--accent)]">
-            After signing in, you will be redirected to {nextPath}.
+        {/* Heading */}
+        <div style={{ marginBottom: "1.75rem" }}>
+          <h1 style={{ fontFamily: "var(--font-cormorant), Georgia, serif", fontSize: "2rem", fontWeight: 400, letterSpacing: "-0.04em", color: "#ecf4ec", lineHeight: 1.1, marginBottom: "0.4rem" }}>
+            {mode === "signin" ? "Welcome back." : "Create your account."}
+          </h1>
+          <p style={{ fontSize: "0.875rem", color: "#a5b4aa", lineHeight: 1.6 }}>
+            {mode === "signin"
+              ? "Sign in to access your workspace, invoices, and escrows."
+              : "Join Stablelane. Your first 12 months have zero platform fees."}
           </p>
         </div>
-      </aside>
+
+        {/* Mode toggle */}
+        <div style={{ display: "flex", background: "rgba(255,255,255,0.04)", borderRadius: "12px", padding: "3px", marginBottom: "1.5rem", border: "0.5px solid rgba(255,255,255,0.07)" }}>
+          {(["signin", "signup"] as AuthMode[]).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => { setMode(m); setMessage(""); }}
+              style={{
+                flex: 1,
+                padding: "0.55rem 0",
+                borderRadius: "9px",
+                border: mode === m ? "0.5px solid rgba(201,255,96,0.2)" : "none",
+                background: mode === m ? "rgba(201,255,96,0.08)" : "transparent",
+                color: mode === m ? "#c9ff60" : "#85938b",
+                fontSize: "0.85rem",
+                fontWeight: mode === m ? 700 : 500,
+                cursor: "pointer",
+                letterSpacing: "0.01em",
+                transition: "all 0.15s",
+              }}
+            >
+              {m === "signin" ? "Sign in" : "Create account"}
+            </button>
+          ))}
+        </div>
+
+        {/* Email input */}
+        <div style={{ marginBottom: "0.75rem" }}>
+          <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, letterSpacing: "0.04em", color: "#85938b", textTransform: "uppercase", marginBottom: "0.4rem" }}>
+            Email
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handlePasswordSubmit()}
+            placeholder="you@company.com"
+            style={{
+              width: "100%",
+              padding: "0.8rem 1rem",
+              borderRadius: "12px",
+              border: "0.5px solid rgba(255,255,255,0.1)",
+              background: "rgba(255,255,255,0.04)",
+              color: "#ecf4ec",
+              fontSize: "0.95rem",
+              outline: "none",
+              transition: "border-color 0.15s",
+              boxSizing: "border-box",
+            }}
+            onFocus={(e) => { e.target.style.borderColor = "rgba(201,255,96,0.35)"; }}
+            onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; }}
+          />
+        </div>
+
+        {/* Password input */}
+        <div style={{ marginBottom: "0.5rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
+            <label style={{ fontSize: "0.78rem", fontWeight: 600, letterSpacing: "0.04em", color: "#85938b", textTransform: "uppercase" }}>
+              Password
+            </label>
+            {mode === "signin" && (
+              <span style={{ fontSize: "0.78rem", color: "#c9ff60", cursor: "pointer", fontWeight: 500 }}>
+                Forgot password?
+              </span>
+            )}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.8rem 1rem", borderRadius: "12px", border: "0.5px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", transition: "border-color 0.15s" }}
+            onFocus={() => {}}
+          >
+            <input
+              type={passwordVisible ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handlePasswordSubmit()}
+              placeholder={mode === "signup" ? "Create a strong password" : "Enter your password"}
+              style={{ flex: 1, background: "transparent", border: "none", color: "#ecf4ec", fontSize: "0.95rem", outline: "none" }}
+            />
+            <button
+              type="button"
+              onClick={() => setPasswordVisible((v) => !v)}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#85938b", display: "flex", alignItems: "center", padding: "2px", flexShrink: 0 }}
+              aria-label={passwordVisible ? "Hide password" : "Show password"}
+            >
+              <EyeIcon open={passwordVisible} />
+            </button>
+          </div>
+        </div>
+
+        {/* Remember me */}
+        <label style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "1.25rem", cursor: "pointer" }}>
+          <div
+            onClick={() => setRememberMe((v) => !v)}
+            style={{
+              width: 18, height: 18, borderRadius: 5,
+              border: rememberMe ? "none" : "1.5px solid rgba(255,255,255,0.2)",
+              background: rememberMe ? "#c9ff60" : "rgba(255,255,255,0.04)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", flexShrink: 0, transition: "all 0.15s",
+            }}
+          >
+            {rememberMe && <CheckIcon />}
+          </div>
+          <span style={{ fontSize: "0.82rem", color: "#85938b", userSelect: "none" }}>Keep me signed in on this device</span>
+        </label>
+
+        {/* Primary CTA */}
+        <button
+          type="button"
+          onClick={handlePasswordSubmit}
+          disabled={isLoading}
+          style={{
+            width: "100%",
+            padding: "0.9rem",
+            borderRadius: "12px",
+            border: "none",
+            background: loading === "password" ? "rgba(201,255,96,0.7)" : "#c9ff60",
+            color: "#08100b",
+            fontSize: "0.95rem",
+            fontWeight: 700,
+            cursor: isLoading ? "not-allowed" : "pointer",
+            marginBottom: "0.75rem",
+            letterSpacing: "0.01em",
+            transition: "opacity 0.15s, transform 0.1s",
+            opacity: isLoading && loading !== "password" ? 0.5 : 1,
+          }}
+          onMouseEnter={(e) => { if (!isLoading) (e.target as HTMLElement).style.transform = "translateY(-1px)"; }}
+          onMouseLeave={(e) => { (e.target as HTMLElement).style.transform = "translateY(0)"; }}
+        >
+          {loading === "password"
+            ? (mode === "signup" ? "Creating account..." : "Signing in...")
+            : (mode === "signup" ? "Create account" : "Sign in")}
+        </button>
+
+        {/* Magic link */}
+        <button
+          type="button"
+          onClick={handleMagicLink}
+          disabled={isLoading}
+          style={{
+            width: "100%",
+            padding: "0.875rem",
+            borderRadius: "12px",
+            border: "0.5px solid rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.03)",
+            color: "#ecf4ec",
+            fontSize: "0.9rem",
+            fontWeight: 500,
+            cursor: isLoading ? "not-allowed" : "pointer",
+            marginBottom: "1.25rem",
+            letterSpacing: "0.01em",
+            transition: "background 0.15s, border-color 0.15s",
+            opacity: isLoading && loading !== "magic" ? 0.5 : 1,
+          }}
+          onMouseEnter={(e) => { if (!isLoading) { (e.target as HTMLElement).style.background = "rgba(255,255,255,0.06)"; } }}
+          onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
+        >
+          {loading === "magic" ? "Sending link..." : "Send magic link instead"}
+        </button>
+
+        {/* Divider */}
+        {(walletProviders.length > 0 || socialProviders.length > 0) && (
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+            <div style={{ flex: 1, height: "0.5px", background: "rgba(255,255,255,0.09)" }} />
+            <span style={{ fontSize: "0.78rem", color: "#85938b", fontWeight: 500, whiteSpace: "nowrap" }}>or continue with</span>
+            <div style={{ flex: 1, height: "0.5px", background: "rgba(255,255,255,0.09)" }} />
+          </div>
+        )}
+
+        {/* Wallet buttons */}
+        {walletProviders.length > 0 && (
+          <div style={{ display: "grid", gap: "0.5rem", marginBottom: socialProviders.length > 0 ? "0.5rem" : "1rem" }}>
+            {walletProviders.map((wallet) => (
+              <button
+                key={wallet.key}
+                type="button"
+                onClick={handleWalletVerify}
+                disabled={isLoading}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  width: "100%",
+                  padding: "0.8rem 1rem",
+                  borderRadius: "12px",
+                  border: "0.5px solid rgba(255,255,255,0.1)",
+                  background: "rgba(255,255,255,0.03)",
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  transition: "background 0.15s, border-color 0.15s",
+                  opacity: isLoading && loading !== "wallet" ? 0.5 : 1,
+                  textAlign: "left",
+                }}
+                onMouseEnter={(e) => { if (!isLoading) { (e.currentTarget).style.background = "rgba(255,255,255,0.06)"; (e.currentTarget).style.borderColor = "rgba(255,255,255,0.16)"; }}}
+                onMouseLeave={(e) => { (e.currentTarget).style.background = "rgba(255,255,255,0.03)"; (e.currentTarget).style.borderColor = "rgba(255,255,255,0.1)"; }}
+              >
+                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.05)", flexShrink: 0 }}>
+                  <WalletIcon label={wallet.label} />
+                </span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#ecf4ec" }}>
+                    {loading === "wallet" ? "Connecting wallet..." : `Continue with ${wallet.label}`}
+                  </div>
+                  <div style={{ fontSize: "0.74rem", color: "#85938b", marginTop: 1 }}>Sign a message to verify ownership</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Social buttons */}
+        {socialProviders.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: socialProviders.length === 1 ? "1fr" : socialProviders.length === 2 ? "1fr 1fr" : "1fr 1fr 1fr", gap: "0.5rem", marginBottom: "1rem" }}>
+            {socialProviders.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => handleOAuth(item.key)}
+                disabled={isLoading}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.5rem",
+                  padding: "0.8rem 0.5rem",
+                  borderRadius: "12px",
+                  border: "0.5px solid rgba(255,255,255,0.1)",
+                  background: "rgba(255,255,255,0.03)",
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  transition: "background 0.15s",
+                  opacity: isLoading && loading !== item.key ? 0.5 : 1,
+                  color: "#ecf4ec",
+                }}
+                onMouseEnter={(e) => { if (!isLoading) (e.currentTarget).style.background = "rgba(255,255,255,0.07)"; }}
+                onMouseLeave={(e) => { (e.currentTarget).style.background = "rgba(255,255,255,0.03)"; }}
+                title={`Continue with ${item.label}`}
+              >
+                {item.key === "google" ? <GoogleIcon /> : item.key === "apple" ? <AppleIcon /> : <XIcon />}
+                <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+                  {loading === item.key ? "..." : item.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Message */}
+        {message && (
+          <div style={{
+            padding: "0.75rem 1rem",
+            borderRadius: "10px",
+            border: `0.5px solid ${messageType === "success" ? "rgba(201,255,96,0.2)" : "rgba(255,120,120,0.2)"}`,
+            background: messageType === "success" ? "rgba(201,255,96,0.06)" : "rgba(255,80,80,0.06)",
+            color: messageType === "success" ? "#c9ff60" : "#ff8b8b",
+            fontSize: "0.84rem",
+            lineHeight: 1.6,
+            marginBottom: "1rem",
+          }}>
+            {message}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{ display: "flex", justifyContent: "center", gap: "1rem", paddingTop: "0.75rem", borderTop: "0.5px solid rgba(255,255,255,0.07)" }}>
+          <Link
+            href="/app"
+            style={{ fontSize: "0.8rem", color: "#85938b", textDecoration: "none", fontWeight: 500 }}
+          >
+            Browse in preview
+          </Link>
+          <span style={{ color: "rgba(255,255,255,0.12)" }}>·</span>
+          <Link
+            href="/"
+            style={{ fontSize: "0.8rem", color: "#85938b", textDecoration: "none", fontWeight: 500 }}
+          >
+            Back to home
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

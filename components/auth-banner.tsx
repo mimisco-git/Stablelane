@@ -65,7 +65,7 @@ export function AuthBanner() {
   if (!supabase) {
     return (
       <div className="rounded-[20px] border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4 text-[0.84rem] leading-6 text-[var(--accent)]">
-        Supabase keys are not set yet. Add your project URL and publishable or anon key to Vercel before testing auth.
+        Authentication is not configured. Add your Supabase project URL and publishable key to your environment variables to enable sign-in.
       </div>
     );
   }
@@ -74,7 +74,7 @@ export function AuthBanner() {
     return (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4">
         <p className="max-w-3xl text-[0.84rem] leading-6 text-[var(--accent)]">
-          You are currently browsing in preview mode. Sign in to save invoice drafts to Supabase and keep them across devices.
+          You are browsing in preview mode. Sign in to keep invoices and workspace data synced across devices.
         </p>
         <Link href="/auth" className="rounded-full bg-[var(--accent)] px-4 py-2 text-[0.84rem] font-bold text-[#08100b]">
           Open sign in

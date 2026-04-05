@@ -271,7 +271,7 @@ export function InvoiceBuilder({ draftId }: InvoiceBuilderProps) {
             setMessage("Draft updated in Supabase.");
           } else {
             await saveRemoteInvoiceDraft(draft);
-            setMessage("Draft saved to Supabase.");
+            setMessage("Draft saved.");
           }
           setActiveDraft(draft);
           setTimeout(() => setMessage(""), 3200);
@@ -629,7 +629,7 @@ export function InvoiceBuilder({ draftId }: InvoiceBuilderProps) {
           {[
             activeDraft
               ? "You are editing an existing draft. Saving now updates the same record instead of creating a new one."
-              : "New drafts save to Supabase when you are signed in, or to browser storage when you are not.",
+              : "Drafts are saved to your account when signed in, or locally to this browser when not.",
             "Saved clients now feed directly into invoice creation so the workflow feels closer to a real workspace product.",
             "The next step after this is connecting approved invoices to real Arc testnet escrow contracts.",
           ].map((note) => (
