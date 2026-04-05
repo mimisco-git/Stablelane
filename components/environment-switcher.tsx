@@ -17,7 +17,7 @@ export function EnvironmentSwitcher() {
           </div>
           <div className="text-[0.98rem] font-semibold text-[var(--text)]">Choose where Stablelane is operating</div>
           <p className="mt-1 max-w-2xl text-[0.82rem] leading-6 text-[var(--muted)]">
-            Testnet stays fully interactive. Mainnet is available as a guarded mode and only unlocks full write actions when complete network values are configured.
+            Stablelane is currently optimized for Arc testnet. Mainnet stays visible in the product, but it should read as coming soon until you are ready to turn on live production values.
           </p>
         </div>
         <div className={`rounded-full px-3 py-2 text-[0.72rem] font-extrabold uppercase tracking-[0.08em] ${
@@ -43,7 +43,7 @@ export function EnvironmentSwitcher() {
                   : "border border-white/8 bg-white/3 text-[var(--muted)] hover:text-[var(--text)]"
               }`}
             >
-              {option === "testnet" ? "Arc testnet" : "Arc mainnet"}
+              {option === "testnet" ? "Arc testnet" : "Arc mainnet · coming soon"}
             </button>
           );
         })}
@@ -67,7 +67,7 @@ export function EnvironmentSwitcher() {
       {!network.hasCompleteConfig ? (
         <div className="mt-4">
           <InlineNotice
-            title="Mainnet is guarded"
+            title="Mainnet is coming soon"
             detail="Add the mainnet RPC, chain ID, and explorer environment values before enabling real write actions in this mode."
             tone="warning"
           />

@@ -236,3 +236,12 @@ This package restores the missing `fetchInvoiceStatusSummary` export required by
 
 ## Stage 15 fix v4
 This package fixes the conflicting `window.ethereum` type declaration by removing the duplicate global augmentation from `wallet-connect-panel.tsx` and using a local provider getter instead.
+
+
+## Stage 16 package
+This stage makes Stablelane more relevant to Arc Testnet:
+- a dedicated Arc finance workspace page
+- stablecoin asset registry for native USDC, USDC ERC-20, and EURC
+- Arc amount guide for 18-decimal native USDC vs 6-decimal ERC-20 handling
+- finality-aware confirmation guidance for faster settlement UX
+- stronger testnet-first messaging while mainnet stays marked as coming soon

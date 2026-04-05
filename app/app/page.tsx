@@ -28,6 +28,22 @@ export default function AppOverviewPage() {
         <DashboardLiveStats />
         <WalletConnectPanel />
         <DashboardMetricCards />
+        <section className="rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,rgba(16,27,20,.88),rgba(10,18,13,.82))] p-5 shadow-[0_18px_60px_rgba(0,0,0,.2)]">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="mb-1 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
+                Arc finance layer
+              </div>
+              <h2 className="mb-2 text-base font-bold tracking-normal">Make Stablelane feel more native to Arc.</h2>
+              <p className="max-w-3xl text-[0.84rem] leading-6 text-[var(--muted)]">
+                Open the new Arc workspace section for stablecoin asset rules, finality-aware confirmations, and a clearer testnet settlement operating model.
+              </p>
+            </div>
+            <Link href="/app/arc" className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]">
+              Open Arc finance
+            </Link>
+          </div>
+        </section>
 
         <div className="grid gap-3 xl:grid-cols-[1.05fr_.95fr]">
           <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
