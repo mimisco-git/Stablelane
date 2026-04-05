@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 import {
@@ -7,7 +8,7 @@ import {
   getWalletProviderOptions,
   type SocialProviderKey,
 } from "@/lib/auth-options";
-import { readWalletHint, shortWallet, writeAccessMode, writeWalletHint } from "@/lib/access-flow";
+import { readVerifiedWallet, readWalletHint, shortWallet, writeAccessMode, writeVerifiedWallet, writeWalletHint } from "@/lib/access-flow";
 import { getBaseUrl } from "@/lib/url";
 import { InlineNotice, LoadingState } from "@/components/ui-state";
 
@@ -26,6 +27,7 @@ export function AccountMethodsPanel() {
   const walletProviders = useMemo(() => getWalletProviderOptions(), []);
   const [email, setEmail] = useState("");
   const [walletHint, setWalletHint] = useState("");
+  const [verifiedWallet, setVerifiedWallet] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
@@ -35,6 +37,7 @@ export function AccountMethodsPanel() {
 
     async function load() {
       setWalletHint(readWalletHint());
+      setVerifiedWallet(readVerifiedWallet());
 
       if (!supabase) {
         if (mounted) setLoading(false);
@@ -44,6 +47,16 @@ export function AccountMethodsPanel() {
       const { data } = await supabase.auth.getSession();
       if (!mounted) return;
       setEmail(data.session?.user?.email || "");
+
+      try {
+        const response = await fetch("/api/wallet-auth/session");
+        const json = await response.json();
+        if (mounted && json?.verified && json?.address) {
+          setVerifiedWallet(json.address);
+          writeVerifiedWallet(json.address);
+        }
+      } catch {}
+
       setLoading(false);
     }
 
@@ -58,6 +71,7 @@ export function AccountMethodsPanel() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setEmail(session?.user?.email || "");
       setWalletHint(readWalletHint());
+      setVerifiedWallet(readVerifiedWallet());
       setLoading(false);
     });
 
@@ -67,7 +81,7 @@ export function AccountMethodsPanel() {
     };
   }, [supabase]);
 
-  async function connectWallet() {
+  async function connectWalletHint() {
     const provider = getEthereumProvider();
     if (!provider) {
       setMessage("No browser wallet was detected on this device.");
@@ -85,7 +99,7 @@ export function AccountMethodsPanel() {
       writeWalletHint(selected);
       writeAccessMode(email ? "email" : "wallet");
       setWalletHint(selected);
-      setMessage(`Wallet linked in this browser as ${shortWallet(selected)}.`);
+      setMessage(`Wallet hint saved in this browser as ${shortWallet(selected)}.`);
     } catch (error) {
       const text = error instanceof Error ? error.message : "Wallet linking failed.";
       setMessage(text);
@@ -94,10 +108,19 @@ export function AccountMethodsPanel() {
     }
   }
 
-  function unlinkWallet() {
-    writeWalletHint("");
-    setWalletHint("");
-    setMessage("Wallet hint removed from this browser.");
+  async function clearWalletState() {
+    setBusy("clear-wallet");
+    setMessage("");
+    try {
+      writeWalletHint("");
+      writeVerifiedWallet("");
+      await fetch("/api/wallet-auth/logout", { method: "POST" });
+      setWalletHint("");
+      setVerifiedWallet("");
+      setMessage("Browser wallet hint && verified wallet session removed.");
+    } finally {
+      setBusy("");
+    }
   }
 
   async function continueWithProvider(provider: SocialProviderKey) {
@@ -139,7 +162,7 @@ export function AccountMethodsPanel() {
   }
 
   if (loading) {
-    return <LoadingState title="Loading account methods" detail="Stablelane is checking your email session, wallet hint, and enabled access methods." />;
+    return <LoadingState title="Loading account methods" detail="Stablelane is checking your email session, wallet state, && enabled access methods." />;
   }
 
   return (
@@ -152,7 +175,7 @@ export function AccountMethodsPanel() {
           Make access feel real.
         </h1>
         <p className="max-w-3xl text-[0.92rem] leading-7 text-[var(--muted)]">
-          This page shows the methods currently attached to this workspace session and hides providers that are not actually enabled or available.
+          This page shows the current email session, wallet hint, verified wallet state, && enabled access methods.
         </p>
       </section>
 
@@ -161,7 +184,7 @@ export function AccountMethodsPanel() {
           <div className="mb-4">
             <h2 className="mb-1 text-base font-bold tracking-normal">Current methods</h2>
             <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-              Your current email session and wallet hint for this browser.
+              Your current email session, browser wallet hint, && verified wallet session.
             </p>
           </div>
 
@@ -173,7 +196,7 @@ export function AccountMethodsPanel() {
                 <button
                   type="button"
                   onClick={signOutEmail}
-                  disabled={busy === "signout"}
+                  disabled={busy == "signout"}
                   className="mt-3 rounded-full border border-white/8 bg-white/3 px-4 py-2 text-[0.82rem] font-semibold text-[var(--text)] disabled:opacity-70"
                 >
                   {busy === "signout" ? "Signing out..." : "Sign out email"}
@@ -182,26 +205,30 @@ export function AccountMethodsPanel() {
             </div>
 
             <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-              <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Wallet</div>
-              <div className="font-semibold text-[var(--text)]">{walletHint ? shortWallet(walletHint) : "No wallet linked in this browser"}</div>
+              <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Browser wallet hint</div>
+              <div className="font-semibold text-[var(--text)]">{walletHint ? shortWallet(walletHint) : "No wallet hint in this browser"}</div>
+            </div>
+
+            <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+              <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Verified wallet session</div>
+              <div className="font-semibold text-[var(--text)]">{verifiedWallet ? shortWallet(verifiedWallet) : "No verified wallet session"}</div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={connectWallet}
+                  onClick={connectWalletHint}
                   disabled={busy === "wallet"}
                   className="rounded-full bg-[var(--accent)] px-4 py-2 text-[0.82rem] font-bold text-[#08100b] disabled:opacity-70"
                 >
-                  {busy === "wallet" ? "Connecting..." : walletHint ? "Replace wallet" : "Connect wallet"}
+                  {busy === "wallet" ? "Connecting..." : "Connect wallet hint"}
                 </button>
-                {walletHint ? (
-                  <button
-                    type="button"
-                    onClick={unlinkWallet}
-                    className="rounded-full border border-white/8 bg-white/3 px-4 py-2 text-[0.82rem] font-semibold text-[var(--text)]"
-                  >
-                    Unlink wallet hint
-                  </button>
-                ) : null}
+                <button
+                  type="button"
+                  onClick={clearWalletState}
+                  disabled={busy === "clear-wallet"}
+                  className="rounded-full border border-white/8 bg-white/3 px-4 py-2 text-[0.82rem] font-semibold text-[var(--text)] disabled:opacity-70"
+                >
+                  {busy === "clear-wallet" ? "Clearing..." : "Clear wallet state"}
+                </button>
               </div>
             </div>
           </div>
@@ -236,7 +263,7 @@ export function AccountMethodsPanel() {
               ))
             ) : (
               <div className="rounded-2xl border border-white/8 bg-white/3 p-4 text-[0.84rem] leading-6 text-[var(--muted)]">
-                No social providers are enabled yet. Add the corresponding Vercel and Supabase settings first.
+                No social providers are enabled yet. Add the corresponding Vercel && Supabase settings first.
               </div>
             )}
 
@@ -252,21 +279,19 @@ export function AccountMethodsPanel() {
                 No injected wallet was detected in this browser right now.
               </div>
             )}
+
+            <Link href="/app/identity" className="rounded-full bg-[var(--accent)] px-4 py-3 text-center text-[0.92rem] font-bold text-[#08100b]">
+              Open identity center
+            </Link>
           </div>
         </section>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        <a href="/app/identity" className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]">
-          Open identity center
-        </a>
       </div>
 
       {message ? (
         <InlineNotice
           title="Account methods"
           detail={message}
-          tone={message.toLowerCase().includes("failed") || message.toLowerCase().includes("not") ? "warning" : "success"}
+          tone={message.toLowerCase().includes("failed") || message.toLowerCase().includes("not") && "No " not in message ? "warning" : "success"}
         />
       ) : null}
     </div>

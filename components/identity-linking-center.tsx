@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  clearLinkedWalletAddress,
   createWorkspaceAuditEvent,
   fetchIdentitySummary,
-  saveLinkedWalletAddress,
+  saveVerifiedWalletLink,
+  clearLinkedWalletAddress,
 } from "@/lib/supabase-data";
 import { getSocialProviderOptions, getWalletProviderOptions } from "@/lib/auth-options";
-import { readWalletHint, shortWallet, writeWalletHint } from "@/lib/access-flow";
+import { readVerifiedWallet, shortWallet, writeVerifiedWallet, writeWalletHint } from "@/lib/access-flow";
 import { InlineNotice, LoadingState } from "@/components/ui-state";
 import { StatusPill } from "@/components/status-pill";
 
@@ -25,7 +25,7 @@ export function IdentityLinkingCenter() {
   const socialProviders = useMemo(() => getSocialProviderOptions(), []);
   const walletProviders = useMemo(() => getWalletProviderOptions(), []);
   const [identity, setIdentity] = useState<IdentitySummary | null>(null);
-  const [walletHint, setWalletHint] = useState("");
+  const [verifiedWallet, setVerifiedWallet] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
@@ -33,11 +33,18 @@ export function IdentityLinkingCenter() {
   async function loadIdentity() {
     setLoading(true);
     try {
-      const [summary] = await Promise.all([
-        fetchIdentitySummary(),
-      ]);
+      const [summary] = await Promise.all([fetchIdentitySummary()]);
       setIdentity(summary as IdentitySummary | null);
-      setWalletHint(readWalletHint());
+      setVerifiedWallet(readVerifiedWallet());
+
+      try {
+        const response = await fetch("/api/wallet-auth/session");
+        const json = await response.json();
+        if (json?.verified && json?.address) {
+          setVerifiedWallet(json.address);
+          writeVerifiedWallet(json.address);
+        }
+      } catch {}
     } finally {
       setLoading(false);
     }
@@ -47,30 +54,30 @@ export function IdentityLinkingCenter() {
     loadIdentity();
   }, []);
 
-  async function linkWalletHintToProfile() {
+  async function linkVerifiedWalletToProfile() {
     if (!identity?.email) {
-      setMessage("Sign in with email first before linking a wallet to the workspace profile.");
+      setMessage("Sign in with email first before linking a verified wallet to the workspace profile.");
       return;
     }
-    if (!walletHint) {
-      setMessage("Connect a wallet first so there is a wallet hint to link.");
+    if (!verifiedWallet) {
+      setMessage("Verify a wallet first from the auth screen before linking it to the workspace profile.");
       return;
     }
 
     setBusy("link-wallet");
     setMessage("");
     try {
-      await saveLinkedWalletAddress(walletHint);
+      await saveVerifiedWalletLink(verifiedWallet);
       await createWorkspaceAuditEvent({
-        event_type: "identity_wallet_linked",
-        title: "Wallet linked to workspace identity",
-        detail: `Wallet ${shortWallet(walletHint)} was linked to the signed-in workspace identity.`,
-        metadata: { walletHint },
+        event_type: "identity_wallet_verified_linked",
+        title: "Verified wallet linked to workspace identity",
+        detail: `Verified wallet ${shortWallet(verifiedWallet)} was linked to the signed-in workspace identity.`,
+        metadata: { verifiedWallet },
       });
-      setMessage("Wallet linked into the workspace profile.");
+      setMessage("Verified wallet linked into the workspace profile.");
       await loadIdentity();
     } catch {
-      setMessage("Wallet could not be linked into the workspace profile.");
+      setMessage("Verified wallet could not be linked into the workspace profile.");
     } finally {
       setBusy("");
     }
@@ -82,10 +89,12 @@ export function IdentityLinkingCenter() {
     try {
       await clearLinkedWalletAddress();
       writeWalletHint("");
+      writeVerifiedWallet("");
+      await fetch("/api/wallet-auth/logout", { method: "POST" });
       await createWorkspaceAuditEvent({
         event_type: "identity_wallet_unlinked",
         title: "Wallet unlinked from workspace identity",
-        detail: "The workspace-linked wallet was removed from the profile.",
+        detail: "The workspace-linked wallet was removed from the profile and verified session cache.",
       });
       setMessage("Wallet removed from the workspace profile.");
       await loadIdentity();
@@ -97,7 +106,7 @@ export function IdentityLinkingCenter() {
   }
 
   if (loading) {
-    return <LoadingState title="Loading identity center" detail="Stablelane is reading the current email session, linked wallet state, and enabled providers." />;
+    return <LoadingState title="Loading identity center" detail="Stablelane is reading the current email session, verified wallet state, and enabled providers." />;
   }
 
   return (
@@ -107,10 +116,10 @@ export function IdentityLinkingCenter() {
           Identity center
         </div>
         <h1 className="mb-3 font-[family-name:var(--font-cormorant)] text-5xl leading-none tracking-[-0.05em] text-[var(--text)]">
-          Link access methods more realistically.
+          Link verified identity methods.
         </h1>
         <p className="max-w-3xl text-[0.92rem] leading-7 text-[var(--muted)]">
-          This build starts moving Stablelane from browser-only hints toward a real linked identity model inside the workspace profile.
+          This build moves Stablelane beyond browser-only wallet hints by letting a server-verified wallet session become part of the workspace profile.
         </p>
       </section>
 
@@ -130,8 +139,8 @@ export function IdentityLinkingCenter() {
             </div>
 
             <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-              <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Browser wallet hint</div>
-              <div className="font-semibold text-[var(--text)]">{walletHint ? shortWallet(walletHint) : "No wallet hint in this browser"}</div>
+              <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Verified wallet session</div>
+              <div className="font-semibold text-[var(--text)]">{verifiedWallet ? shortWallet(verifiedWallet) : "No verified wallet session yet"}</div>
             </div>
 
             <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
@@ -157,11 +166,11 @@ export function IdentityLinkingCenter() {
             <div className="flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={linkWalletHintToProfile}
+                onClick={linkVerifiedWalletToProfile}
                 disabled={busy === "link-wallet"}
                 className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b] disabled:opacity-70"
               >
-                {busy === "link-wallet" ? "Linking..." : "Link browser wallet to profile"}
+                {busy === "link-wallet" ? "Linking..." : "Link verified wallet to profile"}
               </button>
               <button
                 type="button"
@@ -213,9 +222,9 @@ export function IdentityLinkingCenter() {
             <div className="rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4">
               <div className="mb-2 font-semibold text-[var(--accent)]">What this stage makes real</div>
               <div className="grid gap-2 text-[0.84rem] leading-6 text-[var(--accent)]">
-                <div>• the linked wallet can now be stored on the workspace profile</div>
-                <div>• the auth screen only shows methods that are actually available</div>
-                <div>• identity linking actions now write into the audit trail</div>
+                <div>• wallet access now uses a signed challenge</div>
+                <div>• verified wallet sessions can now be linked to the workspace profile</div>
+                <div>• the workspace gate now prefers verified wallet access over plain wallet hints</div>
               </div>
             </div>
           </div>
@@ -226,7 +235,7 @@ export function IdentityLinkingCenter() {
         <InlineNotice
           title="Identity center"
           detail={message}
-          tone={message.toLowerCase().includes("could not") || message.toLowerCase().includes("sign in") ? "warning" : "success"}
+          tone={message.toLowerCase().includes("could not") || message.toLowerCase().includes("sign in") || message.toLowerCase().includes("verify") ? "warning" : "success"}
         />
       ) : null}
     </div>

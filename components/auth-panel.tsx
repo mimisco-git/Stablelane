@@ -5,12 +5,20 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 import { getBaseUrl } from "@/lib/url";
+import { buildWalletAuthMessage } from "@/lib/wallet-auth";
 import {
   getSocialProviderOptions,
   getWalletProviderOptions,
   type SocialProviderKey,
 } from "@/lib/auth-options";
-import { readWalletHint, shortWallet, writeAccessMode, writeWalletHint } from "@/lib/access-flow";
+import {
+  readVerifiedWallet,
+  readWalletHint,
+  shortWallet,
+  writeAccessMode,
+  writeVerifiedWallet,
+  writeWalletHint,
+} from "@/lib/access-flow";
 import { saveLinkedAuthMethod } from "@/lib/supabase-data";
 
 type AuthMode = "signin" | "signup";
@@ -49,6 +57,7 @@ export function AuthPanel() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [walletHint, setWalletHint] = useState("");
+  const [verifiedWallet, setVerifiedWallet] = useState("");
   const [activeEmail, setActiveEmail] = useState("");
   const [loading, setLoading] = useState("");
   const [message, setMessage] = useState("");
@@ -58,11 +67,21 @@ export function AuthPanel() {
 
     async function load() {
       setWalletHint(readWalletHint());
+      setVerifiedWallet(readVerifiedWallet());
 
       if (!supabase) return;
       const { data } = await supabase.auth.getSession();
       if (!mounted) return;
       setActiveEmail(data.session?.user?.email || "");
+
+      try {
+        const response = await fetch("/api/wallet-auth/session");
+        const json = await response.json();
+        if (mounted && json?.verified && json?.address) {
+          setVerifiedWallet(json.address);
+          writeVerifiedWallet(json.address);
+        }
+      } catch {}
     }
 
     load();
@@ -76,6 +95,7 @@ export function AuthPanel() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setActiveEmail(session?.user?.email || "");
       setWalletHint(readWalletHint());
+      setVerifiedWallet(readVerifiedWallet());
     });
 
     return () => {
@@ -109,9 +129,6 @@ export function AuthPanel() {
         });
         if (error) throw error;
         writeAccessMode("email");
-      try {
-        await saveLinkedAuthMethod(provider === "google" ? "google_oauth" : provider === "apple" ? "apple_oauth" : "x_oauth");
-      } catch {}
         setMessage("Account created. Check your email to confirm the account, then come back and continue.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -187,6 +204,9 @@ export function AuthPanel() {
       });
       if (error) throw error;
       writeAccessMode("email");
+      try {
+        await saveLinkedAuthMethod(provider === "google" ? "google_oauth" : provider === "apple" ? "apple_oauth" : "x_oauth");
+      } catch {}
     } catch (error) {
       const text = error instanceof Error ? error.message : "OAuth sign-in failed.";
       setMessage(text);
@@ -194,11 +214,11 @@ export function AuthPanel() {
     }
   }
 
-  async function handleWallet() {
+  async function handleWalletVerify() {
     const provider = getEthereumProvider();
 
     if (!provider) {
-      setMessage("No browser wallet was detected. Use email or preview mode, or install a supported wallet first.");
+      setMessage("No supported browser wallet was detected. Use email or preview mode, or install a wallet first.");
       return;
     }
 
@@ -210,13 +230,59 @@ export function AuthPanel() {
       const selected = accounts?.[0] || "";
       if (!selected) throw new Error("No wallet account was returned.");
 
+      const chainIdHex = (await provider.request({ method: "eth_chainId" })) as string;
+      const chainId = Number.parseInt(chainIdHex, 16);
+
+      const nonceResponse = await fetch("/api/wallet-auth/nonce", {
+        method: "POST",
+      });
+      const challenge = await nonceResponse.json();
+
+      if (!challenge?.nonce || !challenge?.issuedAt || !challenge?.domain || !challenge?.uri) {
+        throw new Error("Wallet challenge could not be created.");
+      }
+
+      const messageToSign = buildWalletAuthMessage({
+        address: selected,
+        nonce: challenge.nonce,
+        domain: challenge.domain,
+        uri: challenge.uri,
+        chainId,
+        issuedAt: challenge.issuedAt,
+      });
+
+      const signature = (await provider.request({
+        method: "personal_sign",
+        params: [messageToSign, selected],
+      })) as string;
+
+      const verifyResponse = await fetch("/api/wallet-auth/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          address: selected,
+          signature,
+          chainId,
+        }),
+      });
+
+      const verifyJson = await verifyResponse.json();
+
+      if (!verifyResponse.ok || !verifyJson?.ok || !verifyJson?.address) {
+        throw new Error(verifyJson?.error || "Wallet verification failed.");
+      }
+
       writeAccessMode("wallet");
       writeWalletHint(selected);
+      writeVerifiedWallet(verifyJson.address);
       setWalletHint(selected);
-      setMessage(`Wallet connected as ${shortWallet(selected)}. You can use the workspace now and add email later.`);
-      setTimeout(() => router.push("/app"), 650);
+      setVerifiedWallet(verifyJson.address);
+      setMessage(`Wallet verified as ${shortWallet(verifyJson.address)}. This is now stronger than a plain wallet connect step.`);
+      setTimeout(() => router.push("/app"), 700);
     } catch (error) {
-      const text = error instanceof Error ? error.message : "Wallet connection failed.";
+      const text = error instanceof Error ? error.message : "Wallet verification failed.";
       setMessage(text);
     } finally {
       setLoading("");
@@ -228,6 +294,8 @@ export function AuthPanel() {
     router.push("/app");
   }
 
+  const currentAccess = activeEmail || verifiedWallet || walletHint;
+
   return (
     <div className="grid gap-4 xl:grid-cols-[1.04fr_.96fr]">
       <section className="rounded-[30px] border border-white/8 bg-[linear-gradient(180deg,rgba(16,27,20,.94),rgba(10,18,13,.86))] p-6 shadow-[0_24px_80px_rgba(0,0,0,.3)]">
@@ -236,10 +304,10 @@ export function AuthPanel() {
         </div>
 
         <h1 className="mb-3 font-[family-name:var(--font-cormorant)] text-[clamp(2.8rem,5vw,4.5rem)] leading-none tracking-[-0.055em] text-[var(--text)]">
-          One premium login, now more truthful.
+          One premium login, now with verified wallet access.
         </h1>
         <p className="mb-6 max-w-2xl text-[0.96rem] leading-7 text-[var(--muted)]">
-          Email, wallet, and social entry now live on one screen, but only the methods that are really enabled or detected are shown.
+          Email, wallet, and social entry now live on one screen, and the wallet path now verifies a signed challenge instead of only asking for a connection.
         </p>
 
         <div className="mb-5 flex flex-wrap gap-2">
@@ -267,16 +335,18 @@ export function AuthPanel() {
           </button>
         </div>
 
-        {activeEmail || walletHint ? (
+        {currentAccess ? (
           <div className="mb-5 rounded-[22px] border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4">
             <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--accent)]">Current access</div>
             <div className="mb-2 text-lg font-semibold text-[var(--text)]">
-              {activeEmail ? activeEmail : shortWallet(walletHint)}
+              {activeEmail || shortWallet(verifiedWallet || walletHint)}
             </div>
             <p className="mb-3 text-[0.84rem] leading-6 text-[var(--accent)]">
               {activeEmail
                 ? "You already have an active email session. Continue straight into the workspace."
-                : "A wallet is already connected in this browser. You can continue now or still add email later."}
+                : verifiedWallet
+                  ? "A verified wallet session already exists in this browser."
+                  : "A wallet hint exists in this browser, but wallet verification is still better for stronger access."}
             </p>
             <button
               type="button"
@@ -359,14 +429,14 @@ export function AuthPanel() {
                 <button
                   key={wallet.key}
                   type="button"
-                  onClick={handleWallet}
+                  onClick={handleWalletVerify}
                   disabled={Boolean(loading)}
                   className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-left transition hover:bg-white/5 disabled:opacity-70"
                 >
                   <WalletIcon label={wallet.label} />
                   <div>
                     <div className="text-[0.9rem] font-semibold text-[var(--text)]">{wallet.label}</div>
-                    <div className="text-[0.72rem] text-[var(--muted)]">Detected wallet</div>
+                    <div className="text-[0.72rem] text-[var(--muted)]">Verified wallet access</div>
                   </div>
                 </button>
               ))}
@@ -405,8 +475,8 @@ export function AuthPanel() {
             <Link href="/app" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.86rem] font-semibold text-[var(--text)]">
               Browse in preview
             </Link>
-            <Link href="/app/account" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.86rem] font-semibold text-[var(--text)]">
-              Manage methods
+            <Link href="/app/identity" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.86rem] font-semibold text-[var(--text)]">
+              Open identity center
             </Link>
           </div>
 
@@ -424,34 +494,34 @@ export function AuthPanel() {
 
       <aside className="rounded-[30px] border border-white/8 bg-white/3 p-6">
         <div className="mb-4 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-          Auth hardening
+          Verified wallet auth
         </div>
 
         <div className="grid gap-3">
           <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-            <div className="mb-2 font-semibold text-[var(--text)]">Only real methods are shown</div>
+            <div className="mb-2 font-semibold text-[var(--text)]">Stronger than plain connect</div>
             <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
-              Social buttons only render when their providers are actually enabled. Wallet buttons only render when a compatible browser wallet is actually detected.
+              The wallet path now signs a challenge and verifies it on the server before the workspace treats the wallet as a verified session.
             </div>
           </div>
           <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-            <div className="mb-2 font-semibold text-[var(--text)]">Cleaner entry truth</div>
+            <div className="mb-2 font-semibold text-[var(--text)]">Still compatible with email</div>
             <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
-              This keeps the login screen feeling premium without pretending every method is available before it is configured.
+              Email remains the primary synced identity layer, but verified wallet access now feels more real when users want a web3-first entry.
             </div>
           </div>
           <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-            <div className="mb-2 font-semibold text-[var(--text)]">Better access management</div>
+            <div className="mb-2 font-semibold text-[var(--text)]">Ready for better linking</div>
             <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
-              The new account page lets you inspect the active email session, browser wallet hint, and enabled providers in one place.
+              The next step after this is to merge verified wallet sessions and email sessions even more tightly across the workspace profile.
             </div>
           </div>
         </div>
 
         <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4">
-          <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--accent)]">Environment flags</div>
+          <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--accent)]">Implementation note</div>
           <p className="text-[0.84rem] leading-6 text-[var(--accent)]">
-            Enable social providers with NEXT_PUBLIC_AUTH_GOOGLE_ENABLED, NEXT_PUBLIC_AUTH_APPLE_ENABLED, and NEXT_PUBLIC_AUTH_X_ENABLED.
+            This stage adds a SIWE-style signed challenge and verification flow using viem. It is stronger than plain wallet connect, but it is not yet full wallet-to-Supabase account unification.
           </p>
         </div>
       </aside>

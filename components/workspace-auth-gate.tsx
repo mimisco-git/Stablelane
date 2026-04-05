@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
-import { readAccessMode, readWalletHint, type AccessMode } from "@/lib/access-flow";
+import {
+  readAccessMode,
+  readVerifiedWallet,
+  readWalletHint,
+  type AccessMode,
+} from "@/lib/access-flow";
 
 export function WorkspaceAuthGate({
   children,
@@ -16,6 +21,7 @@ export function WorkspaceAuthGate({
   const [email, setEmail] = useState("");
   const [mode, setMode] = useState<AccessMode>("preview");
   const [walletHint, setWalletHint] = useState("");
+  const [verifiedWallet, setVerifiedWallet] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -23,24 +29,29 @@ export function WorkspaceAuthGate({
     async function load() {
       const currentMode = readAccessMode();
       const currentWalletHint = readWalletHint();
+      const currentVerifiedWallet = readVerifiedWallet();
 
-      if (!supabase) {
-        if (!mounted) return;
-        setMode(currentMode);
-        setWalletHint(currentWalletHint);
-        setAllowed(currentMode === "preview" || Boolean(currentWalletHint));
-        setReady(true);
-        return;
+      let activeEmail = "";
+      if (supabase) {
+        const { data } = await supabase.auth.getSession();
+        activeEmail = data.session?.user?.email || "";
       }
 
-      const { data } = await supabase.auth.getSession();
-      if (!mounted) return;
+      let verifiedFromServer = currentVerifiedWallet;
+      try {
+        const response = await fetch("/api/wallet-auth/session");
+        const json = await response.json();
+        if (json?.verified && json?.address) {
+          verifiedFromServer = json.address;
+        }
+      } catch {}
 
-      const activeEmail = data.session?.user?.email || "";
+      if (!mounted) return;
       setEmail(activeEmail);
       setMode(currentMode);
       setWalletHint(currentWalletHint);
-      setAllowed(Boolean(activeEmail) || currentMode === "preview" || Boolean(currentWalletHint));
+      setVerifiedWallet(verifiedFromServer);
+      setAllowed(Boolean(activeEmail) || currentMode === "preview" || Boolean(verifiedFromServer));
       setReady(true);
     }
 
@@ -56,7 +67,8 @@ export function WorkspaceAuthGate({
       setEmail(session?.user?.email || "");
       setMode(readAccessMode());
       setWalletHint(readWalletHint());
-      setAllowed(Boolean(session?.user?.email) || readAccessMode() === "preview" || Boolean(readWalletHint()));
+      setVerifiedWallet(readVerifiedWallet());
+      setAllowed(Boolean(session?.user?.email) || readAccessMode() === "preview" || Boolean(readVerifiedWallet()));
       setReady(true);
     });
 
@@ -87,10 +99,10 @@ export function WorkspaceAuthGate({
           Protected workspace
         </div>
         <h1 className="mb-3 font-[family-name:var(--font-cormorant)] text-5xl leading-none tracking-[-0.05em] text-[var(--text)]">
-          Sign in or connect before entering.
+          Sign in or verify wallet access before entering.
         </h1>
         <p className="mb-5 max-w-3xl text-[0.92rem] leading-7 text-[var(--muted)]">
-          The workspace now prefers a real access state. Use the unified login screen, connect a wallet, or enter preview mode first.
+          The workspace now prefers a real access state. Use the unified login screen, verify a wallet session, or enter preview mode first.
         </p>
 
         <div className="flex flex-wrap gap-3">
@@ -102,7 +114,7 @@ export function WorkspaceAuthGate({
           </Link>
         </div>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <div className="mt-5 grid gap-3 md:grid-cols-4">
           <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
             <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Email session</div>
             <div className="text-[0.88rem] text-[var(--muted)]">{email || "No email session"}</div>
@@ -114,6 +126,10 @@ export function WorkspaceAuthGate({
           <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
             <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Wallet hint</div>
             <div className="text-[0.88rem] text-[var(--muted)]">{walletHint || "No linked wallet hint"}</div>
+          </div>
+          <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+            <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Verified wallet</div>
+            <div className="text-[0.88rem] text-[var(--muted)]">{verifiedWallet || "No verified wallet session"}</div>
           </div>
         </div>
       </div>
