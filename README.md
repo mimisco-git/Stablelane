@@ -245,3 +245,11 @@ This stage makes Stablelane more relevant to Arc Testnet:
 - Arc amount guide for 18-decimal native USDC vs 6-decimal ERC-20 handling
 - finality-aware confirmation guidance for faster settlement UX
 - stronger testnet-first messaging while mainnet stays marked as coming soon
+
+
+## Stage 17 package
+This stage pushes Stablelane deeper into Arc testnet operations:
+- Arc-native balance reader for wallet-funded USDC display
+- funding lane manager for wallet, Gateway, and crosschain settlement routes
+- crosschain readiness panel for Arc testnet Gateway and CCTP environment values
+- stronger Arc workspace page with balance, finality, and funding-lane guidance

@@ -2,6 +2,9 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { ArcNativeFinancePanel } from "@/components/arc-native-finance-panel";
 import { ArcAmountGuide } from "@/components/arc-amount-guide";
 import { ArcFinalityPanel } from "@/components/arc-finality-panel";
+import { ArcBalanceReader } from "@/components/arc-balance-reader";
+import { FundingLaneManager } from "@/components/funding-lane-manager";
+import { CrosschainReadinessPanel } from "@/components/crosschain-readiness-panel";
 
 export default function ArcPage() {
   return (
@@ -17,6 +20,11 @@ export default function ArcPage() {
           <ArcAmountGuide />
           <ArcFinalityPanel />
         </div>
+        <div className="grid gap-4 xl:grid-cols-[1.02fr_.98fr]">
+          <ArcBalanceReader />
+          <FundingLaneManager />
+        </div>
+        <CrosschainReadinessPanel />
       </div>
     </DashboardShell>
   );
