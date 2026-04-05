@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { updateInvoiceWorkflowState, fetchInvoiceApprovalGate, createWorkspaceAuditEvent } from "@/lib/supabase-data";
+import { updateInvoiceWorkflowState, fetchInvoiceApprovalGate, createWorkspaceAuditEvent, createSettlementLedgerEntry } from "@/lib/supabase-data";
 import { sendNativeTransaction, ensureSelectedNetwork, getActiveWalletAddress } from "@/lib/onchain";
 import { useAppEnvironment } from "@/lib/use-app-environment";
 import { getEscrowContractConfig, getEscrowExplorerLink } from "@/lib/contracts";
@@ -176,6 +176,16 @@ export function EscrowTransactionPanel({
         targetAddress,
       });
 
+      await createSettlementLedgerEntry({
+        invoice_id: invoiceId,
+        entry_type: "escrow_funding",
+        amount: Number(invoiceAmount || 0),
+        currency: "USDC",
+        tx_hash: txHash,
+        target_address: targetAddress,
+        note: "Wallet funding submitted into the escrow path.",
+      });
+
       await createWorkspaceAuditEvent({
         event_type: "escrow_wallet_funding_submitted",
         title: "Escrow wallet funding submitted",
@@ -267,6 +277,16 @@ export function EscrowTransactionPanel({
         status: "confirmed",
         txHash: releaseTxHash,
         invoiceId,
+      });
+
+      await createSettlementLedgerEntry({
+        invoice_id: invoiceId,
+        entry_type: "release",
+        amount: Number(invoiceAmount || 0),
+        currency: "USDC",
+        tx_hash: releaseTxHash,
+        target_address: contractConfig.releaseModuleAddress,
+        note: "Release completed through the contract path.",
       });
 
       await createWorkspaceAuditEvent({

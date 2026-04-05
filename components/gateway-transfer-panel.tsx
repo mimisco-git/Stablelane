@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { arcFundingEnv, arcFundingReadiness } from "@/lib/arc-funding";
 import { arcTestnetFinance } from "@/lib/arc-finance";
 import { ensureSelectedNetwork, sendErc20Transfer } from "@/lib/onchain";
-import { createWorkspaceAuditEvent } from "@/lib/supabase-data";
+import { createWorkspaceAuditEvent, createSettlementLedgerEntry } from "@/lib/supabase-data";
 import { pushActivityItem } from "@/lib/activity-feed";
 import { useAppEnvironment } from "@/lib/use-app-environment";
 import { InlineNotice } from "@/components/ui-state";
@@ -69,6 +69,15 @@ export function GatewayTransferPanel() {
         txHash,
         targetAddress: arcFundingEnv.gatewayAddress,
       });
+      await createSettlementLedgerEntry({
+        entry_type: "gateway_deposit",
+        amount: Number(amount || 0),
+        currency: assetConfig.symbol as "USDC" | "EURC",
+        tx_hash: txHash,
+        target_address: arcFundingEnv.gatewayAddress,
+        note: "Gateway deposit submitted from the Arc workspace.",
+      });
+
       await createWorkspaceAuditEvent({
         event_type: "gateway_transfer_submitted",
         title: "Gateway transfer submitted",

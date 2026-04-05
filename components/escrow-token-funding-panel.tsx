@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { getEscrowContractConfig } from "@/lib/contracts";
 import { sendErc20Transfer, ensureSelectedNetwork } from "@/lib/onchain";
 import { useAppEnvironment } from "@/lib/use-app-environment";
-import { createWorkspaceAuditEvent } from "@/lib/supabase-data";
+import { createWorkspaceAuditEvent, createSettlementLedgerEntry } from "@/lib/supabase-data";
 import { pushActivityItem } from "@/lib/activity-feed";
 import { InlineNotice } from "@/components/ui-state";
 import { StatusPill } from "@/components/status-pill";
@@ -70,6 +70,15 @@ export function EscrowTokenFundingPanel() {
         txHash,
         targetAddress,
       });
+      await createSettlementLedgerEntry({
+        entry_type: "escrow_funding",
+        amount: Number(amount || 0),
+        currency: assetConfig.symbol as "USDC" | "EURC",
+        tx_hash: txHash,
+        target_address: targetAddress,
+        note: "Escrow token funding submitted from the workspace.",
+      });
+
       await createWorkspaceAuditEvent({
         event_type: "escrow_token_funding_submitted",
         title: "Escrow token funding submitted",
