@@ -448,3 +448,11 @@ This stage focuses on production-readiness for auth and launch flow:
 
 ## Stage 37 fix v2
 This package fixes the Next.js prerender error on `/auth` by wrapping the `useSearchParams()` consumer in a `Suspense` boundary.
+
+
+## Stage 38 package
+This stage adds a more practical go-live layer:
+- new `/app/launch` page
+- launch-hardening checklist with real blockers
+- browser cleanup actions for preview mode and wallet cache
+- clearer launch notes tied to existing readiness, identity, audit, ledger, and transaction systems

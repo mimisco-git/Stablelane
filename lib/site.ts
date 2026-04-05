@@ -57,5 +57,6 @@ export const dashboardNav = [
   { href: "/app/clients", label: "Clients" },
   { href: "/app/settings", label: "Settings" },
   { href: "/app/readiness", label: "Readiness" },
+  { href: "/app/launch", label: "Launch" },
   { href: "/app/preferences", label: "Preferences" },
 ];

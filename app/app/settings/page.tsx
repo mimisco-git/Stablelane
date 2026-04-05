@@ -22,6 +22,7 @@ export default function SettingsPage() {
           <div className="flex flex-wrap gap-3">
             <a href="/app/preferences" className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]">Open preferences</a>
             <a href="/app/audit" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.92rem] font-bold text-[var(--text)]">Open audit trail</a>
+            <a href="/app/launch" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.92rem] font-bold text-[var(--text)]">Open launch hardening</a>
           </div>
         </div>
 
