@@ -366,3 +366,11 @@ This stage moves Stablelane toward a more real multi-user workspace:
 - accepting an invitation creates a real workspace member record
 - approver-specific inbox at `/app/my-approvals`
 - schema policies now allow invited users and assigned approvers to read or update records by signed-in email
+
+
+## Stage 30 package
+This stage makes Stablelane more real in day-to-day access control:
+- new `/app/access` page for real membership and invitation-aware access resolution
+- workflow panels now prefer database-backed role resolution before falling back to preview roles
+- approver inbox now shows resolved role and access source
+- acting-role preview is kept as fallback, not as the primary control model

@@ -41,6 +41,7 @@ export const dashboardNav = [
   { href: "/app/analytics", label: "Analytics" },
   { href: "/app/activity", label: "Activity" },
   { href: "/app/notifications", label: "Notifications" },
+  { href: "/app/access", label: "Access" },
   { href: "/app/inbox", label: "Inbox" },
   { href: "/app/ops", label: "Ops" },
   { href: "/app/approvals", label: "Approvals" },
