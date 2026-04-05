@@ -5,47 +5,63 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 import { getBaseUrl } from "@/lib/url";
-import { readWalletHint, shortWallet, writeAccessMode } from "@/lib/access-flow";
+import { readWalletHint, shortWallet, writeAccessMode, writeWalletHint } from "@/lib/access-flow";
 
 type AuthMode = "signin" | "signup";
-type AuthMethod = "password" | "magic";
 
-type SessionState = {
-  email: string;
-} | null;
+type EthereumProvider = {
+  request: (args: { method: string; params?: unknown[] | object }) => Promise<unknown>;
+};
+
+function getEthereumProvider(): EthereumProvider | undefined {
+  if (typeof window === "undefined") return undefined;
+  return (window as Window & { ethereum?: EthereumProvider }).ethereum;
+}
+
+function WalletIcon({ label }: { label: "MetaMask" | "Coinbase" | "WalletConnect" }) {
+  const base = "flex h-9 w-9 items-center justify-center rounded-full text-[0.82rem] font-black";
+  if (label === "MetaMask") {
+    return <div className={`${base} bg-[rgba(249,115,22,.16)] text-[#fb923c]`}>M</div>;
+  }
+  if (label === "Coinbase") {
+    return <div className={`${base} bg-[rgba(59,130,246,.16)] text-[#60a5fa]`}>C</div>;
+  }
+  return <div className={`${base} bg-[rgba(168,85,247,.16)] text-[#c084fc]`}>W</div>;
+}
+
+function SocialIcon({ label }: { label: "Google" | "Apple" | "X" }) {
+  const base = "flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[.04] text-sm font-black";
+  if (label === "Google") return <div className={`${base} text-[#fbbc05]`}>G</div>;
+  if (label === "Apple") return <div className={`${base} text-white`}></div>;
+  return <div className={`${base} text-white`}>X</div>;
+}
 
 export function AuthPanel() {
   const router = useRouter();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [mode, setMode] = useState<AuthMode>("signin");
-  const [method, setMethod] = useState<AuthMethod>("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sessionState, setSessionState] = useState<SessionState>(null);
   const [walletHint, setWalletHint] = useState("");
+  const [activeEmail, setActiveEmail] = useState("");
+  const [loading, setLoading] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     let mounted = true;
 
-    async function loadState() {
+    async function load() {
       setWalletHint(readWalletHint());
 
       if (!supabase) return;
-
       const { data } = await supabase.auth.getSession();
       if (!mounted) return;
-
-      const activeEmail = data.session?.user?.email || "";
-      if (activeEmail) {
-        setSessionState({ email: activeEmail });
-      }
+      setActiveEmail(data.session?.user?.email || "");
     }
 
-    loadState();
+    load();
 
     if (!supabase) {
       return () => {
@@ -54,8 +70,8 @@ export function AuthPanel() {
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const activeEmail = session?.user?.email || "";
-      setSessionState(activeEmail ? { email: activeEmail } : null);
+      setActiveEmail(session?.user?.email || "");
+      setWalletHint(readWalletHint());
     });
 
     return () => {
@@ -66,7 +82,7 @@ export function AuthPanel() {
 
   async function handlePasswordSubmit() {
     if (!supabase) {
-      setMessage("Supabase environment variables are missing. Add them in Vercel and .env.local first.");
+      setMessage("Supabase environment variables are missing. Add them first.");
       return;
     }
 
@@ -75,7 +91,7 @@ export function AuthPanel() {
       return;
     }
 
-    setLoading(true);
+    setLoading("password");
     setMessage("");
 
     try {
@@ -89,7 +105,7 @@ export function AuthPanel() {
         });
         if (error) throw error;
         writeAccessMode("email");
-        setMessage("Account created. Check your inbox for the confirmation email, then return here and sign in.");
+        setMessage("Account created. Check your email to confirm the account, then come back and continue.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -104,13 +120,13 @@ export function AuthPanel() {
       const text = error instanceof Error ? error.message : "Authentication failed.";
       setMessage(text);
     } finally {
-      setLoading(false);
+      setLoading("");
     }
   }
 
   async function handleMagicLink() {
     if (!supabase) {
-      setMessage("Supabase environment variables are missing. Add them in Vercel and .env.local first.");
+      setMessage("Supabase environment variables are missing. Add them first.");
       return;
     }
 
@@ -119,7 +135,7 @@ export function AuthPanel() {
       return;
     }
 
-    setLoading(true);
+    setLoading("magic");
     setMessage("");
 
     try {
@@ -131,39 +147,91 @@ export function AuthPanel() {
       });
       if (error) throw error;
       writeAccessMode("email");
-      setMessage(
-        mode === "signup"
-          ? "Magic signup link sent. Open the email to finish creating your workspace access."
-          : "Magic sign-in link sent. Open the email to continue securely."
-      );
+      setMessage(mode === "signup" ? "Magic signup link sent. Open your email to finish joining." : "Magic sign-in link sent. Open your email to continue securely.");
     } catch (error) {
       const text = error instanceof Error ? error.message : "Magic link failed.";
       setMessage(text);
     } finally {
-      setLoading(false);
+      setLoading("");
     }
   }
 
-  async function continueToWorkspace() {
-    writeAccessMode("email");
+  async function handleOAuth(provider: "google" | "apple" | "twitter") {
+    if (!supabase) {
+      setMessage("Supabase environment variables are missing. Add them first.");
+      return;
+    }
+
+    setLoading(provider);
+    setMessage("");
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${getBaseUrl()}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+      writeAccessMode("email");
+    } catch (error) {
+      const text = error instanceof Error ? error.message : "OAuth sign-in failed.";
+      setMessage(text);
+      setLoading("");
+    }
+  }
+
+  async function handleWallet(providerLabel: "MetaMask" | "Coinbase" | "WalletConnect") {
+    const provider = getEthereumProvider();
+
+    if (!provider) {
+      setMessage(`${providerLabel} connection was requested, but no browser wallet was detected. You can still sign in with email or use preview mode.`);
+      return;
+    }
+
+    setLoading(providerLabel.toLowerCase());
+    setMessage("");
+
+    try {
+      const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
+      const selected = accounts?.[0] || "";
+      if (!selected) throw new Error("No wallet account was returned.");
+
+      writeAccessMode("wallet");
+      writeWalletHint(selected);
+      setWalletHint(selected);
+      setMessage(`Wallet connected as ${shortWallet(selected)}. You can use the workspace now and add email later when you want synced account access.`);
+      setTimeout(() => router.push("/app"), 650);
+    } catch (error) {
+      const text = error instanceof Error ? error.message : "Wallet connection failed.";
+      setMessage(text);
+    } finally {
+      setLoading("");
+    }
+  }
+
+  async function continueExistingSession() {
+    writeAccessMode(activeEmail ? "email" : "wallet");
     router.push("/app");
   }
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[1.02fr_.98fr]">
-      <section className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(16,27,20,.92),rgba(10,18,13,.86))] p-6 shadow-[0_24px_80px_rgba(0,0,0,.26)]">
+    <div className="grid gap-4 xl:grid-cols-[1.04fr_.96fr]">
+      <section className="rounded-[30px] border border-white/8 bg-[linear-gradient(180deg,rgba(16,27,20,.94),rgba(10,18,13,.86))] p-6 shadow-[0_24px_80px_rgba(0,0,0,.3)]">
         <div className="mb-4 inline-flex items-center rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-3 py-2 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-          Fintech access
+          Unified access
         </div>
-        <h1 className="mb-3 font-[family-name:var(--font-cormorant)] text-5xl leading-none tracking-[-0.05em] text-[var(--text)]">
-          Clean sign-in, wallet later.
+
+        <h1 className="mb-3 font-[family-name:var(--font-cormorant)] text-[clamp(2.8rem,5vw,4.5rem)] leading-none tracking-[-0.055em] text-[var(--text)]">
+          One premium login, all entry paths.
         </h1>
         <p className="mb-6 max-w-2xl text-[0.96rem] leading-7 text-[var(--muted)]">
-          Stablelane now treats email account access and wallet connection as two separate layers. Sign in like a finance product first, then connect your wallet later only when a real Arc action needs it.
+          Email, wallet, Google, Apple, and X now sit inside one smarter access screen. Sign in like a premium web3 finance product, then move into the workspace without awkward separation.
         </p>
 
         <div className="mb-5 flex flex-wrap gap-2">
           <button
+            type="button"
             onClick={() => setMode("signin")}
             className={`rounded-full px-4 py-2 text-[0.86rem] font-semibold ${
               mode === "signin"
@@ -174,6 +242,7 @@ export function AuthPanel() {
             Sign in
           </button>
           <button
+            type="button"
             onClick={() => setMode("signup")}
             className={`rounded-full px-4 py-2 text-[0.86rem] font-semibold ${
               mode === "signup"
@@ -185,38 +254,20 @@ export function AuthPanel() {
           </button>
         </div>
 
-        <div className="mb-5 flex flex-wrap gap-2">
-          <button
-            onClick={() => setMethod("password")}
-            className={`rounded-full px-4 py-2 text-[0.82rem] font-semibold ${
-              method === "password"
-                ? "border border-[var(--line)] bg-[rgba(201,255,96,.08)] text-[var(--accent)]"
-                : "border border-white/8 bg-white/3 text-[var(--muted)]"
-            }`}
-          >
-            Password
-          </button>
-          <button
-            onClick={() => setMethod("magic")}
-            className={`rounded-full px-4 py-2 text-[0.82rem] font-semibold ${
-              method === "magic"
-                ? "border border-[var(--line)] bg-[rgba(201,255,96,.08)] text-[var(--accent)]"
-                : "border border-white/8 bg-white/3 text-[var(--muted)]"
-            }`}
-          >
-            Magic link
-          </button>
-        </div>
-
-        {sessionState ? (
+        {activeEmail || walletHint ? (
           <div className="mb-5 rounded-[22px] border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4">
-            <div className="mb-1 text-[0.8rem] uppercase tracking-[0.08em] text-[var(--accent)]">Active session</div>
-            <div className="mb-2 text-lg font-semibold text-[var(--text)]">{sessionState.email}</div>
+            <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--accent)]">Current access</div>
+            <div className="mb-2 text-lg font-semibold text-[var(--text)]">
+              {activeEmail ? activeEmail : shortWallet(walletHint)}
+            </div>
             <p className="mb-3 text-[0.84rem] leading-6 text-[var(--accent)]">
-              You are already signed in. Open the workspace now, then connect wallet later only when you need funding or release actions.
+              {activeEmail
+                ? "You already have an active email session. Continue straight into the workspace."
+                : "A wallet is already connected in this browser. You can continue now or still add email later."}
             </p>
             <button
-              onClick={continueToWorkspace}
+              type="button"
+              onClick={continueExistingSession}
               className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]"
             >
               Continue to workspace
@@ -226,7 +277,7 @@ export function AuthPanel() {
 
         <div className="grid gap-3">
           <label className="grid gap-2 text-[0.84rem] text-[var(--muted)]">
-            <span>Work email</span>
+            <span>Email</span>
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -235,31 +286,25 @@ export function AuthPanel() {
             />
           </label>
 
-          {method === "password" ? (
-            <label className="grid gap-2 text-[0.84rem] text-[var(--muted)]">
-              <span>Password</span>
-              <div className="flex items-center gap-2 rounded-2xl border border-white/8 bg-white/3 px-3 py-2">
-                <input
-                  type={passwordVisible ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={mode === "signup" ? "Create a secure password" : "Enter your password"}
-                  className="w-full bg-transparent px-1 py-1 text-[var(--text)] outline-none placeholder:text-[var(--muted-2)]"
-                />
-                <button
-                  type="button"
-                  onClick={() => setPasswordVisible((value) => !value)}
-                  className="rounded-full border border-white/8 bg-white/3 px-3 py-2 text-[0.75rem] font-semibold text-[var(--text)]"
-                >
-                  {passwordVisible ? "Hide" : "Show"}
-                </button>
-              </div>
-            </label>
-          ) : (
-            <div className="rounded-2xl border border-white/8 bg-white/3 p-4 text-[0.84rem] leading-6 text-[var(--muted)]">
-              Send a secure email link and finish sign-in without typing a password on this device.
+          <label className="grid gap-2 text-[0.84rem] text-[var(--muted)]">
+            <span>Password</span>
+            <div className="flex items-center gap-2 rounded-2xl border border-white/8 bg-white/3 px-3 py-2">
+              <input
+                type={passwordVisible ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={mode === "signup" ? "Create a secure password" : "Enter your password"}
+                className="w-full bg-transparent px-1 py-1 text-[var(--text)] outline-none placeholder:text-[var(--muted-2)]"
+              />
+              <button
+                type="button"
+                onClick={() => setPasswordVisible((value) => !value)}
+                className="rounded-full border border-white/8 bg-white/3 px-3 py-2 text-[0.75rem] font-semibold text-[var(--text)]"
+              >
+                {passwordVisible ? "Hide" : "Show"}
+              </button>
             </div>
-          )}
+          </label>
 
           <label className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-[0.82rem] text-[var(--muted)]">
             <input
@@ -267,37 +312,86 @@ export function AuthPanel() {
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
             />
-            <span>{rememberMe ? "Keep this workspace remembered on this device" : "Session will be treated as lightweight on this device"}</span>
+            <span>{rememberMe ? "Keep this workspace remembered on this device" : "Use a lighter session on this device"}</span>
           </label>
 
           <button
-            onClick={method === "password" ? handlePasswordSubmit : handleMagicLink}
-            disabled={loading}
-            className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b] disabled:opacity-70"
+            type="button"
+            onClick={handlePasswordSubmit}
+            disabled={Boolean(loading)}
+            className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.96rem] font-bold text-[#08100b] disabled:opacity-70"
           >
-            {loading
-              ? "Working..."
-              : method === "magic"
-                ? mode === "signup"
-                  ? "Send magic signup link"
-                  : "Send magic sign-in link"
-                : mode === "signup"
-                  ? "Create account"
-                  : "Sign in"}
+            {loading === "password" ? "Working..." : mode === "signup" ? "Create account" : "Sign in"}
           </button>
+
+          <button
+            type="button"
+            onClick={handleMagicLink}
+            disabled={Boolean(loading)}
+            className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.9rem] font-semibold text-[var(--text)] disabled:opacity-70"
+          >
+            {loading === "magic" ? "Sending..." : mode === "signup" ? "Join with magic link" : "Sign in with magic link"}
+          </button>
+
+          <div className="relative py-1">
+            <div className="absolute inset-x-0 top-1/2 h-px bg-white/10" />
+            <div className="relative mx-auto flex w-fit items-center justify-center bg-[rgb(12,18,14)] px-4 text-[0.82rem] text-[var(--muted)]">
+              or continue with
+            </div>
+          </div>
+
+          <div className="grid gap-2 md:grid-cols-3">
+            {(["MetaMask", "Coinbase", "WalletConnect"] as const).map((wallet) => (
+              <button
+                key={wallet}
+                type="button"
+                onClick={() => handleWallet(wallet)}
+                disabled={Boolean(loading)}
+                className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-left transition hover:bg-white/5 disabled:opacity-70"
+              >
+                <WalletIcon label={wallet} />
+                <div>
+                  <div className="text-[0.9rem] font-semibold text-[var(--text)]">{wallet}</div>
+                  <div className="text-[0.72rem] text-[var(--muted)]">Wallet access</div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <div className="grid gap-2 md:grid-cols-3">
+            {[
+              { label: "Google", provider: "google" as const },
+              { label: "Apple", provider: "apple" as const },
+              { label: "X", provider: "twitter" as const },
+            ].map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => handleOAuth(item.provider)}
+                disabled={Boolean(loading)}
+                className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-left transition hover:bg-white/5 disabled:opacity-70"
+              >
+                <SocialIcon label={item.label as "Google" | "Apple" | "X"} />
+                <div>
+                  <div className="text-[0.9rem] font-semibold text-[var(--text)]">Continue with {item.label}</div>
+                  <div className="text-[0.72rem] text-[var(--muted)]">Social access</div>
+                </div>
+              </button>
+            ))}
+          </div>
 
           <div className="flex flex-wrap gap-2">
             <Link href="/app" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.86rem] font-semibold text-[var(--text)]">
               Browse in preview
             </Link>
             <Link href="/start" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.86rem] font-semibold text-[var(--text)]">
-              Open access options
+              More access options
             </Link>
           </div>
 
           {message ? (
             <div className={`rounded-2xl px-4 py-3 text-[0.84rem] leading-6 ${
-              message.toLowerCase().includes("failed") || message.toLowerCase().includes("missing")
+              message.toLowerCase().includes("failed") || message.toLowerCase().includes("missing") || message.toLowerCase().includes("no wallet")
                 ? "border border-white/8 bg-white/3 text-[var(--muted)]"
                 : "border border-[var(--line)] bg-[rgba(201,255,96,.08)] text-[var(--accent)]"
             }`}>
@@ -307,30 +401,28 @@ export function AuthPanel() {
         </div>
       </section>
 
-      <aside className="rounded-[28px] border border-white/8 bg-white/3 p-6">
+      <aside className="rounded-[30px] border border-white/8 bg-white/3 p-6">
         <div className="mb-4 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-          Why this feels better
+          Premium web3 access
         </div>
 
         <div className="grid gap-3">
           {[
             {
-              title: "Email-first account access",
-              body: "The saved workspace, invoices, approvals, and team records all belong to your email account flow. That keeps sign-in clear and finance-like.",
+              title: "One screen, smarter flow",
+              body: "Email, wallet, and social entry now live together in one premium access layout instead of separate disconnected flows.",
             },
             {
-              title: "Wallet stays optional",
-              body: "Wallet connection should only happen when you explicitly need Arc funding, Gateway, escrow, or release actions.",
+              title: "Wallets inside login",
+              body: "Wallet connection is now presented as a first-class login path on the same screen, closer to premium web3 products.",
             },
             {
-              title: "Magic link fallback",
-              body: "A cleaner login option for devices where you do not want to type a password or where you want a lighter sign-in experience.",
+              title: "Better fintech feel",
+              body: "The page now looks and behaves more like a modern finance product, with cleaner hierarchy and smarter entry options.",
             },
             {
-              title: "Wallet hint, not wallet pressure",
-              body: walletHint
-                ? `A wallet is already remembered here as ${shortWallet(walletHint)}. You can attach it later inside the product.`
-                : "No wallet is attached yet, which is completely fine until a real payment action is needed.",
+              title: "Still practical",
+              body: "Email remains the path for synced account access, while wallet-first access still works for users who want to move fast.",
             },
           ].map((item) => (
             <div key={item.title} className="rounded-2xl border border-white/8 bg-white/3 p-4">
@@ -341,9 +433,9 @@ export function AuthPanel() {
         </div>
 
         <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4">
-          <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--accent)]">Fintech login rule</div>
+          <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--accent)]">Implementation note</div>
           <p className="text-[0.84rem] leading-6 text-[var(--accent)]">
-            Users should never feel forced into wallet connection before basic account access is settled.
+            Google, Apple, and X require Supabase OAuth provider setup. Wallet buttons work as wallet-first workspace access, not full SIWE yet.
           </p>
         </div>
       </aside>
