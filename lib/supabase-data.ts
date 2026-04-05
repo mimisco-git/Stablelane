@@ -967,3 +967,53 @@ export async function saveNotificationPreferences(payload: {
   if (error) throw error;
   return data;
 }
+
+
+export async function createSettlementLedgerEntry(input: {
+  invoice_id?: string | null;
+  entry_type: "gateway_deposit" | "escrow_funding" | "release" | "crosschain" | "manual";
+  amount?: number | null;
+  currency: "USDC" | "EURC";
+  tx_hash?: string | null;
+  target_address?: string | null;
+  note?: string | null;
+}) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const workspace = await ensureWorkspaceProfile();
+  if (!workspace) return null;
+
+  const { data, error } = await supabase
+    .from("settlement_ledger")
+    .insert({
+      owner_id: user.id,
+      workspace_name: workspace.workspace_name,
+      invoice_id: input.invoice_id || null,
+      entry_type: input.entry_type,
+      amount: input.amount ?? null,
+      currency: input.currency,
+      tx_hash: input.tx_hash || null,
+      target_address: input.target_address || null,
+      note: input.note || null,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchSettlementLedger(limit = 100) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return [];
+
+  const { data } = await supabase
+    .from("settlement_ledger")
+    .select("*")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  return (data || []) as any[];
+}

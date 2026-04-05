@@ -387,3 +387,11 @@ This stage adds more real, database-backed workspace infrastructure:
 - database-backed audit trail at `/app/audit`
 - database-backed notification preferences at `/app/preferences`
 - key actions now write audit events into Supabase, not only local activity storage
+
+
+## Stage 32 package
+This stage adds more real financial operations infrastructure:
+- new `settlement_ledger` table
+- new `/app/ledger` page for database-backed settlement entries
+- new `/app/transactions` page for onchain receipt monitoring using saved tx hashes
+- gateway, funding, and release actions now also write ledger entries into Supabase

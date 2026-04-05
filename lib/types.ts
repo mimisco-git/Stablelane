@@ -151,3 +151,25 @@ export type NotificationPreferences = {
   created_at: string;
   updated_at: string;
 };
+
+
+export type SettlementLedgerEntryType =
+  | "gateway_deposit"
+  | "escrow_funding"
+  | "release"
+  | "crosschain"
+  | "manual";
+
+export type SettlementLedgerEntry = {
+  id: string;
+  owner_id: string;
+  workspace_name: string;
+  invoice_id: string | null;
+  entry_type: SettlementLedgerEntryType;
+  amount: number | null;
+  currency: "USDC" | "EURC";
+  tx_hash: string | null;
+  target_address: string | null;
+  note: string | null;
+  created_at: string;
+};

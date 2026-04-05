@@ -411,3 +411,34 @@ create trigger trg_notification_preferences_updated_at
 before update on public.notification_preferences
 for each row
 execute function public.set_notification_preferences_updated_at();
+
+
+create table if not exists public.settlement_ledger (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  workspace_name text not null,
+  invoice_id uuid,
+  entry_type text not null default 'manual',
+  amount numeric(18,2),
+  currency text not null default 'USDC',
+  tx_hash text,
+  target_address text,
+  note text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.settlement_ledger enable row level security;
+
+drop policy if exists "settlement_ledger_select_own" on public.settlement_ledger;
+create policy "settlement_ledger_select_own"
+on public.settlement_ledger
+for select
+to authenticated
+using (auth.uid() = owner_id);
+
+drop policy if exists "settlement_ledger_insert_own" on public.settlement_ledger;
+create policy "settlement_ledger_insert_own"
+on public.settlement_ledger
+for insert
+to authenticated
+with check (auth.uid() = owner_id);
