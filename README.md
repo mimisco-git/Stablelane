@@ -433,3 +433,14 @@ This stage makes wallet access more real:
 - workspace gate now prefers verified wallet session over plain wallet hints
 - identity center can link the verified wallet into the workspace profile
 - linked wallet verification time is now stored on `workspace_profiles`
+
+
+## Stage 37 package
+This stage focuses on production-readiness for auth and launch flow:
+- new `lib/auth-intent.ts` helper for pending method and post-login destination recovery
+- unified auth now remembers the intended destination and returns users there after success
+- callback page now finalizes linked auth methods after session creation, which is more reliable for magic-link and OAuth flows
+- workspace gate now treats preview access as an explicit state instead of silently allowing access
+- new `/app/readiness` page for launch-oriented checks
+- `.env.example` now includes site URL and social-provider visibility flags
+- account methods page was cleaned up and fixed

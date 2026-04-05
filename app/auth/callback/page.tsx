@@ -5,6 +5,21 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 import { writeAccessMode } from "@/lib/access-flow";
+import {
+  clearPendingAuthMethod,
+  clearPostAuthNextPath,
+  readPendingAuthMethod,
+  readPostAuthNextPath,
+  sanitizeNextPath,
+} from "@/lib/auth-intent";
+import { saveLinkedAuthMethod } from "@/lib/supabase-data";
+
+function resolveMethodFromProvider(provider: string | undefined) {
+  if (provider === "google") return "google_oauth" as const;
+  if (provider === "apple") return "apple_oauth" as const;
+  if (provider === "twitter") return "x_oauth" as const;
+  return null;
+}
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -29,11 +44,26 @@ export default function AuthCallbackPage() {
         return;
       }
 
+      const pendingMethod = readPendingAuthMethod();
+      const nextPath = sanitizeNextPath(readPostAuthNextPath());
+
       const { data } = await supabase.auth.getSession();
       if (data.session?.user) {
         writeAccessMode("email");
+
+        const providerMethod = resolveMethodFromProvider(data.session.user.app_metadata?.provider);
+        const finalMethod = pendingMethod || providerMethod;
+        if (finalMethod && finalMethod !== "wallet_siwe") {
+          try {
+            await saveLinkedAuthMethod(finalMethod);
+          } catch {}
+        }
+
+        clearPendingAuthMethod();
+        clearPostAuthNextPath();
+
         if (mounted) setMessage("Secure sign-in complete. Redirecting to your workspace...");
-        setTimeout(() => router.push("/app"), 800);
+        setTimeout(() => router.push(nextPath || "/app"), 800);
         return;
       }
 

@@ -56,5 +56,6 @@ export const dashboardNav = [
   { href: "/app/team", label: "Team" },
   { href: "/app/clients", label: "Clients" },
   { href: "/app/settings", label: "Settings" },
+  { href: "/app/readiness", label: "Readiness" },
   { href: "/app/preferences", label: "Preferences" },
 ];

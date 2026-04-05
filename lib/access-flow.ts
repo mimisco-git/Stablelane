@@ -50,3 +50,20 @@ export function writeVerifiedWallet(address: string) {
   }
   window.localStorage.setItem(VERIFIED_WALLET_KEY, address);
 }
+
+
+const PREVIEW_MODE_KEY = "stablelane_preview_access_v1";
+
+export function readPreviewAccessEnabled() {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(PREVIEW_MODE_KEY) === "1";
+}
+
+export function writePreviewAccessEnabled(enabled: boolean) {
+  if (typeof window === "undefined") return;
+  if (!enabled) {
+    window.localStorage.removeItem(PREVIEW_MODE_KEY);
+    return;
+  }
+  window.localStorage.setItem(PREVIEW_MODE_KEY, "1");
+}
