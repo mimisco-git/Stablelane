@@ -307,3 +307,10 @@ This stage makes Stablelane feel more like a real approval-led operations produc
 - approval operations dashboard
 - stronger release-finalization guard so all approvals must be approved before release completes
 - role-aware action gating for approval and release workflow in the UI
+
+
+## Stage 23 fix v2
+This package fixes the missing approval-op files and exports:
+- adds `components/acting-role-switcher.tsx`
+- restores `fetchApprovalOverview`
+- restores `fetchInvoiceApprovalGate`

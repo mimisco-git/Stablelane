@@ -647,3 +647,43 @@ export async function updateReleaseApprovalRequest(
 
   return data as ReleaseApprovalRequest;
 }
+
+
+
+export async function fetchApprovalOverview() {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const { data } = await supabase
+    .from("release_approval_requests")
+    .select("*")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: false });
+
+  const rows = (data as ReleaseApprovalRequest[] | null) || [];
+
+  return {
+    total: rows.length,
+    pending: rows.filter((row) => row.status === "Pending").length,
+    approved: rows.filter((row) => row.status === "Approved").length,
+    rejected: rows.filter((row) => row.status === "Rejected").length,
+    recent: rows.slice(0, 12),
+  };
+}
+
+export async function fetchInvoiceApprovalGate(invoiceId: string) {
+  const rows = await fetchReleaseApprovals(invoiceId);
+  const total = rows.length;
+  const pending = rows.filter((row) => row.status === "Pending").length;
+  const approved = rows.filter((row) => row.status === "Approved").length;
+  const rejected = rows.filter((row) => row.status === "Rejected").length;
+
+  return {
+    total,
+    pending,
+    approved,
+    rejected,
+    allApproved: total > 0 && approved === total,
+    hasRejection: rejected > 0,
+  };
+}
