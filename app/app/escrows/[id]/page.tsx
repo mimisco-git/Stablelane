@@ -12,8 +12,8 @@ export default async function EscrowDetailPage({
     <DashboardShell
       currentPath="/app/escrows"
       title="Escrow detail"
-      description="This screen now behaves like a contract-ready escrow center, with wallet checks, explorer links, and a clear state timeline for the invoice."
-      badge={id}
+      description="Escrow state, wallet verification, milestone timeline, and settlement controls for this engagement."
+      badge="Escrow detail"
     >
       <EscrowWorkbench invoiceId={id} amount="$4,800" currency="USDC" />
     </DashboardShell>

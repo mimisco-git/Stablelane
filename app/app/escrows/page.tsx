@@ -8,7 +8,7 @@ export default function EscrowsPage() {
     <DashboardShell
       currentPath="/app/escrows"
       title="Escrows"
-      description="Escrow state is where Stablelane proves trust. This view now behaves more like a real funding and release control center."
+      description="Manage escrow state, milestone approvals, and settlement releases across your active client engagements."
       badge="Milestone escrow"
     >
       <div className="grid gap-3">

@@ -12,7 +12,7 @@ export default async function EditInvoicePage({
     <DashboardShell
       currentPath="/app/invoices"
       title="Edit invoice draft"
-      description="This stage adds real draft editing, so saved workspace records can be refined instead of recreated from scratch."
+      description="Edit invoice details, update milestones, and refine payment terms before sending."
       badge={id}
     >
       <InvoiceBuilder draftId={id} />

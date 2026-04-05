@@ -6,8 +6,8 @@ export default function ReleasesPage() {
     <DashboardShell
       currentPath="/app/releases"
       title="Releases"
-      description="A premium release orchestration screen for funded invoices, approval gates, and final release readiness."
-      badge="Release center"
+      description="Release management for funded invoices, approval gates, and final settlement execution."
+      badge="Releases"
     >
       <ReleaseOrchestrationCenter />
     </DashboardShell>

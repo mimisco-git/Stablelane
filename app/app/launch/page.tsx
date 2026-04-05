@@ -6,8 +6,8 @@ export default function LaunchPage() {
     <DashboardShell
       currentPath="/app/launch"
       title="Launch"
-      description="A final launch-hardening view for the blockers and cleanup actions that matter most before go-live."
-      badge="Go-live"
+      description="Pre-launch checklist and environment hardening actions before your workspace goes live."
+      badge="Launch"
     >
       <LaunchHardeningCenter />
     </DashboardShell>

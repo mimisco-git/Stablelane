@@ -6,8 +6,8 @@ export default function InvitationsPage() {
     <DashboardShell
       currentPath="/app/invitations"
       title="Invitations"
-      description="A dedicated invitation flow for onboarding future workspace members before they become fully active operators inside Stablelane."
-      badge="Team onboarding"
+      description="Invite collaborators and manage pending access requests for your workspace."
+      badge="Invitations"
     >
       <WorkspaceInvitationsManager />
     </DashboardShell>

@@ -6,8 +6,8 @@ export default function ClientsPage() {
     <DashboardShell
       currentPath="/app/clients"
       title="Clients"
-      description="This stage adds a real client record layer to Stablelane so invoices and workspace activity can start sitting on proper business entities instead of only mock data."
-      badge="Supabase clients"
+      description="Manage client records and link them to invoices, escrows, and payment history."
+      badge="Clients"
     >
       <ClientsManager />
     </DashboardShell>

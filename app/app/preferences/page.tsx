@@ -6,7 +6,7 @@ export default function PreferencesPage() {
     <DashboardShell
       currentPath="/app/preferences"
       title="Preferences"
-      description="Database-backed notification and alert preferences for the workspace."
+      description="Set your notification preferences for approvals, payments, and workspace events."
       badge="Preferences"
     >
       <NotificationPreferencesForm />

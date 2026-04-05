@@ -6,8 +6,8 @@ export default function NewInvoicePage() {
     <DashboardShell
       currentPath="/app/invoices"
       title="Create invoice"
-      description="This stage turns the invoice form into a working local draft builder so you can test the product flow before the backend arrives."
-      badge="Interactive draft"
+      description="Create a new invoice with milestones, client details, payment terms, and stablecoin settlement."
+      badge="Invoice"
     >
       <InvoiceBuilder />
     </DashboardShell>

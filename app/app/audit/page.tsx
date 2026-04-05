@@ -6,7 +6,7 @@ export default function AuditPage() {
     <DashboardShell
       currentPath="/app/audit"
       title="Audit"
-      description="A database-backed workspace audit trail for key operational events across Stablelane."
+      description="Complete audit trail for key operational events and state changes across your workspace."
       badge="Audit trail"
     >
       <AuditTrailPanel />

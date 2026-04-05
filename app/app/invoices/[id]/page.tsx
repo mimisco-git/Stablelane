@@ -12,7 +12,7 @@ export default async function InvoiceDetailPage({
     <DashboardShell
       currentPath="/app/invoices"
       title="Invoice detail"
-      description="This stage turns invoice detail into a real record view that can load saved workspace drafts or browser drafts by ID."
+      description="Full invoice detail with funding state, milestone breakdown, and release history."
       badge={id}
     >
       <InvoiceDetailView invoiceId={id} />

@@ -6,8 +6,8 @@ export default function TeamPage() {
     <DashboardShell
       currentPath="/app/team"
       title="Team"
-      description="This stage introduces a premium workspace-role preview so Stablelane feels more like a true operational product for agencies and finance teams."
-      badge="Team controls"
+      description="Manage team roles, member permissions, and collaborator access across your workspace."
+      badge="Team"
     >
       <div className="grid gap-4">
         <div className="rounded-[20px] border border-white/8 bg-white/3 p-5">

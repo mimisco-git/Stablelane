@@ -6,8 +6,8 @@ export default function AccessPage() {
     <DashboardShell
       currentPath="/app/access"
       title="Access"
-      description="A real workspace-access control page for signed-in users, invitations, memberships, and permission resolution."
-      badge="Real access"
+      description="Access control for workspace members, invitations, and permission management."
+      badge="Access control"
     >
       <RealAccessControlPanel />
     </DashboardShell>

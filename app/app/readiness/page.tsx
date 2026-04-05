@@ -6,8 +6,8 @@ export default function ReadinessPage() {
     <DashboardShell
       currentPath="/app/readiness"
       title="Readiness"
-      description="A practical launch-readiness view for identity, provider, preview, and notification configuration."
-      badge="Production"
+      description="Identity, provider, and notification configuration for launch readiness."
+      badge="Readiness"
     >
       <ProductionReadinessCenter />
     </DashboardShell>

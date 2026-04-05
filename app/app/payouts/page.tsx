@@ -7,8 +7,8 @@ export default function PayoutsPage() {
     <DashboardShell
       currentPath="/app/payouts"
       title="Payouts"
-      description="This page now behaves more like the operating layer for payout templates and completed payout records."
-      badge="Split router"
+      description="Configure payout splits, manage templates, and view completed payout records for your workspace."
+      badge="Payouts"
     >
       <div className="grid gap-4 xl:grid-cols-[.95fr_1.05fr]">
         <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">

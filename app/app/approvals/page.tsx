@@ -7,8 +7,8 @@ export default function ApprovalsPage() {
     <DashboardShell
       currentPath="/app/approvals"
       title="Approvals"
-      description="A workspace-level approval operations page that makes release control feel more like a real finance and operations product."
-      badge="Approval ops"
+      description="Workspace-level approval queue and release control for all active milestone decisions."
+      badge="Approvals"
     >
       <div className="grid gap-4">
         <ActingRoleSwitcher />

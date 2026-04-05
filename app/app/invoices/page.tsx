@@ -6,8 +6,8 @@ export default function InvoicesPage() {
     <DashboardShell
       currentPath="/app/invoices"
       title="Invoices"
-      description="The invoices area now mixes seeded mock records with local draft invoices so you can start testing a more believable workflow."
-      badge="Interactive list"
+      description="Track invoice state, funding status, and release readiness across all your client engagements."
+      badge="Invoices"
     >
       <InvoicesBoard />
     </DashboardShell>

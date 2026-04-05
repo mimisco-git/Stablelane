@@ -6,8 +6,8 @@ export default function LedgerPage() {
     <DashboardShell
       currentPath="/app/ledger"
       title="Ledger"
-      description="A database-backed settlement ledger for the stablecoin movement happening inside the workspace."
-      badge="Settlement ledger"
+      description="Settlement records and stablecoin movement history for your workspace."
+      badge="Ledger"
     >
       <SettlementLedgerPanel />
     </DashboardShell>

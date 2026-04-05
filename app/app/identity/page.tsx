@@ -6,8 +6,8 @@ export default function IdentityPage() {
     <DashboardShell
       currentPath="/app/identity"
       title="Identity"
-      description="A more realistic identity center for linking the email session and wallet hint into the workspace profile."
-      badge="Identity center"
+      description="Link your email session and wallet to your workspace profile and manage verified credentials."
+      badge="Identity"
     >
       <IdentityLinkingCenter />
     </DashboardShell>

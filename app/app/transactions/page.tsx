@@ -6,8 +6,8 @@ export default function TransactionsPage() {
     <DashboardShell
       currentPath="/app/transactions"
       title="Transactions"
-      description="A live monitor for funding and release transaction hashes that already exist inside the workspace."
-      badge="Onchain monitor"
+      description="Live monitor for funding and release transaction hashes across your Arc workspace."
+      badge="Transactions"
     >
       <TransactionMonitorPanel />
     </DashboardShell>

@@ -16,7 +16,7 @@ export default function ArcPage() {
     <DashboardShell
       currentPath="/app/arc"
       title="Arc finance"
-      description="This is the Arc-native workspace layer for Stablelane. It keeps testnet operations closer to Arc itself with stablecoin-aware balance logic, finality-aware confirmations, and clearer settlement lanes."
+      description="Stablecoin assets, finality-aware confirmations, native Arc balance, and funding lanes for your workspace."
       badge="Arc testnet"
     >
       <div className="grid gap-4">

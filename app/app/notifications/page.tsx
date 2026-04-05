@@ -6,8 +6,8 @@ export default function NotificationsPage() {
     <DashboardShell
       currentPath="/app/notifications"
       title="Notifications"
-      description="A cleaner notification center for approvals, invitations, and operational signals across the workspace."
-      badge="Alerts"
+      description="Manage approval notifications, invitation alerts, and operational signals for your workspace."
+      badge="Notifications"
     >
       <NotificationsCenter />
     </DashboardShell>

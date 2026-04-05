@@ -6,8 +6,8 @@ export default function ActivityPage() {
     <DashboardShell
       currentPath="/app/activity"
       title="Activity"
-      description="Stablelane now keeps a live operational feed for Arc-focused funding, settlement, and execution actions."
-      badge="Operational feed"
+      description="Live operational feed for funding, settlement, and execution events across your workspace."
+      badge="Activity"
     >
       <ActivityFeedPanel />
     </DashboardShell>

@@ -6,8 +6,8 @@ export default function InboxPage() {
     <DashboardShell
       currentPath="/app/inbox"
       title="Inbox"
-      description="A premium workspace inbox for approval pressure, pending invitations, and recent operational signals."
-      badge="Workspace inbox"
+      description="Incoming approvals, pending invitations, and workspace alerts in one place."
+      badge="Inbox"
     >
       <ApprovalInboxPanel />
     </DashboardShell>

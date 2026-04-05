@@ -6,8 +6,8 @@ export default function MyApprovalsPage() {
     <DashboardShell
       currentPath="/app/my-approvals"
       title="My approvals"
-      description="A dedicated approver inbox for the currently signed-in user, so approvals can be actioned by the assigned person instead of only the workspace owner."
-      badge="Approver view"
+      description="Your personal queue of milestone approvals and release decisions assigned to you."
+      badge="My approvals"
     >
       <MyApprovalsPanel />
     </DashboardShell>

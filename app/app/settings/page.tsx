@@ -8,8 +8,8 @@ export default function SettingsPage() {
     <DashboardShell
       currentPath="/app/settings"
       title="Settings"
-      description="Settings now save real workspace preferences to Supabase so Stablelane can stop feeling like a demo and start behaving like a real app."
-      badge="Workspace config"
+      description="Configure workspace name, notification settings, payout preferences, and environment options."
+      badge="Settings"
     >
       <div className="grid gap-4">
         <EnvironmentSwitcher />
