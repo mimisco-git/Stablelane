@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { updateInvoiceWorkflowState } from "@/lib/supabase-data";
+import { updateInvoiceWorkflowState, fetchInvoiceApprovalGate } from "@/lib/supabase-data";
 import { sendNativeTransaction, ensureSelectedNetwork, getActiveWalletAddress } from "@/lib/onchain";
 import { useAppEnvironment } from "@/lib/use-app-environment";
 import { getEscrowContractConfig, getEscrowExplorerLink } from "@/lib/contracts";
+import { canFinalizeRelease, canPrepareFunding, readActingRole } from "@/lib/role-session";
 import { InlineNotice } from "@/components/ui-state";
 import { pushActivityItem } from "@/lib/activity-feed";
 
@@ -30,15 +31,41 @@ export function EscrowTransactionPanel({
   escrowAddress: string | null;
   currentEscrowStatus: string;
 }) {
-  const { environment, network } = useAppEnvironment();
+  const { environment } = useAppEnvironment();
   const contractConfig = getEscrowContractConfig(environment);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [actingRole, setActingRole] = useState("Owner");
+  const [approvalGate, setApprovalGate] = useState({
+    total: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    allApproved: false,
+    hasRejection: false,
+  });
+
+  async function loadGate() {
+    try {
+      const gate = await fetchInvoiceApprovalGate(invoiceId);
+      setApprovalGate(gate);
+    } catch {
+      // ignore approval gate load failure
+    }
+  }
+
+  useEffect(() => {
+    setActingRole(readActingRole());
+    loadGate();
+  }, [invoiceId]);
 
   async function createEscrowRecord() {
     setBusy(true);
     setMessage("");
     try {
+      if (!canPrepareFunding(readActingRole())) {
+        throw new Error(`${readActingRole()} cannot create escrow records in this preview.`);
+      }
       if (!contractConfig.ready) {
         throw new Error("Configure the escrow factory, implementation, and release module addresses first.");
       }
@@ -78,6 +105,9 @@ export function EscrowTransactionPanel({
     setBusy(true);
     setMessage("");
     try {
+      if (!canPrepareFunding(readActingRole())) {
+        throw new Error(`${readActingRole()} cannot prepare escrow funding in this preview.`);
+      }
       if (!contractConfig.ready) throw new Error("Contract addresses are not configured yet.");
       const targetAddress = escrowAddress || contractConfig.implementationAddress;
       if (!targetAddress) throw new Error("No contract-aware escrow target is available.");
@@ -109,6 +139,7 @@ export function EscrowTransactionPanel({
           },
         }
       );
+
       pushActivityItem({
         title: "Escrow funding submitted",
         detail: `${invoiceAmount} submitted into the contract-aware escrow target.`,
@@ -118,6 +149,7 @@ export function EscrowTransactionPanel({
         invoiceId,
         targetAddress,
       });
+
       setMessage("Funding transaction submitted from your wallet.");
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Funding transaction failed.";
@@ -131,6 +163,9 @@ export function EscrowTransactionPanel({
     setBusy(true);
     setMessage("");
     try {
+      if (!canFinalizeRelease(readActingRole())) {
+        throw new Error(`${readActingRole()} cannot request release in this preview.`);
+      }
       if (!contractConfig.ready) throw new Error("Contract addresses are not configured yet.");
 
       await updateInvoiceWorkflowState(
@@ -145,6 +180,7 @@ export function EscrowTransactionPanel({
           },
         }
       );
+      await loadGate();
       setMessage("Release request recorded for this invoice.");
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Release request failed.";
@@ -158,7 +194,13 @@ export function EscrowTransactionPanel({
     setBusy(true);
     setMessage("");
     try {
+      if (!canFinalizeRelease(readActingRole())) {
+        throw new Error(`${readActingRole()} cannot finalize release in this preview.`);
+      }
       if (!contractConfig.ready) throw new Error("Contract addresses are not configured yet.");
+      if (!approvalGate.allApproved) {
+        throw new Error("All release approvals must be approved before final release.");
+      }
 
       const releaseTxHash = `0x${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`;
 
@@ -179,6 +221,7 @@ export function EscrowTransactionPanel({
           },
         }
       );
+
       pushActivityItem({
         title: "Release confirmed",
         detail: `Invoice ${invoiceId} was marked released through the contract path.`,
@@ -187,6 +230,7 @@ export function EscrowTransactionPanel({
         txHash: releaseTxHash,
         invoiceId,
       });
+
       setMessage("Invoice marked as released and completed.");
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Release update failed.";
@@ -203,6 +247,18 @@ export function EscrowTransactionPanel({
         <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
           This layer now uses the configured contract path so funding and release state are tied to real environment addresses, not only placeholders.
         </p>
+      </div>
+
+      <div className="mb-4 rounded-2xl border border-white/8 bg-white/3 p-4">
+        <div className="mb-2 font-semibold">Release gate</div>
+        <div className="grid gap-3 md:grid-cols-4">
+          <div className="rounded-xl border border-white/8 bg-white/[.03] px-3 py-3 text-[0.84rem] text-[var(--muted)]">Approvals: {approvalGate.total}</div>
+          <div className="rounded-xl border border-white/8 bg-white/[.03] px-3 py-3 text-[0.84rem] text-[var(--muted)]">Pending: {approvalGate.pending}</div>
+          <div className="rounded-xl border border-white/8 bg-white/[.03] px-3 py-3 text-[0.84rem] text-[var(--muted)]">Approved: {approvalGate.approved}</div>
+          <div className="rounded-xl border border-white/8 bg-white/[.03] px-3 py-3 text-[0.84rem] text-[var(--muted)]">
+            {approvalGate.allApproved ? "Final release unlocked" : approvalGate.hasRejection ? "A rejection blocks final release" : "Waiting on approvals"}
+          </div>
+        </div>
       </div>
 
       <div className="mb-4 grid gap-3 md:grid-cols-3">
@@ -228,47 +284,23 @@ export function EscrowTransactionPanel({
       </div>
 
       <div className="grid gap-3">
-        <button
-          type="button"
-          onClick={createEscrowRecord}
-          disabled={busy}
-          className="rounded-full bg-[var(--accent)] px-4 py-3 text-left text-[0.92rem] font-bold text-[#08100b] disabled:opacity-70"
-        >
+        <button type="button" onClick={createEscrowRecord} disabled={busy} className="rounded-full bg-[var(--accent)] px-4 py-3 text-left text-[0.92rem] font-bold text-[#08100b] disabled:opacity-70">
           {busy ? "Working..." : "Create contract-aware escrow record"}
         </button>
-        <button
-          type="button"
-          onClick={fundEscrow}
-          disabled={busy || !contractConfig.ready}
-          className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-45"
-        >
+        <button type="button" onClick={fundEscrow} disabled={busy || !contractConfig.ready} className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-45">
           {busy ? "Submitting..." : "Fund escrow from wallet"}
         </button>
-        <button
-          type="button"
-          onClick={requestRelease}
-          disabled={busy || currentEscrowStatus !== "funded" || !contractConfig.ready}
-          className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-45"
-        >
+        <button type="button" onClick={requestRelease} disabled={busy || currentEscrowStatus !== "funded" || !contractConfig.ready} className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-45">
           Request release
         </button>
-        <button
-          type="button"
-          onClick={markReleased}
-          disabled={busy || currentEscrowStatus !== "release_requested" || !contractConfig.ready}
-          className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-45"
-        >
+        <button type="button" onClick={markReleased} disabled={busy || currentEscrowStatus !== "release_requested" || !contractConfig.ready || !approvalGate.allApproved} className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-45">
           Mark released
         </button>
       </div>
 
       {message ? (
         <div className="mt-4">
-          <InlineNotice
-            title="Escrow action"
-            detail={message}
-            tone={message.toLowerCase().includes("failed") || message.toLowerCase().includes("not configured") ? "warning" : "success"}
-          />
+          <InlineNotice title="Escrow action" detail={message} tone={message.toLowerCase().includes("cannot") || message.toLowerCase().includes("not configured") || message.toLowerCase().includes("must") ? "warning" : "success"} />
         </div>
       ) : null}
     </section>

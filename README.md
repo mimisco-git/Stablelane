@@ -298,3 +298,12 @@ This stage pushes Stablelane toward a more complete operational workspace:
 
 ## Stage 22 fix v2
 This package fixes the TypeScript union issue in `components/crosschain-execution-desk.tsx` by explicitly typing the mapped execution-intent arrays.
+
+
+## Stage 23 package
+This stage makes Stablelane feel more like a real approval-led operations product:
+- acting-role preview for Owner, Admin, Operator, and Viewer
+- workspace-level approvals page
+- approval operations dashboard
+- stronger release-finalization guard so all approvals must be approved before release completes
+- role-aware action gating for approval and release workflow in the UI
