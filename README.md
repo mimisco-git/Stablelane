@@ -444,3 +444,7 @@ This stage focuses on production-readiness for auth and launch flow:
 - new `/app/readiness` page for launch-oriented checks
 - `.env.example` now includes site URL and social-provider visibility flags
 - account methods page was cleaned up and fixed
+
+
+## Stage 37 fix v2
+This package fixes the Next.js prerender error on `/auth` by wrapping the `useSearchParams()` consumer in a `Suspense` boundary.
