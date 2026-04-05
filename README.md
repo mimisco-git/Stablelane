@@ -374,3 +374,7 @@ This stage makes Stablelane more real in day-to-day access control:
 - workflow panels now prefer database-backed role resolution before falling back to preview roles
 - approver inbox now shows resolved role and access source
 - acting-role preview is kept as fallback, not as the primary control model
+
+
+## Stage 30 fix v2
+This package fixes the Next.js prerender error on `/accept-invite` by wrapping the `useSearchParams()` consumer in a `Suspense` boundary.
