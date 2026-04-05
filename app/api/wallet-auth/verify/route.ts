@@ -1,5 +1,5 @@
 import { cookies, headers } from "next/headers";
-import { verifyMessage, isAddressEqual } from "viem";
+import { verifyMessage } from "viem";
 import { buildWalletAuthMessage } from "@/lib/wallet-auth";
 
 type VerifyPayload = {
