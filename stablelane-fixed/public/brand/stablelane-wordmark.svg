@@ -1,0 +1,11 @@
+<svg width="2600" height="512" viewBox="0 0 2600 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="wg" x1="0" y1="0" x2="2600" y2="512">
+      <stop stop-color="#F4F8F2"/>
+      <stop offset="1" stop-color="#BDD6C6"/>
+    </linearGradient>
+  </defs>
+  <rect width="2600" height="512" rx="72" fill="none"/>
+  <text x="0" y="350" fill="url(#wg)" font-family="Georgia, 'Times New Roman', serif" font-size="320" font-weight="600" letter-spacing="-10">Stablelane</text>
+  <circle cx="2360" cy="332" r="18" fill="#C9FF60"/>
+</svg>
