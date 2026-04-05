@@ -332,3 +332,13 @@ This stage fixes the access-flow friction:
 - wallet connection is treated as optional and separate from email sign-in
 - dashboard now shows an access-mode banner so users know email and wallet can be added independently
 - auth page copy now explains that email-first and wallet-later is fully supported
+
+
+## Stage 26 package
+This stage upgrades the login experience into a more fintech-style access flow:
+- premium auth screen redesign
+- password and magic-link methods
+- active-session continue card
+- stronger email-first, wallet-later messaging
+- wider and cleaner auth layout
+- polished callback flow wording
