@@ -1,4 +1,5 @@
--- Stablelane stage 4 schema
+-- Stablelane database schema
+-- Run this in the Supabase SQL editor to set up the workspace.
 -- Run this in the Supabase SQL editor.
 
 create extension if not exists pgcrypto;

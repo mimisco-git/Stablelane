@@ -23,7 +23,7 @@ export const dashboardMetrics = [
 
 export const readinessChecklist = [
   { title: "Workspace set up", detail: "Business profile, wallet, and default currencies configured.", done: true },
-  { title: "First invoice sent", detail: "A real invoice structure is now in the system for testing.", done: true },
+  { title: "First invoice sent", detail: "An invoice has been created and sent to a client.", done: true },
   { title: "Escrow contract connected", detail: "UI ready now, onchain release logic comes next.", done: false },
   { title: "Payout template saved", detail: "Default team split can be reused across invoices.", done: true },
 ];
