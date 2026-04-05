@@ -5,6 +5,7 @@ import type {
   InvoiceHistoryRecord,
   ReleaseApprovalRequest,
   RemoteInvoiceDraftRow,
+  WorkspaceInvitation,
   WorkspaceMember,
   WorkspaceProfile,
 } from "@/lib/types";
@@ -686,4 +687,180 @@ export async function fetchInvoiceApprovalGate(invoiceId: string) {
     allApproved: total > 0 && approved === total,
     hasRejection: rejected > 0,
   };
+}
+
+
+export async function fetchWorkspaceInvitations() {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return [];
+
+  const workspace = await ensureWorkspaceProfile();
+  if (!workspace) return [];
+
+  const { data } = await supabase
+    .from("workspace_invitations")
+    .select("*")
+    .eq("owner_id", user.id)
+    .eq("workspace_name", workspace.workspace_name)
+    .order("created_at", { ascending: false });
+
+  return (data as WorkspaceInvitation[] | null) || [];
+}
+
+export async function createWorkspaceInvitation(input: {
+  invite_email: string;
+  invite_role: "Owner" | "Admin" | "Operator" | "Viewer";
+  invite_note?: string;
+}) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const workspace = await ensureWorkspaceProfile();
+  if (!workspace) return null;
+
+  const { data, error } = await supabase
+    .from("workspace_invitations")
+    .insert({
+      workspace_name: workspace.workspace_name,
+      owner_id: user.id,
+      invite_email: input.invite_email,
+      invite_role: input.invite_role,
+      status: "Pending",
+      invite_note: input.invite_note || null,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data as WorkspaceInvitation;
+}
+
+export async function updateWorkspaceInvitationStatus(
+  invitationId: string,
+  status: "Accepted" | "Revoked" | "Declined"
+) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const { data, error } = await supabase
+    .from("workspace_invitations")
+    .update({
+      status,
+      responded_at: new Date().toISOString(),
+    })
+    .eq("id", invitationId)
+    .eq("owner_id", user.id)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data as WorkspaceInvitation;
+}
+
+
+export async function fetchInvitationsAssignedToMe() {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return [];
+
+  const email = user.email || "";
+  if (!email) return [];
+
+  const { data } = await supabase
+    .from("workspace_invitations")
+    .select("*")
+    .eq("invite_email", email)
+    .order("created_at", { ascending: false });
+
+  return (data as WorkspaceInvitation[] | null) || [];
+}
+
+export async function acceptWorkspaceInvitation(invitationId: string) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user || !user.email) return null;
+
+  const { data: invitation, error: invitationError } = await supabase
+    .from("workspace_invitations")
+    .select("*")
+    .eq("id", invitationId)
+    .eq("invite_email", user.email)
+    .single();
+
+  if (invitationError) throw invitationError;
+  if (!invitation) return null;
+
+  const { data: existingMember } = await supabase
+    .from("workspace_members")
+    .select("*")
+    .eq("workspace_name", invitation.workspace_name)
+    .eq("member_email", user.email)
+    .maybeSingle();
+
+  if (!existingMember) {
+    const { error: memberError } = await supabase
+      .from("workspace_members")
+      .insert({
+        workspace_name: invitation.workspace_name,
+        owner_id: invitation.owner_id,
+        member_name: user.user_metadata?.full_name || user.email.split("@")[0] || "Workspace member",
+        member_email: user.email,
+        role: invitation.invite_role,
+      });
+
+    if (memberError) throw memberError;
+  }
+
+  const { data, error } = await supabase
+    .from("workspace_invitations")
+    .update({
+      status: "Accepted",
+      responded_at: new Date().toISOString(),
+    })
+    .eq("id", invitationId)
+    .eq("invite_email", user.email)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data as WorkspaceInvitation;
+}
+
+export async function declineWorkspaceInvitation(invitationId: string) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user || !user.email) return null;
+
+  const { data, error } = await supabase
+    .from("workspace_invitations")
+    .update({
+      status: "Declined",
+      responded_at: new Date().toISOString(),
+    })
+    .eq("id", invitationId)
+    .eq("invite_email", user.email)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data as WorkspaceInvitation;
+}
+
+export async function fetchApprovalsAssignedToMe() {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user || !user.email) return [];
+
+  const { data } = await supabase
+    .from("release_approval_requests")
+    .select("*")
+    .eq("approver_email", user.email)
+    .order("created_at", { ascending: false });
+
+  return (data as ReleaseApprovalRequest[] | null) || [];
+}
+
+export async function respondToAssignedApproval(
+  requestId: string,
+  invoiceId: string,
+  nextStatus: "Approved" | "Rejected",
+  note?: string
+) {
+  return updateReleaseApprovalRequest(requestId, invoiceId, nextStatus, note);
 }

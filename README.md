@@ -342,3 +342,27 @@ This stage upgrades the login experience into a more fintech-style access flow:
 - stronger email-first, wallet-later messaging
 - wider and cleaner auth layout
 - polished callback flow wording
+
+
+## Stage 27 package
+This stage upgrades collaboration and review flow:
+- database-backed workspace invitations
+- dedicated `/app/invitations` page
+- new `/app/inbox` page for approvals, invitations, and recent operational signals
+- improved team onboarding path before someone becomes a permanent workspace member
+
+
+## Stage 28 package
+This stage upgrades operational control and alerting:
+- new `/app/releases` page for release orchestration
+- new `/app/notifications` page for approvals, invitations, and operational alerts
+- release command view for ready, blocked, funded, and completed invoice states
+- notification center with mark-read behavior for a more polished fintech workspace feel
+
+
+## Stage 29 package
+This stage moves Stablelane toward a more real multi-user workspace:
+- invitation acceptance flow at `/accept-invite`
+- accepting an invitation creates a real workspace member record
+- approver-specific inbox at `/app/my-approvals`
+- schema policies now allow invited users and assigned approvers to read or update records by signed-in email

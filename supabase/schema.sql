@@ -242,3 +242,90 @@ for update
 to authenticated
 using (auth.uid() = owner_id)
 with check (auth.uid() = owner_id);
+
+
+create table if not exists public.workspace_invitations (
+  id uuid primary key default gen_random_uuid(),
+  workspace_name text not null,
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  invite_email text not null,
+  invite_role text not null default 'Operator',
+  status text not null default 'Pending',
+  invite_note text,
+  created_at timestamptz not null default now(),
+  responded_at timestamptz
+);
+
+alter table public.workspace_invitations enable row level security;
+
+drop policy if exists "workspace_invitations_select_own" on public.workspace_invitations;
+create policy "workspace_invitations_select_own"
+on public.workspace_invitations
+for select
+to authenticated
+using (auth.uid() = owner_id);
+
+drop policy if exists "workspace_invitations_insert_own" on public.workspace_invitations;
+create policy "workspace_invitations_insert_own"
+on public.workspace_invitations
+for insert
+to authenticated
+with check (auth.uid() = owner_id);
+
+drop policy if exists "workspace_invitations_update_own" on public.workspace_invitations;
+create policy "workspace_invitations_update_own"
+on public.workspace_invitations
+for update
+to authenticated
+using (auth.uid() = owner_id)
+with check (auth.uid() = owner_id);
+
+
+drop policy if exists "workspace_invitations_select_invited" on public.workspace_invitations;
+create policy "workspace_invitations_select_invited"
+on public.workspace_invitations
+for select
+to authenticated
+using (lower(invite_email) = lower(coalesce(auth.jwt() ->> 'email', '')));
+
+drop policy if exists "workspace_invitations_update_invited" on public.workspace_invitations;
+create policy "workspace_invitations_update_invited"
+on public.workspace_invitations
+for update
+to authenticated
+using (lower(invite_email) = lower(coalesce(auth.jwt() ->> 'email', '')))
+with check (lower(invite_email) = lower(coalesce(auth.jwt() ->> 'email', '')));
+
+drop policy if exists "workspace_members_select_member_email" on public.workspace_members;
+create policy "workspace_members_select_member_email"
+on public.workspace_members
+for select
+to authenticated
+using (
+  lower(member_email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+  or auth.uid() = owner_id
+);
+
+drop policy if exists "release_approvals_select_assigned" on public.release_approval_requests;
+create policy "release_approvals_select_assigned"
+on public.release_approval_requests
+for select
+to authenticated
+using (
+  auth.uid() = owner_id
+  or lower(approver_email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+);
+
+drop policy if exists "release_approvals_update_assigned" on public.release_approval_requests;
+create policy "release_approvals_update_assigned"
+on public.release_approval_requests
+for update
+to authenticated
+using (
+  lower(approver_email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+  or auth.uid() = owner_id
+)
+with check (
+  lower(approver_email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+  or auth.uid() = owner_id
+);

@@ -111,3 +111,18 @@ export type ReleaseApprovalRequest = {
   created_at: string;
   decided_at: string | null;
 };
+
+
+export type WorkspaceInvitationStatus = "Pending" | "Accepted" | "Revoked" | "Declined";
+
+export type WorkspaceInvitation = {
+  id: string;
+  workspace_name: string;
+  owner_id: string;
+  invite_email: string;
+  invite_role: WorkspaceMemberRole;
+  status: WorkspaceInvitationStatus;
+  invite_note: string | null;
+  created_at: string;
+  responded_at: string | null;
+};
