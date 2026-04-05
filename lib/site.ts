@@ -26,7 +26,7 @@ export const siteConfig = {
 
 export const navLinks = [
   { href: "#how", label: "How it works" },
-  { href: "#preview", label: "Product preview" },
+  { href: "#preview", label: "Product" },
   { href: "#features", label: "Features" },
   { href: "#arc", label: "Why Arc" },
   { href: "#waitlist", label: "Waitlist" },
