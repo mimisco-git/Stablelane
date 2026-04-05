@@ -1017,3 +1017,108 @@ export async function fetchSettlementLedger(limit = 100) {
 
   return (data || []) as any[];
 }
+
+
+export async function fetchIdentitySummary() {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const workspace = await ensureWorkspaceProfile();
+  if (!workspace) return null;
+
+  const methods = Array.isArray((workspace as any).linked_auth_methods)
+    ? ((workspace as any).linked_auth_methods as string[])
+    : [];
+
+  return {
+    workspace_name: workspace.workspace_name,
+    role_type: workspace.role_type,
+    default_currency: workspace.default_currency,
+    linked_wallet_address: ((workspace as any).linked_wallet_address as string | null) || null,
+    linked_auth_methods: methods,
+    email: user.email || null,
+  };
+}
+
+export async function saveLinkedWalletAddress(walletAddress: string) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const workspace = await ensureWorkspaceProfile();
+  if (!workspace) return null;
+
+  const currentMethods = Array.isArray((workspace as any).linked_auth_methods)
+    ? ((workspace as any).linked_auth_methods as string[])
+    : [];
+
+  const nextMethods = Array.from(new Set([...currentMethods, "wallet_hint"]));
+
+  const { data, error } = await supabase
+    .from("workspace_profiles")
+    .update({
+      linked_wallet_address: walletAddress,
+      linked_auth_methods: nextMethods,
+    })
+    .eq("id", workspace.id)
+    .eq("user_id", user.id)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function clearLinkedWalletAddress() {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const workspace = await ensureWorkspaceProfile();
+  if (!workspace) return null;
+
+  const currentMethods = Array.isArray((workspace as any).linked_auth_methods)
+    ? ((workspace as any).linked_auth_methods as string[])
+    : [];
+
+  const nextMethods = currentMethods.filter((item) => item !== "wallet_hint");
+
+  const { data, error } = await supabase
+    .from("workspace_profiles")
+    .update({
+      linked_wallet_address: null,
+      linked_auth_methods: nextMethods,
+    })
+    .eq("id", workspace.id)
+    .eq("user_id", user.id)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function saveLinkedAuthMethod(method: "email_password" | "email_magic_link" | "google_oauth" | "apple_oauth" | "x_oauth") {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const workspace = await ensureWorkspaceProfile();
+  if (!workspace) return null;
+
+  const currentMethods = Array.isArray((workspace as any).linked_auth_methods)
+    ? ((workspace as any).linked_auth_methods as string[])
+    : [];
+
+  const nextMethods = Array.from(new Set([...currentMethods, method]));
+
+  const { data, error } = await supabase
+    .from("workspace_profiles")
+    .update({
+      linked_auth_methods: nextMethods,
+    })
+    .eq("id", workspace.id)
+    .eq("user_id", user.id)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}

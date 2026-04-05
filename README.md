@@ -414,3 +414,12 @@ This stage hardens access so the auth surface behaves more truthfully:
 - new `/app/account` page for active methods and wallet management
 - workspace layout now uses a real access gate instead of leaving the app fully open by default
 - added Account entry to dashboard navigation
+
+
+## Stage 35 package
+This stage starts making identity linkage more real:
+- new linked identity fields on `workspace_profiles`
+- new `/app/identity` page
+- wallet hint can now be saved into the workspace profile as a linked wallet
+- auth methods begin to be recorded on the workspace profile
+- identity linking actions now write audit events

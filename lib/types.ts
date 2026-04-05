@@ -173,3 +173,21 @@ export type SettlementLedgerEntry = {
   note: string | null;
   created_at: string;
 };
+
+
+export type IdentityMethod =
+  | "email_password"
+  | "email_magic_link"
+  | "google_oauth"
+  | "apple_oauth"
+  | "x_oauth"
+  | "wallet_hint";
+
+export type IdentitySummary = {
+  workspace_name: string;
+  role_type: string;
+  default_currency: "USDC" | "EURC";
+  linked_wallet_address: string | null;
+  linked_auth_methods: IdentityMethod[];
+  email: string | null;
+};
