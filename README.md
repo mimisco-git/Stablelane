@@ -405,3 +405,12 @@ This stage replaces the separated access feel with a smarter unified web3-style 
 - Google, Apple, and X buttons on the same screen
 - `Open app` now routes directly to `/auth`
 - overall auth page upgraded to feel more premium and web3-native
+
+
+## Stage 34 package
+This stage hardens access so the auth surface behaves more truthfully:
+- new `lib/auth-options.ts` helper for enabled social providers and detected wallets
+- unified auth page now hides providers that are not truly enabled or detected
+- new `/app/account` page for active methods and wallet management
+- workspace layout now uses a real access gate instead of leaving the app fully open by default
+- added Account entry to dashboard navigation
