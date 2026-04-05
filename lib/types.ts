@@ -86,3 +86,28 @@ export type WorkspaceProfile = {
   wallet_address: string | null;
   created_at: string;
 };
+
+
+export type WorkspaceMemberRole = "Owner" | "Admin" | "Operator" | "Viewer";
+
+export type WorkspaceMember = {
+  id: string;
+  workspace_name: string;
+  owner_id: string;
+  member_name: string;
+  member_email: string;
+  role: WorkspaceMemberRole;
+  created_at: string;
+};
+
+export type ReleaseApprovalRequest = {
+  id: string;
+  invoice_id: string;
+  owner_id: string;
+  approver_email: string;
+  approver_role: WorkspaceMemberRole;
+  status: "Pending" | "Approved" | "Rejected";
+  note: string | null;
+  created_at: string;
+  decided_at: string | null;
+};

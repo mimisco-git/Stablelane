@@ -1,22 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { EmptyState, InlineNotice } from "@/components/ui-state";
+import { createWorkspaceMember, deleteWorkspaceMember, fetchWorkspaceMembers } from "@/lib/supabase-data";
+import type { WorkspaceMemberRole, WorkspaceMember } from "@/lib/types";
+import { EmptyState, InlineNotice, LoadingState } from "@/components/ui-state";
 import { StatusPill } from "@/components/status-pill";
 
-type TeamRole = "Owner" | "Admin" | "Operator" | "Viewer";
-
-type TeamMember = {
-  id: string;
-  name: string;
-  email: string;
-  role: TeamRole;
-  createdAt: string;
-};
-
-const STORAGE_KEY = "stablelane_team_members_v1";
-
-const rolePermissions: Record<TeamRole, string[]> = {
+const rolePermissions: Record<WorkspaceMemberRole, string[]> = {
   Owner: [
     "Full workspace control",
     "Can manage contracts and settings",
@@ -39,40 +29,34 @@ const rolePermissions: Record<TeamRole, string[]> = {
   ],
 };
 
-function readMembers(): TeamMember[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as TeamMember[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeMembers(rows: TeamMember[]) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
-}
-
 export function TeamRolesManager() {
-  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<TeamRole>("Operator");
+  const [role, setRole] = useState<WorkspaceMemberRole>("Operator");
   const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    setMembers(readMembers());
-  }, []);
+  const [loading, setLoading] = useState(true);
 
   const permissionPreview = useMemo(() => rolePermissions[role], [role]);
 
-  function save(next: TeamMember[]) {
-    setMembers(next);
-    writeMembers(next);
+  async function loadMembers() {
+    setLoading(true);
+    try {
+      const rows = await fetchWorkspaceMembers();
+      setMembers(rows);
+    } catch {
+      setMembers([]);
+      setMessage("Workspace members could not be loaded right now.");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function addMember(e: React.FormEvent) {
+  useEffect(() => {
+    loadMembers();
+  }, []);
+
+  async function addMember(e: React.FormEvent) {
     e.preventDefault();
 
     if (!name.trim() || !email.trim()) {
@@ -80,24 +64,30 @@ export function TeamRolesManager() {
       return;
     }
 
-    const nextMember: TeamMember = {
-      id: `member_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
-      name: name.trim(),
-      email: email.trim(),
-      role,
-      createdAt: new Date().toISOString(),
-    };
-
-    save([nextMember, ...members].slice(0, 24));
-    setName("");
-    setEmail("");
-    setRole("Operator");
-    setMessage("Team member saved to this workspace preview.");
+    try {
+      await createWorkspaceMember({
+        member_name: name.trim(),
+        member_email: email.trim(),
+        role,
+      });
+      setName("");
+      setEmail("");
+      setRole("Operator");
+      setMessage("Team member saved to the workspace.");
+      await loadMembers();
+    } catch {
+      setMessage("Team member could not be saved.");
+    }
   }
 
-  function removeMember(memberId: string) {
-    save(members.filter((member) => member.id !== memberId));
-    setMessage("Team member removed.");
+  async function removeMember(memberId: string) {
+    try {
+      await deleteWorkspaceMember(memberId);
+      setMessage("Team member removed.");
+      await loadMembers();
+    } catch {
+      setMessage("Team member could not be removed.");
+    }
   }
 
   return (
@@ -106,7 +96,7 @@ export function TeamRolesManager() {
         <div className="mb-4">
           <h2 className="mb-1 text-base font-bold tracking-normal">Workspace team roles</h2>
           <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-            Shape how a premium operations workspace should behave before full database-backed permissions land. This keeps the product closer to a real team operating system.
+            These team roles now persist in the workspace database preview, so Stablelane starts behaving more like a real multi-user operational product.
           </p>
         </div>
 
@@ -136,7 +126,7 @@ export function TeamRolesManager() {
               <span>Role</span>
               <select
                 value={role}
-                onChange={(e) => setRole(e.target.value as TeamRole)}
+                onChange={(e) => setRole(e.target.value as WorkspaceMemberRole)}
                 className="rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-[var(--text)]"
               >
                 <option>Owner</option>
@@ -168,27 +158,29 @@ export function TeamRolesManager() {
 
         {message ? (
           <div className="mt-4">
-            <InlineNotice title="Team workspace" detail={message} tone="success" />
+            <InlineNotice title="Team workspace" detail={message} tone={message.toLowerCase().includes("could not") ? "warning" : "success"} />
           </div>
         ) : null}
       </section>
 
       <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
         <div className="mb-4">
-          <h2 className="mb-1 text-base font-bold tracking-normal">Current team preview</h2>
+          <h2 className="mb-1 text-base font-bold tracking-normal">Current team workspace</h2>
           <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-            Local role preview for a more operational workspace experience.
+            Database-backed workspace members and role previews.
           </p>
         </div>
 
-        {members.length ? (
+        {loading ? (
+          <LoadingState title="Loading workspace team" detail="Stablelane is reading the saved workspace members from Supabase." />
+        ) : members.length ? (
           <div className="grid gap-3">
             {members.map((member) => (
               <div key={member.id} className="rounded-2xl border border-white/8 bg-white/3 p-4">
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <div className="font-semibold">{member.name}</div>
-                    <div className="text-[0.82rem] text-[var(--muted)]">{member.email}</div>
+                    <div className="font-semibold">{member.member_name}</div>
+                    <div className="text-[0.82rem] text-[var(--muted)]">{member.member_email}</div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusPill
@@ -217,7 +209,7 @@ export function TeamRolesManager() {
         ) : (
           <EmptyState
             title="No team members yet"
-            detail="Add a few workspace members to preview how Stablelane could evolve into a proper multi-user operations product."
+            detail="Add workspace members so approval-based release and role-aware operations can grow from a real database-backed team list."
           />
         )}
       </section>

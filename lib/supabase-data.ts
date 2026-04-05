@@ -3,7 +3,9 @@ import type {
   ClientRecord,
   InvoiceDraft,
   InvoiceHistoryRecord,
+  ReleaseApprovalRequest,
   RemoteInvoiceDraftRow,
+  WorkspaceMember,
   WorkspaceProfile,
 } from "@/lib/types";
 
@@ -503,4 +505,145 @@ export async function fetchInvoiceStatusSummary() {
     completed: rows.filter((row) => row.status === "Completed").length,
     totalValue: rows.reduce((sum, row) => sum + Number(row.amount || 0), 0),
   };
+}
+
+
+export async function fetchWorkspaceMembers() {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return [];
+
+  const workspace = await ensureWorkspaceProfile();
+  if (!workspace) return [];
+
+  const { data } = await supabase
+    .from("workspace_members")
+    .select("*")
+    .eq("owner_id", user.id)
+    .eq("workspace_name", workspace.workspace_name)
+    .order("created_at", { ascending: false });
+
+  return (data as WorkspaceMember[] | null) || [];
+}
+
+export async function createWorkspaceMember(input: {
+  member_name: string;
+  member_email: string;
+  role: "Owner" | "Admin" | "Operator" | "Viewer";
+}) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const workspace = await ensureWorkspaceProfile();
+  if (!workspace) return null;
+
+  const { data, error } = await supabase
+    .from("workspace_members")
+    .insert({
+      workspace_name: workspace.workspace_name,
+      owner_id: user.id,
+      member_name: input.member_name,
+      member_email: input.member_email,
+      role: input.role,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data as WorkspaceMember;
+}
+
+export async function deleteWorkspaceMember(memberId: string) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return false;
+
+  const { error } = await supabase
+    .from("workspace_members")
+    .delete()
+    .eq("id", memberId)
+    .eq("owner_id", user.id);
+
+  if (error) throw error;
+  return true;
+}
+
+export async function fetchReleaseApprovals(invoiceId: string) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return [];
+
+  const { data } = await supabase
+    .from("release_approval_requests")
+    .select("*")
+    .eq("owner_id", user.id)
+    .eq("invoice_id", invoiceId)
+    .order("created_at", { ascending: false });
+
+  return (data as ReleaseApprovalRequest[] | null) || [];
+}
+
+export async function createReleaseApprovalRequests(
+  invoiceId: string,
+  requests: Array<{ approver_email: string; approver_role: "Owner" | "Admin" | "Operator" | "Viewer" }>
+) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user || !requests.length) return [];
+
+  const payload = requests.map((item) => ({
+    invoice_id: invoiceId,
+    owner_id: user.id,
+    approver_email: item.approver_email,
+    approver_role: item.approver_role,
+    status: "Pending",
+    note: null,
+  }));
+
+  const { data, error } = await supabase
+    .from("release_approval_requests")
+    .insert(payload)
+    .select("*");
+
+  if (error) throw error;
+
+  await appendInvoiceHistory(invoiceId, "release_approvals_requested", "Release approvals requested.", {
+    approverCount: requests.length,
+    approvers: requests.map((item) => item.approver_email),
+  });
+
+  return (data as ReleaseApprovalRequest[] | null) || [];
+}
+
+export async function updateReleaseApprovalRequest(
+  requestId: string,
+  invoiceId: string,
+  nextStatus: "Approved" | "Rejected",
+  note?: string
+) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const { data, error } = await supabase
+    .from("release_approval_requests")
+    .update({
+      status: nextStatus,
+      note: note || null,
+      decided_at: new Date().toISOString(),
+    })
+    .eq("id", requestId)
+    .eq("owner_id", user.id)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+
+  await appendInvoiceHistory(
+    invoiceId,
+    nextStatus === "Approved" ? "release_approval_approved" : "release_approval_rejected",
+    nextStatus === "Approved" ? "A release approval was approved." : "A release approval was rejected.",
+    {
+      approver: data.approver_email,
+      role: data.approver_role,
+      note: data.note,
+    }
+  );
+
+  return data as ReleaseApprovalRequest;
 }

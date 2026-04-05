@@ -10,6 +10,7 @@ import { ContractPathPanel } from "@/components/contract-path-panel";
 import { InvoiceHistoryPanel } from "@/components/invoice-history-panel";
 import { SettlementReceiptsPanel } from "@/components/settlement-receipts-panel";
 import { DocumentExportPanel } from "@/components/document-export-panel";
+import { ReleaseApprovalPanel } from "@/components/release-approval-panel";
 import { readLocalInvoices, removeLocalInvoice } from "@/lib/storage";
 import { deleteRemoteInvoiceDraft, fetchRemoteInvoiceDraftById } from "@/lib/supabase-data";
 import type { InvoiceDraft, RemoteInvoiceDraftRow } from "@/lib/types";
@@ -273,6 +274,15 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
         fundingTxHash={invoice.fundingTxHash || null}
         releaseTxHash={invoice.releaseTxHash || null}
       />
+
+      {source === "workspace" ? (
+        <ReleaseApprovalPanel
+          invoiceId={invoiceId}
+          clientName={invoice.clientName}
+          amount={invoice.amount}
+          currency={invoice.currency}
+        />
+      ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[1.02fr_.98fr]">
         <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">

@@ -286,3 +286,11 @@ This stage pushes Stablelane toward a more operational premium product:
 - dedicated Team workspace page
 - local workspace-role preview for Owner, Admin, Operator, and Viewer
 - dashboard navigation now includes Team
+
+
+## Stage 22 package
+This stage pushes Stablelane toward a more complete operational workspace:
+- database-backed workspace roles via Supabase
+- approval-based release workflow on invoice detail
+- release approval requests and decision queue
+- team page now reads and writes real workspace members instead of only local preview data

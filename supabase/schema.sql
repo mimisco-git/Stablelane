@@ -171,3 +171,74 @@ on public.invoice_history_logs
 for insert
 to authenticated
 with check (auth.uid() = owner_id);
+
+
+create table if not exists public.workspace_members (
+  id uuid primary key default gen_random_uuid(),
+  workspace_name text not null,
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  member_name text not null,
+  member_email text not null,
+  role text not null default 'Operator',
+  created_at timestamptz not null default now()
+);
+
+alter table public.workspace_members enable row level security;
+
+drop policy if exists "workspace_members_select_own" on public.workspace_members;
+create policy "workspace_members_select_own"
+on public.workspace_members
+for select
+to authenticated
+using (auth.uid() = owner_id);
+
+drop policy if exists "workspace_members_insert_own" on public.workspace_members;
+create policy "workspace_members_insert_own"
+on public.workspace_members
+for insert
+to authenticated
+with check (auth.uid() = owner_id);
+
+drop policy if exists "workspace_members_delete_own" on public.workspace_members;
+create policy "workspace_members_delete_own"
+on public.workspace_members
+for delete
+to authenticated
+using (auth.uid() = owner_id);
+
+
+create table if not exists public.release_approval_requests (
+  id uuid primary key default gen_random_uuid(),
+  invoice_id uuid not null,
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  approver_email text not null,
+  approver_role text not null default 'Operator',
+  status text not null default 'Pending',
+  note text,
+  created_at timestamptz not null default now(),
+  decided_at timestamptz
+);
+
+alter table public.release_approval_requests enable row level security;
+
+drop policy if exists "release_approvals_select_own" on public.release_approval_requests;
+create policy "release_approvals_select_own"
+on public.release_approval_requests
+for select
+to authenticated
+using (auth.uid() = owner_id);
+
+drop policy if exists "release_approvals_insert_own" on public.release_approval_requests;
+create policy "release_approvals_insert_own"
+on public.release_approval_requests
+for insert
+to authenticated
+with check (auth.uid() = owner_id);
+
+drop policy if exists "release_approvals_update_own" on public.release_approval_requests;
+create policy "release_approvals_update_own"
+on public.release_approval_requests
+for update
+to authenticated
+using (auth.uid() = owner_id)
+with check (auth.uid() = owner_id);
