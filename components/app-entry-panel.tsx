@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
-import { readWalletHint, shortWallet, writeAccessMode, writeWalletHint } from "@/lib/access-flow";
+import { readWalletHint, shortWallet, writeAccessMode, writeWalletHint, writePreviewAccessEnabled } from "@/lib/access-flow";
 import { InlineNotice } from "@/components/ui-state";
 
 type EthereumProvider = {
@@ -42,6 +42,7 @@ export function AppEntryPanel() {
       }
 
       writeAccessMode("wallet");
+      writePreviewAccessEnabled(false);
       writeWalletHint(selected);
       setWalletHint(selected);
       setMessage("Wallet connected. You can keep using the workspace now and add email later if you want synced account access.");
@@ -56,11 +57,13 @@ export function AppEntryPanel() {
 
   async function continueWithEmail() {
     writeAccessMode("email");
+    writePreviewAccessEnabled(false);
     router.push("/auth");
   }
 
   async function continueInPreview() {
     writeAccessMode("preview");
+    writePreviewAccessEnabled(true);
     router.push("/app");
   }
 
@@ -73,6 +76,7 @@ export function AppEntryPanel() {
     const { data } = await supabase.auth.getSession();
     if (data.session?.user?.email) {
       writeAccessMode("email");
+      writePreviewAccessEnabled(false);
       router.push("/app");
       return;
     }

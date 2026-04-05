@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 import { getBaseUrl } from "@/lib/url";
 import { buildWalletAuthMessage } from "@/lib/wallet-auth";
@@ -12,13 +12,20 @@ import {
   type SocialProviderKey,
 } from "@/lib/auth-options";
 import {
+  readPreviewAccessEnabled,
   readVerifiedWallet,
   readWalletHint,
   shortWallet,
   writeAccessMode,
+  writePreviewAccessEnabled,
   writeVerifiedWallet,
   writeWalletHint,
 } from "@/lib/access-flow";
+import {
+  sanitizeNextPath,
+  writePendingAuthMethod,
+  writePostAuthNextPath,
+} from "@/lib/auth-intent";
 import { saveLinkedAuthMethod } from "@/lib/supabase-data";
 
 type AuthMode = "signin" | "signup";
@@ -48,6 +55,7 @@ function SocialIcon({ label }: { label: "Google" | "Apple" | "X" }) {
 
 export function AuthPanel() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const socialProviders = useMemo(() => getSocialProviderOptions().filter((item) => item.enabled), []);
   const walletProviders = useMemo(() => getWalletProviderOptions(), []);
@@ -62,12 +70,15 @@ export function AuthPanel() {
   const [loading, setLoading] = useState("");
   const [message, setMessage] = useState("");
 
+  const nextPath = sanitizeNextPath(searchParams.get("next") || "/app");
+
   useEffect(() => {
     let mounted = true;
 
     async function load() {
       setWalletHint(readWalletHint());
       setVerifiedWallet(readVerifiedWallet());
+      writePostAuthNextPath(nextPath);
 
       if (!supabase) return;
       const { data } = await supabase.auth.getSession();
@@ -102,7 +113,7 @@ export function AuthPanel() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [nextPath, supabase]);
 
   async function handlePasswordSubmit() {
     if (!supabase) {
@@ -117,6 +128,8 @@ export function AuthPanel() {
 
     setLoading("password");
     setMessage("");
+    writePendingAuthMethod("email_password");
+    writePostAuthNextPath(nextPath);
 
     try {
       if (mode === "signup") {
@@ -129,6 +142,7 @@ export function AuthPanel() {
         });
         if (error) throw error;
         writeAccessMode("email");
+        writePreviewAccessEnabled(false);
         setMessage("Account created. Check your email to confirm the account, then come back and continue.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -137,9 +151,10 @@ export function AuthPanel() {
         });
         if (error) throw error;
         writeAccessMode("email");
+        writePreviewAccessEnabled(false);
         try { await saveLinkedAuthMethod("email_password"); } catch {}
         setMessage("Signed in successfully. Redirecting to your workspace...");
-        setTimeout(() => router.push("/app"), 700);
+        setTimeout(() => router.push(nextPath), 700);
       }
     } catch (error) {
       const text = error instanceof Error ? error.message : "Authentication failed.";
@@ -162,6 +177,8 @@ export function AuthPanel() {
 
     setLoading("magic");
     setMessage("");
+    writePendingAuthMethod("email_magic_link");
+    writePostAuthNextPath(nextPath);
 
     try {
       const { error } = await supabase.auth.signInWithOtp({
@@ -172,7 +189,7 @@ export function AuthPanel() {
       });
       if (error) throw error;
       writeAccessMode("email");
-      try { await saveLinkedAuthMethod("email_magic_link"); } catch {}
+      writePreviewAccessEnabled(false);
       setMessage(
         mode === "signup"
           ? "Magic signup link sent. Open your email to finish joining."
@@ -194,6 +211,8 @@ export function AuthPanel() {
 
     setLoading(provider);
     setMessage("");
+    writePendingAuthMethod(provider === "google" ? "google_oauth" : provider === "apple" ? "apple_oauth" : "x_oauth");
+    writePostAuthNextPath(nextPath);
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -204,9 +223,7 @@ export function AuthPanel() {
       });
       if (error) throw error;
       writeAccessMode("email");
-      try {
-        await saveLinkedAuthMethod(provider === "google" ? "google_oauth" : provider === "apple" ? "apple_oauth" : "x_oauth");
-      } catch {}
+      writePreviewAccessEnabled(false);
     } catch (error) {
       const text = error instanceof Error ? error.message : "OAuth sign-in failed.";
       setMessage(text);
@@ -224,6 +241,8 @@ export function AuthPanel() {
 
     setLoading("wallet");
     setMessage("");
+    writePendingAuthMethod("wallet_siwe");
+    writePostAuthNextPath(nextPath);
 
     try {
       const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
@@ -275,12 +294,13 @@ export function AuthPanel() {
       }
 
       writeAccessMode("wallet");
+      writePreviewAccessEnabled(false);
       writeWalletHint(selected);
       writeVerifiedWallet(verifyJson.address);
       setWalletHint(selected);
       setVerifiedWallet(verifyJson.address);
       setMessage(`Wallet verified as ${shortWallet(verifyJson.address)}. This is now stronger than a plain wallet connect step.`);
-      setTimeout(() => router.push("/app"), 700);
+      setTimeout(() => router.push(nextPath), 700);
     } catch (error) {
       const text = error instanceof Error ? error.message : "Wallet verification failed.";
       setMessage(text);
@@ -290,8 +310,8 @@ export function AuthPanel() {
   }
 
   function continueExistingSession() {
-    writeAccessMode(activeEmail ? "email" : "wallet");
-    router.push("/app");
+    writeAccessMode(activeEmail ? "email" : verifiedWallet ? "wallet" : readPreviewAccessEnabled() ? "preview" : "wallet");
+    router.push(nextPath);
   }
 
   const currentAccess = activeEmail || verifiedWallet || walletHint;
@@ -304,10 +324,10 @@ export function AuthPanel() {
         </div>
 
         <h1 className="mb-3 font-[family-name:var(--font-cormorant)] text-[clamp(2.8rem,5vw,4.5rem)] leading-none tracking-[-0.055em] text-[var(--text)]">
-          One premium login, now with verified wallet access.
+          One premium login, now with production-ready flow recovery.
         </h1>
         <p className="mb-6 max-w-2xl text-[0.96rem] leading-7 text-[var(--muted)]">
-          Email, wallet, and social entry now live on one screen, and the wallet path now verifies a signed challenge instead of only asking for a connection.
+          Email, wallet, and social entry now live on one screen, and the auth flow now remembers where the user wanted to go after successful access.
         </p>
 
         <div className="mb-5 flex flex-wrap gap-2">
@@ -494,34 +514,34 @@ export function AuthPanel() {
 
       <aside className="rounded-[30px] border border-white/8 bg-white/3 p-6">
         <div className="mb-4 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-          Verified wallet auth
+          Production readiness
         </div>
 
         <div className="grid gap-3">
           <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-            <div className="mb-2 font-semibold text-[var(--text)]">Stronger than plain connect</div>
+            <div className="mb-2 font-semibold text-[var(--text)]">Post-login recovery</div>
             <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
-              The wallet path now signs a challenge and verifies it on the server before the workspace treats the wallet as a verified session.
+              The auth flow now remembers where the user was trying to go before sign-in, then routes them back after callback completion.
             </div>
           </div>
           <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-            <div className="mb-2 font-semibold text-[var(--text)]">Still compatible with email</div>
+            <div className="mb-2 font-semibold text-[var(--text)]">Callback finalization</div>
             <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
-              Email remains the primary synced identity layer, but verified wallet access now feels more real when users want a web3-first entry.
+              Magic link and OAuth methods are now finalized after callback, not only before redirect, so linked methods are tracked more reliably.
             </div>
           </div>
           <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-            <div className="mb-2 font-semibold text-[var(--text)]">Ready for better linking</div>
+            <div className="mb-2 font-semibold text-[var(--text)]">Preview is explicit</div>
             <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
-              The next step after this is to merge verified wallet sessions and email sessions even more tightly across the workspace profile.
+              The workspace gate now treats preview mode as an explicit browser-level choice instead of silently allowing access without any state.
             </div>
           </div>
         </div>
 
         <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4">
-          <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--accent)]">Implementation note</div>
+          <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--accent)]">Next destination</div>
           <p className="text-[0.84rem] leading-6 text-[var(--accent)]">
-            This stage adds a SIWE-style signed challenge and verification flow using viem. It is stronger than plain wallet connect, but it is not yet full wallet-to-Supabase account unification.
+            After access succeeds, Stablelane now returns the user to {nextPath} when possible.
           </p>
         </div>
       </aside>

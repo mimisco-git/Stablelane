@@ -117,7 +117,7 @@ export function AccountMethodsPanel() {
       await fetch("/api/wallet-auth/logout", { method: "POST" });
       setWalletHint("");
       setVerifiedWallet("");
-      setMessage("Browser wallet hint && verified wallet session removed.");
+      setMessage("Browser wallet hint and verified wallet session removed.");
     } finally {
       setBusy("");
     }
@@ -162,7 +162,7 @@ export function AccountMethodsPanel() {
   }
 
   if (loading) {
-    return <LoadingState title="Loading account methods" detail="Stablelane is checking your email session, wallet state, && enabled access methods." />;
+    return <LoadingState title="Loading account methods" detail="Stablelane is checking your email session, wallet state, and enabled access methods." />;
   }
 
   return (
@@ -175,7 +175,7 @@ export function AccountMethodsPanel() {
           Make access feel real.
         </h1>
         <p className="max-w-3xl text-[0.92rem] leading-7 text-[var(--muted)]">
-          This page shows the current email session, wallet hint, verified wallet state, && enabled access methods.
+          This page shows the current email session, wallet hint, verified wallet state, and enabled access methods.
         </p>
       </section>
 
@@ -184,7 +184,7 @@ export function AccountMethodsPanel() {
           <div className="mb-4">
             <h2 className="mb-1 text-base font-bold tracking-normal">Current methods</h2>
             <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-              Your current email session, browser wallet hint, && verified wallet session.
+              Your current email session, browser wallet hint, and verified wallet session.
             </p>
           </div>
 
@@ -196,7 +196,7 @@ export function AccountMethodsPanel() {
                 <button
                   type="button"
                   onClick={signOutEmail}
-                  disabled={busy == "signout"}
+                  disabled={busy === "signout"}
                   className="mt-3 rounded-full border border-white/8 bg-white/3 px-4 py-2 text-[0.82rem] font-semibold text-[var(--text)] disabled:opacity-70"
                 >
                   {busy === "signout" ? "Signing out..." : "Sign out email"}
@@ -263,7 +263,7 @@ export function AccountMethodsPanel() {
               ))
             ) : (
               <div className="rounded-2xl border border-white/8 bg-white/3 p-4 text-[0.84rem] leading-6 text-[var(--muted)]">
-                No social providers are enabled yet. Add the corresponding Vercel && Supabase settings first.
+                No social providers are enabled yet. Add the corresponding Vercel and Supabase settings first.
               </div>
             )}
 
@@ -291,7 +291,7 @@ export function AccountMethodsPanel() {
         <InlineNotice
           title="Account methods"
           detail={message}
-          tone={message.toLowerCase().includes("failed") || message.toLowerCase().includes("not") && "No " not in message ? "warning" : "success"}
+          tone={message.toLowerCase().includes("failed") || (message.toLowerCase().includes("not") && !message.startsWith("No ")) ? "warning" : "success"}
         />
       ) : null}
     </div>

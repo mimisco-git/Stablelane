@@ -2,19 +2,23 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 import {
   readAccessMode,
   readVerifiedWallet,
   readWalletHint,
+  readPreviewAccessEnabled,
   type AccessMode,
 } from "@/lib/access-flow";
+import { writePostAuthNextPath } from "@/lib/auth-intent";
 
 export function WorkspaceAuthGate({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [ready, setReady] = useState(false);
   const [allowed, setAllowed] = useState(false);
@@ -22,6 +26,7 @@ export function WorkspaceAuthGate({
   const [mode, setMode] = useState<AccessMode>("preview");
   const [walletHint, setWalletHint] = useState("");
   const [verifiedWallet, setVerifiedWallet] = useState("");
+  const [previewAccess, setPreviewAccess] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -30,6 +35,7 @@ export function WorkspaceAuthGate({
       const currentMode = readAccessMode();
       const currentWalletHint = readWalletHint();
       const currentVerifiedWallet = readVerifiedWallet();
+      const currentPreviewAccess = readPreviewAccessEnabled();
 
       let activeEmail = "";
       if (supabase) {
@@ -46,13 +52,20 @@ export function WorkspaceAuthGate({
         }
       } catch {}
 
+      const canEnter = Boolean(activeEmail) || Boolean(verifiedFromServer) || (currentMode === "preview" && currentPreviewAccess);
+
       if (!mounted) return;
       setEmail(activeEmail);
       setMode(currentMode);
       setWalletHint(currentWalletHint);
       setVerifiedWallet(verifiedFromServer);
-      setAllowed(Boolean(activeEmail) || currentMode === "preview" || Boolean(verifiedFromServer));
+      setPreviewAccess(currentPreviewAccess);
+      setAllowed(canEnter);
       setReady(true);
+
+      if (!canEnter && pathname?.startsWith("/app")) {
+        writePostAuthNextPath(pathname);
+      }
     }
 
     load();
@@ -64,11 +77,13 @@ export function WorkspaceAuthGate({
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const currentPreviewAccess = readPreviewAccessEnabled();
       setEmail(session?.user?.email || "");
       setMode(readAccessMode());
       setWalletHint(readWalletHint());
       setVerifiedWallet(readVerifiedWallet());
-      setAllowed(Boolean(session?.user?.email) || readAccessMode() === "preview" || Boolean(readVerifiedWallet()));
+      setPreviewAccess(currentPreviewAccess);
+      setAllowed(Boolean(session?.user?.email) || (readAccessMode() === "preview" && currentPreviewAccess) || Boolean(readVerifiedWallet()));
       setReady(true);
     });
 
@@ -76,7 +91,7 @@ export function WorkspaceAuthGate({
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [pathname, supabase]);
 
   if (!ready) {
     return (
@@ -102,11 +117,11 @@ export function WorkspaceAuthGate({
           Sign in or verify wallet access before entering.
         </h1>
         <p className="mb-5 max-w-3xl text-[0.92rem] leading-7 text-[var(--muted)]">
-          The workspace now prefers a real access state. Use the unified login screen, verify a wallet session, or enter preview mode first.
+          The workspace now prefers a real access state. Use the unified login screen, verify a wallet session, or explicitly enter preview mode first.
         </p>
 
         <div className="flex flex-wrap gap-3">
-          <Link href="/auth" className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]">
+          <Link href={`/auth?next=${encodeURIComponent(pathname || "/app")}`} className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]">
             Open unified login
           </Link>
           <Link href="/start" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.92rem] font-bold text-[var(--text)]">
@@ -114,7 +129,7 @@ export function WorkspaceAuthGate({
           </Link>
         </div>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-4">
+        <div className="mt-5 grid gap-3 md:grid-cols-5">
           <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
             <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Email session</div>
             <div className="text-[0.88rem] text-[var(--muted)]">{email || "No email session"}</div>
@@ -122,6 +137,10 @@ export function WorkspaceAuthGate({
           <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
             <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Access mode</div>
             <div className="text-[0.88rem] text-[var(--muted)]">{mode}</div>
+          </div>
+          <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+            <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Preview access</div>
+            <div className="text-[0.88rem] text-[var(--muted)]">{previewAccess ? "enabled" : "disabled"}</div>
           </div>
           <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
             <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Wallet hint</div>
