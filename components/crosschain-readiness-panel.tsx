@@ -7,6 +7,10 @@ const rows = [
     value: arcFundingEnv.gatewayAddress,
   },
   {
+    label: "GatewayMinter address",
+    value: arcFundingEnv.gatewayMinterAddress,
+  },
+  {
     label: "CCTP token messenger",
     value: arcFundingEnv.cctpTokenMessenger,
   },

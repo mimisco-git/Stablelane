@@ -253,3 +253,36 @@ This stage pushes Stablelane deeper into Arc testnet operations:
 - funding lane manager for wallet, Gateway, and crosschain settlement routes
 - crosschain readiness panel for Arc testnet Gateway and CCTP environment values
 - stronger Arc workspace page with balance, finality, and funding-lane guidance
+
+
+## Stage 18 package
+This stage starts the next Arc-native funding layer:
+- Gateway deposit workbench
+- settlement route planner
+- GatewayMinter support in the Arc funding registry
+- stronger Arc page structure for wallet, Gateway, and crosschain settlement thinking
+
+
+## Stage 19 package
+This stage pushes Arc relevance further:
+- real Gateway-triggered deposit action using ERC-20 stablecoin transfer calls
+- real token funding path into escrow on Arc testnet
+- stronger crosschain settlement execution desk with stored execution intents
+- richer Arc workspace flow for wallet, Gateway, escrow, and crosschain operations
+
+
+## Stage 20 package
+This stage makes the Arc workflow feel more operational:
+- live activity feed page for deposits, escrow funding, releases, and crosschain execution
+- settlement receipts panel on invoice detail
+- stronger crosschain execution runner with stored intents and progress states
+- Gateway, escrow, and release actions now write into the activity feed
+
+
+## Stage 21 package
+This stage pushes Stablelane toward a more operational premium product:
+- branded invoice and settlement receipt export center on invoice detail
+- print-ready HTML exports for browser PDF workflow
+- dedicated Team workspace page
+- local workspace-role preview for Owner, Admin, Operator, and Viewer
+- dashboard navigation now includes Team

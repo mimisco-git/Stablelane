@@ -68,3 +68,89 @@ export async function sendNativeTransaction({
 
   return txHash;
 }
+
+
+export function toBaseUnits(amount: string, decimals: number) {
+  const normalized = (amount || "0").trim();
+  if (!normalized) return "0";
+
+  const [wholeRaw, fractionRaw = ""] = normalized.split(".");
+  const whole = wholeRaw.replace(/[^0-9]/g, "") || "0";
+  const fraction = fractionRaw.replace(/[^0-9]/g, "").slice(0, decimals);
+  const paddedFraction = (fraction + "0".repeat(decimals)).slice(0, decimals);
+
+  const combined = `${whole}${paddedFraction}`.replace(/^0+/, "") || "0";
+  return combined;
+}
+
+function stripHexPrefix(value: string) {
+  return value.startsWith("0x") ? value.slice(2) : value;
+}
+
+function padHex(value: string, targetLength: number) {
+  return stripHexPrefix(value).padStart(targetLength, "0");
+}
+
+export function encodeErc20TransferData(to: string, amountUnits: string) {
+  const method = "a9059cbb";
+  const addressPart = padHex(to.toLowerCase(), 64);
+  const amountHex = BigInt(amountUnits || "0").toString(16);
+  const amountPart = padHex(amountHex, 64);
+  return `0x${method}${addressPart}${amountPart}`;
+}
+
+export async function sendContractTransaction({
+  environment,
+  to,
+  data,
+  valueHex = "0x0",
+}: {
+  environment: EnvironmentName;
+  to: string;
+  data: string;
+  valueHex?: string;
+}) {
+  const network = getNetworkConfig(environment);
+  if (typeof window === "undefined" || !window.ethereum || !network.hasCompleteConfig) {
+    throw new Error("Wallet or network config unavailable.");
+  }
+
+  const from = await getActiveWalletAddress();
+  if (!from) throw new Error("Connect your wallet first.");
+
+  const txHash = (await window.ethereum.request({
+    method: "eth_sendTransaction",
+    params: [
+      {
+        from,
+        to,
+        value: valueHex,
+        data,
+      },
+    ],
+  })) as string;
+
+  return txHash;
+}
+
+export async function sendErc20Transfer({
+  environment,
+  tokenAddress,
+  to,
+  amount,
+  decimals,
+}: {
+  environment: EnvironmentName;
+  tokenAddress: string;
+  to: string;
+  amount: string;
+  decimals: number;
+}) {
+  const amountUnits = toBaseUnits(amount, decimals);
+  const data = encodeErc20TransferData(to, amountUnits);
+  return sendContractTransaction({
+    environment,
+    to: tokenAddress,
+    data,
+  });
+}

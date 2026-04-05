@@ -5,6 +5,11 @@ import { ArcFinalityPanel } from "@/components/arc-finality-panel";
 import { ArcBalanceReader } from "@/components/arc-balance-reader";
 import { FundingLaneManager } from "@/components/funding-lane-manager";
 import { CrosschainReadinessPanel } from "@/components/crosschain-readiness-panel";
+import { GatewayDepositWorkbench } from "@/components/gateway-deposit-workbench";
+import { SettlementRoutePlanner } from "@/components/settlement-route-planner";
+import { GatewayTransferPanel } from "@/components/gateway-transfer-panel";
+import { EscrowTokenFundingPanel } from "@/components/escrow-token-funding-panel";
+import { CrosschainExecutionDesk } from "@/components/crosschain-execution-desk";
 
 export default function ArcPage() {
   return (
@@ -24,6 +29,15 @@ export default function ArcPage() {
           <ArcBalanceReader />
           <FundingLaneManager />
         </div>
+        <div className="grid gap-4 xl:grid-cols-[1.02fr_.98fr]">
+          <GatewayDepositWorkbench />
+          <SettlementRoutePlanner />
+        </div>
+        <div className="grid gap-4 xl:grid-cols-[1.02fr_.98fr]">
+          <GatewayTransferPanel />
+          <EscrowTokenFundingPanel />
+        </div>
+        <CrosschainExecutionDesk />
         <CrosschainReadinessPanel />
       </div>
     </DashboardShell>

@@ -7,6 +7,7 @@ import { sendNativeTransaction, ensureSelectedNetwork, getActiveWalletAddress } 
 import { useAppEnvironment } from "@/lib/use-app-environment";
 import { getEscrowContractConfig, getEscrowExplorerLink } from "@/lib/contracts";
 import { InlineNotice } from "@/components/ui-state";
+import { pushActivityItem } from "@/lib/activity-feed";
 
 function ethHexFromDecimalAmount(amount: string) {
   const numeric = Number(amount || 0);
@@ -108,6 +109,15 @@ export function EscrowTransactionPanel({
           },
         }
       );
+      pushActivityItem({
+        title: "Escrow funding submitted",
+        detail: `${invoiceAmount} submitted into the contract-aware escrow target.`,
+        kind: "escrow_funding",
+        status: "submitted",
+        txHash,
+        invoiceId,
+        targetAddress,
+      });
       setMessage("Funding transaction submitted from your wallet.");
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Funding transaction failed.";
@@ -169,6 +179,14 @@ export function EscrowTransactionPanel({
           },
         }
       );
+      pushActivityItem({
+        title: "Release confirmed",
+        detail: `Invoice ${invoiceId} was marked released through the contract path.`,
+        kind: "release",
+        status: "confirmed",
+        txHash: releaseTxHash,
+        invoiceId,
+      });
       setMessage("Invoice marked as released and completed.");
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Release update failed.";

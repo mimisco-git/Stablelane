@@ -8,6 +8,8 @@ import { InvoiceStatusTransitionPanel } from "@/components/invoice-status-transi
 import { EscrowTransactionPanel } from "@/components/escrow-transaction-panel";
 import { ContractPathPanel } from "@/components/contract-path-panel";
 import { InvoiceHistoryPanel } from "@/components/invoice-history-panel";
+import { SettlementReceiptsPanel } from "@/components/settlement-receipts-panel";
+import { DocumentExportPanel } from "@/components/document-export-panel";
 import { readLocalInvoices, removeLocalInvoice } from "@/lib/storage";
 import { deleteRemoteInvoiceDraft, fetchRemoteInvoiceDraftById } from "@/lib/supabase-data";
 import type { InvoiceDraft, RemoteInvoiceDraftRow } from "@/lib/types";
@@ -246,6 +248,31 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
       <ContractPathPanel />
 
       {source === "workspace" ? <InvoiceHistoryPanel invoiceId={invoiceId} /> : null}
+
+      <SettlementReceiptsPanel
+        invoiceId={invoiceId}
+        clientName={invoice.clientName}
+        amount={invoice.amount}
+        currency={invoice.currency}
+        fundingTxHash={invoice.fundingTxHash || null}
+        releaseTxHash={invoice.releaseTxHash || null}
+      />
+
+      <DocumentExportPanel
+        invoiceId={invoiceId}
+        title={invoice.title}
+        clientName={invoice.clientName}
+        clientEmail={invoice.clientEmail}
+        amount={invoice.amount}
+        currency={invoice.currency}
+        paymentMode={invoice.paymentMode}
+        dueDate={invoice.dueDate}
+        description={invoice.description}
+        milestones={invoice.milestones}
+        splits={invoice.splits}
+        fundingTxHash={invoice.fundingTxHash || null}
+        releaseTxHash={invoice.releaseTxHash || null}
+      />
 
       <div className="grid gap-4 xl:grid-cols-[1.02fr_.98fr]">
         <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">

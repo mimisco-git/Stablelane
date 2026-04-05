@@ -28,6 +28,16 @@ export const arcFundingLanes = [
 
 export const arcFundingEnv = {
   gatewayAddress: process.env.NEXT_PUBLIC_ARC_TESTNET_GATEWAY_ADDRESS || "",
+  gatewayMinterAddress: process.env.NEXT_PUBLIC_ARC_TESTNET_GATEWAY_MINTER_ADDRESS || "",
   cctpTokenMessenger: process.env.NEXT_PUBLIC_ARC_TESTNET_CCTP_TOKEN_MESSENGER || "",
   cctpMessageTransmitter: process.env.NEXT_PUBLIC_ARC_TESTNET_CCTP_MESSAGE_TRANSMITTER || "",
+};
+
+export const arcFundingReadiness = {
+  gatewayReady: Boolean(
+    arcFundingEnv.gatewayAddress && arcFundingEnv.gatewayMinterAddress
+  ),
+  crosschainReady: Boolean(
+    arcFundingEnv.cctpTokenMessenger && arcFundingEnv.cctpMessageTransmitter
+  ),
 };
