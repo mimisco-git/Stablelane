@@ -395,3 +395,13 @@ This stage adds more real financial operations infrastructure:
 - new `/app/ledger` page for database-backed settlement entries
 - new `/app/transactions` page for onchain receipt monitoring using saved tx hashes
 - gateway, funding, and release actions now also write ledger entries into Supabase
+
+
+## Stage 33 package
+This stage replaces the separated access feel with a smarter unified web3-style login:
+- email and password on the main auth screen
+- magic link on the same screen
+- wallet buttons on the same screen
+- Google, Apple, and X buttons on the same screen
+- `Open app` now routes directly to `/auth`
+- overall auth page upgraded to feel more premium and web3-native
