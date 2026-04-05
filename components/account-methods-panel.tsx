@@ -256,6 +256,12 @@ export function AccountMethodsPanel() {
         </section>
       </div>
 
+      <div className="flex flex-wrap gap-3">
+        <a href="/app/identity" className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]">
+          Open identity center
+        </a>
+      </div>
+
       {message ? (
         <InlineNotice
           title="Account methods"

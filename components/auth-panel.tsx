@@ -11,6 +11,7 @@ import {
   type SocialProviderKey,
 } from "@/lib/auth-options";
 import { readWalletHint, shortWallet, writeAccessMode, writeWalletHint } from "@/lib/access-flow";
+import { saveLinkedAuthMethod } from "@/lib/supabase-data";
 
 type AuthMode = "signin" | "signup";
 
@@ -108,6 +109,9 @@ export function AuthPanel() {
         });
         if (error) throw error;
         writeAccessMode("email");
+      try {
+        await saveLinkedAuthMethod(provider === "google" ? "google_oauth" : provider === "apple" ? "apple_oauth" : "x_oauth");
+      } catch {}
         setMessage("Account created. Check your email to confirm the account, then come back and continue.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -116,6 +120,7 @@ export function AuthPanel() {
         });
         if (error) throw error;
         writeAccessMode("email");
+        try { await saveLinkedAuthMethod("email_password"); } catch {}
         setMessage("Signed in successfully. Redirecting to your workspace...");
         setTimeout(() => router.push("/app"), 700);
       }
@@ -150,6 +155,7 @@ export function AuthPanel() {
       });
       if (error) throw error;
       writeAccessMode("email");
+      try { await saveLinkedAuthMethod("email_magic_link"); } catch {}
       setMessage(
         mode === "signup"
           ? "Magic signup link sent. Open your email to finish joining."
