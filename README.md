@@ -323,3 +323,12 @@ This stage adds a more premium operational command center:
 - blocker tracking
 - recent Arc activity summary
 - role, approvals, contracts, gateway, and team checks in one workspace console
+
+
+## Stage 25 package
+This stage fixes the access-flow friction:
+- new `/start` entry page with three paths: email, wallet, or preview
+- `Open app` now routes to the access-options page instead of dropping users straight into the workspace
+- wallet connection is treated as optional and separate from email sign-in
+- dashboard now shows an access-mode banner so users know email and wallet can be added independently
+- auth page copy now explains that email-first and wallet-later is fully supported
