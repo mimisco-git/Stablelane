@@ -864,3 +864,106 @@ export async function respondToAssignedApproval(
 ) {
   return updateReleaseApprovalRequest(requestId, invoiceId, nextStatus, note);
 }
+
+
+export async function createWorkspaceAuditEvent(input: {
+  event_type: string;
+  title: string;
+  detail: string;
+  metadata?: Record<string, unknown>;
+}) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const workspace = await ensureWorkspaceProfile();
+  if (!workspace) return null;
+
+  const { data, error } = await supabase
+    .from("workspace_audit_events")
+    .insert({
+      owner_id: user.id,
+      workspace_name: workspace.workspace_name,
+      event_type: input.event_type,
+      title: input.title,
+      detail: input.detail,
+      metadata: input.metadata || null,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchWorkspaceAuditEvents(limit = 50) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return [];
+
+  const { data } = await supabase
+    .from("workspace_audit_events")
+    .select("*")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  return (data || []) as any[];
+}
+
+export async function fetchNotificationPreferences() {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const workspace = await ensureWorkspaceProfile();
+  if (!workspace) return null;
+
+  const { data: existing } = await supabase
+    .from("notification_preferences")
+    .select("*")
+    .eq("owner_id", user.id)
+    .eq("workspace_name", workspace.workspace_name)
+    .maybeSingle();
+
+  if (existing) return existing;
+
+  const { data, error } = await supabase
+    .from("notification_preferences")
+    .insert({
+      owner_id: user.id,
+      workspace_name: workspace.workspace_name,
+      email_approvals: true,
+      email_invitations: true,
+      email_releases: true,
+      in_app_activity: true,
+      weekly_summary: false,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function saveNotificationPreferences(payload: {
+  email_approvals: boolean;
+  email_invitations: boolean;
+  email_releases: boolean;
+  in_app_activity: boolean;
+  weekly_summary: boolean;
+}) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const existing = await fetchNotificationPreferences();
+  if (!existing) return null;
+
+  const { data, error } = await supabase
+    .from("notification_preferences")
+    .update(payload)
+    .eq("id", existing.id)
+    .eq("owner_id", user.id)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}

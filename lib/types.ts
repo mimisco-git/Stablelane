@@ -126,3 +126,28 @@ export type WorkspaceInvitation = {
   created_at: string;
   responded_at: string | null;
 };
+
+
+export type WorkspaceAuditEvent = {
+  id: string;
+  owner_id: string;
+  workspace_name: string;
+  event_type: string;
+  title: string;
+  detail: string;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+};
+
+export type NotificationPreferences = {
+  id: string;
+  owner_id: string;
+  workspace_name: string;
+  email_approvals: boolean;
+  email_invitations: boolean;
+  email_releases: boolean;
+  in_app_activity: boolean;
+  weekly_summary: boolean;
+  created_at: string;
+  updated_at: string;
+};

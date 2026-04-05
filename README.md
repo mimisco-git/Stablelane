@@ -378,3 +378,12 @@ This stage makes Stablelane more real in day-to-day access control:
 
 ## Stage 30 fix v2
 This package fixes the Next.js prerender error on `/accept-invite` by wrapping the `useSearchParams()` consumer in a `Suspense` boundary.
+
+
+## Stage 31 package
+This stage adds more real, database-backed workspace infrastructure:
+- new `workspace_audit_events` table
+- new `notification_preferences` table
+- database-backed audit trail at `/app/audit`
+- database-backed notification preferences at `/app/preferences`
+- key actions now write audit events into Supabase, not only local activity storage

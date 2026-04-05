@@ -40,6 +40,7 @@ export const dashboardNav = [
   { href: "/app/payouts", label: "Payouts" },
   { href: "/app/analytics", label: "Analytics" },
   { href: "/app/activity", label: "Activity" },
+  { href: "/app/audit", label: "Audit" },
   { href: "/app/notifications", label: "Notifications" },
   { href: "/app/access", label: "Access" },
   { href: "/app/inbox", label: "Inbox" },
@@ -51,4 +52,5 @@ export const dashboardNav = [
   { href: "/app/team", label: "Team" },
   { href: "/app/clients", label: "Clients" },
   { href: "/app/settings", label: "Settings" },
+  { href: "/app/preferences", label: "Preferences" },
 ];

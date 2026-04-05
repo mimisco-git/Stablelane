@@ -329,3 +329,85 @@ with check (
   lower(approver_email) = lower(coalesce(auth.jwt() ->> 'email', ''))
   or auth.uid() = owner_id
 );
+
+
+create table if not exists public.workspace_audit_events (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  workspace_name text not null,
+  event_type text not null,
+  title text not null,
+  detail text not null,
+  metadata jsonb,
+  created_at timestamptz not null default now()
+);
+
+alter table public.workspace_audit_events enable row level security;
+
+drop policy if exists "workspace_audit_events_select_own" on public.workspace_audit_events;
+create policy "workspace_audit_events_select_own"
+on public.workspace_audit_events
+for select
+to authenticated
+using (auth.uid() = owner_id);
+
+drop policy if exists "workspace_audit_events_insert_own" on public.workspace_audit_events;
+create policy "workspace_audit_events_insert_own"
+on public.workspace_audit_events
+for insert
+to authenticated
+with check (auth.uid() = owner_id);
+
+
+create table if not exists public.notification_preferences (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  workspace_name text not null,
+  email_approvals boolean not null default true,
+  email_invitations boolean not null default true,
+  email_releases boolean not null default true,
+  in_app_activity boolean not null default true,
+  weekly_summary boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.notification_preferences enable row level security;
+
+drop policy if exists "notification_preferences_select_own" on public.notification_preferences;
+create policy "notification_preferences_select_own"
+on public.notification_preferences
+for select
+to authenticated
+using (auth.uid() = owner_id);
+
+drop policy if exists "notification_preferences_insert_own" on public.notification_preferences;
+create policy "notification_preferences_insert_own"
+on public.notification_preferences
+for insert
+to authenticated
+with check (auth.uid() = owner_id);
+
+drop policy if exists "notification_preferences_update_own" on public.notification_preferences;
+create policy "notification_preferences_update_own"
+on public.notification_preferences
+for update
+to authenticated
+using (auth.uid() = owner_id)
+with check (auth.uid() = owner_id);
+
+create or replace function public.set_notification_preferences_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_notification_preferences_updated_at on public.notification_preferences;
+create trigger trg_notification_preferences_updated_at
+before update on public.notification_preferences
+for each row
+execute function public.set_notification_preferences_updated_at();
