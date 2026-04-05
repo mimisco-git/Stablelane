@@ -219,7 +219,7 @@ export function LaunchHardeningCenter() {
   }
 
   if (!hardeningItems.length) {
-    return <EmptyState title="No launch hardening data" detail="Stablelane could not calculate launch-hardening state yet." />;
+    return <EmptyState title="No launch hardening data" detail="Launch readiness data is not available. Complete identity and notification setup first." />;
   }
 
   return (

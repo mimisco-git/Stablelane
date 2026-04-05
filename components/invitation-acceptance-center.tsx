@@ -112,7 +112,7 @@ export function InvitationAcceptanceCenter() {
           Join the workspace cleanly.
         </h1>
         <p className="max-w-3xl text-[0.92rem] leading-7 text-[var(--muted)]">
-          Invitations now behave more like a real onboarding step. Accepting one creates your membership record using the currently signed-in email.
+          Accepting an invitation creates your workspace membership record using your signed-in email.
         </p>
       </section>
 

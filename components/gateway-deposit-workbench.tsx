@@ -127,7 +127,7 @@ export function GatewayDepositWorkbench() {
         <div className="mt-4">
           <InlineNotice
             title="Why this matters"
-            detail="A dedicated Gateway lane makes Stablelane feel more like Arc financial infrastructure instead of only a wallet-funded web app."
+            detail="Deposit via Arc Gateway for a dedicated funding lane, separate from direct wallet funding."
             tone="success"
           />
         </div>

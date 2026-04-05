@@ -76,7 +76,7 @@ export function NotificationPreferencesForm() {
       <div className="mb-4">
         <h2 className="mb-1 text-base font-bold tracking-normal">Notification preferences</h2>
         <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-          These settings are now stored in the database, so the workspace can behave more like a real fintech product.
+          Your notification preferences are saved to your workspace and apply across all devices.
         </p>
       </div>
 

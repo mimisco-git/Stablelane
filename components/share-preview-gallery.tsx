@@ -32,7 +32,7 @@ export function SharePreviewGallery() {
           </h2>
         </div>
         <p className="max-w-3xl text-[1rem] leading-8 text-[var(--muted)]">
-          Stablelane now includes branded social preview graphics so progress screenshots, updates, and launch posts look consistent with the app itself.
+          Branded preview images for sharing Stablelane pages, workspace updates, and product announcements.
         </p>
       </div>
 

@@ -312,7 +312,7 @@ export function InvoiceBuilder({ draftId }: InvoiceBuilderProps) {
             <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
               {activeDraft
                 ? "Update the draft, refine milestones, or adjust payout splits before connecting it to escrow."
-                : "This stage turns the invoice screen into a working draft builder with Supabase saving when you are signed in."}
+                : "Create an invoice with milestones and client terms. Drafts save automatically when you are signed in."}
             </p>
           </div>
           <button

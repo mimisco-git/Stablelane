@@ -541,7 +541,7 @@ export function AuthPanel() {
         <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4">
           <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--accent)]">Next destination</div>
           <p className="text-[0.84rem] leading-6 text-[var(--accent)]">
-            After access succeeds, Stablelane now returns the user to {nextPath} when possible.
+            After signing in, you will be redirected to {nextPath}.
           </p>
         </div>
       </aside>

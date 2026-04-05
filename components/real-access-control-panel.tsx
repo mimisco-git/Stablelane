@@ -47,7 +47,7 @@ export function RealAccessControlPanel() {
   }
 
   if (!access) {
-    return <EmptyState title="No access data available" detail="Sign in first so Stablelane can resolve your real workspace access state." />;
+    return <EmptyState title="No access data available" detail="Sign in to view your workspace access and permissions." />;
   }
 
   const permissionRows = [
@@ -73,13 +73,13 @@ export function RealAccessControlPanel() {
     <div className="grid gap-4">
       <section className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(16,27,20,.92),rgba(10,18,13,.86))] p-6 shadow-[0_24px_80px_rgba(0,0,0,.24)]">
         <div className="mb-2 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-          Real access control
+          Access control
         </div>
         <h1 className="mb-3 font-[family-name:var(--font-cormorant)] text-5xl leading-none tracking-[-0.05em] text-[var(--text)]">
           Workspace access is now resolved from real membership data.
         </h1>
         <p className="max-w-3xl text-[0.92rem] leading-7 text-[var(--muted)]">
-          This stage shifts the product closer to real multi-user behavior. Instead of only relying on preview roles, Stablelane now resolves your working role from the signed-in account and saved membership records first.
+          Your workspace role is resolved from your signed-in account and membership records. Permissions apply across invoices, escrows, approvals, and payout routing.
         </p>
       </section>
 

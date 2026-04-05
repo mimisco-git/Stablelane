@@ -220,7 +220,7 @@ export function IdentityLinkingCenter() {
             </div>
 
             <div className="rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4">
-              <div className="mb-2 font-semibold text-[var(--accent)]">What this stage makes real</div>
+              <div className="mb-2 font-semibold text-[var(--accent)]">What identity linking enables</div>
               <div className="grid gap-2 text-[0.84rem] leading-6 text-[var(--accent)]">
                 <div>• wallet access now uses a signed challenge</div>
                 <div>• verified wallet sessions can now be linked to the workspace profile</div>

@@ -28,7 +28,7 @@ export function CrosschainReadinessPanel() {
       <div className="mb-4">
         <h2 className="mb-1 text-base font-bold tracking-normal">Gateway and crosschain readiness</h2>
         <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-          This keeps the next Arc-native funding path visible, so Stablelane can grow into deposit routing and crosschain settlement without redesigning the product later.
+          Arc-native deposit routing and crosschain settlement via Circle CCTP and Arc Gateway.
         </p>
       </div>
 

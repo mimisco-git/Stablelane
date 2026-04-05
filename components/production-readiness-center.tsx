@@ -132,7 +132,7 @@ export function ProductionReadinessCenter() {
       </div>
 
       {!readinessItems.length ? (
-        <EmptyState title="No readiness data" detail="Stablelane could not calculate readiness in this workspace yet." />
+        <EmptyState title="No readiness data" detail="Complete identity and notification setup to calculate readiness." />
       ) : null}
     </div>
   );

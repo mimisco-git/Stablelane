@@ -87,7 +87,7 @@ export function TeamRolesManager() {
         <div className="mb-4">
           <h2 className="mb-1 text-base font-bold tracking-normal">Workspace team roles</h2>
           <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-            These team roles now persist in the workspace database preview, so Stablelane starts behaving more like a real multi-user operational product.
+            Team roles persist in your workspace database. Each member's permissions apply across invoices, approvals, and payout routing.
           </p>
         </div>
 

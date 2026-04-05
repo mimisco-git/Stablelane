@@ -28,7 +28,7 @@ export function ContractPathPanel() {
           </div>
           <h2 className="text-base font-bold tracking-normal">Escrow contract readiness</h2>
           <p className="mt-1 max-w-2xl text-[0.84rem] leading-6 text-[var(--muted)]">
-            Stablelane now tracks the contract path needed for actual release logic. When these addresses are configured, the escrow center can evolve from transaction scaffolding into a stricter contract flow.
+            Contract addresses for the escrow, invoice registry, and split router. Configure these to enable on-chain release logic.
           </p>
         </div>
         <div className={`rounded-full px-3 py-2 text-[0.72rem] font-extrabold uppercase tracking-[0.08em] ${

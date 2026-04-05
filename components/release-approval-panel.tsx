@@ -196,7 +196,7 @@ export function ReleaseApprovalPanel({
         <div>
           <h2 className="mb-1 text-base font-bold tracking-normal">Release approvals</h2>
           <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-            Add an approval layer before release so Stablelane behaves more like a real operational finance workspace.
+            Add an approval gate before milestone releases. Required approvals must clear before funds can settle.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

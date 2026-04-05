@@ -116,7 +116,7 @@ export function WorkspaceInvitationsManager() {
         <div className="mb-4">
           <h2 className="mb-1 text-base font-bold tracking-normal">Invite workspace members</h2>
           <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-            Create invitations before turning someone into a permanent workspace member. This makes the team flow feel more like a real finance and operations product.
+            Create invitations to onboard collaborators. Accepting an invitation creates a membership record tied to the invitee's email.
           </p>
         </div>
 

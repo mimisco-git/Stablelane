@@ -131,7 +131,7 @@ export function OpsCommandCenter() {
               Operations console
             </div>
             <h2 className="font-[family-name:var(--font-cormorant)] text-[clamp(2rem,3vw,3rem)] leading-[0.98] tracking-[-0.04em] text-[var(--text)]">
-              Stablelane now has a command center for Arc testnet operations.
+              Command center for Arc testnet operations, settlement readiness, and workspace health.
             </h2>
             <p className="mt-3 max-w-3xl text-[0.92rem] leading-7 text-[var(--muted)]">
               This page surfaces operational readiness, blockers, approval pressure, and recent settlement activity so the product feels closer to a real finance and operations workspace.
