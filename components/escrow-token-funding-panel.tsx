@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { getEscrowContractConfig } from "@/lib/contracts";
 import { sendErc20Transfer, ensureSelectedNetwork } from "@/lib/onchain";
 import { useAppEnvironment } from "@/lib/use-app-environment";
+import { createWorkspaceAuditEvent } from "@/lib/supabase-data";
 import { pushActivityItem } from "@/lib/activity-feed";
 import { InlineNotice } from "@/components/ui-state";
 import { StatusPill } from "@/components/status-pill";
@@ -68,6 +69,12 @@ export function EscrowTokenFundingPanel() {
         status: "submitted",
         txHash,
         targetAddress,
+      });
+      await createWorkspaceAuditEvent({
+        event_type: "escrow_token_funding_submitted",
+        title: "Escrow token funding submitted",
+        detail: `${amount} ${assetConfig.symbol} was sent into the escrow target.`,
+        metadata: { txHash, targetAddress, tokenAddress: assetConfig.tokenAddress },
       });
       setMessage(`Escrow funding transfer submitted. Tx: ${txHash}`);
     } catch (error) {

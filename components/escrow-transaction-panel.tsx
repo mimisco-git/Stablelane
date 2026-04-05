@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { updateInvoiceWorkflowState, fetchInvoiceApprovalGate } from "@/lib/supabase-data";
+import { updateInvoiceWorkflowState, fetchInvoiceApprovalGate, createWorkspaceAuditEvent } from "@/lib/supabase-data";
 import { sendNativeTransaction, ensureSelectedNetwork, getActiveWalletAddress } from "@/lib/onchain";
 import { useAppEnvironment } from "@/lib/use-app-environment";
 import { getEscrowContractConfig, getEscrowExplorerLink } from "@/lib/contracts";
@@ -112,6 +112,12 @@ export function EscrowTransactionPanel({
           },
         }
       );
+      await createWorkspaceAuditEvent({
+        event_type: "escrow_record_created",
+        title: "Escrow record created",
+        detail: `A contract-aware escrow record was created for invoice ${invoiceId}.`,
+        metadata: { invoiceId, escrowAddress: derivedEscrowAddress },
+      });
       setMessage("Escrow record created with contract-path awareness.");
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Escrow record could not be created.";
@@ -170,6 +176,12 @@ export function EscrowTransactionPanel({
         targetAddress,
       });
 
+      await createWorkspaceAuditEvent({
+        event_type: "escrow_wallet_funding_submitted",
+        title: "Escrow wallet funding submitted",
+        detail: `Funding was submitted for invoice ${invoiceId}.`,
+        metadata: { invoiceId, txHash, targetAddress },
+      });
       setMessage("Funding transaction submitted from your wallet.");
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Funding transaction failed.";
@@ -201,6 +213,12 @@ export function EscrowTransactionPanel({
         }
       );
       await loadGate();
+      await createWorkspaceAuditEvent({
+        event_type: "release_request_recorded",
+        title: "Release request recorded",
+        detail: `Release was requested for invoice ${invoiceId}.`,
+        metadata: { invoiceId },
+      });
       setMessage("Release request recorded for this invoice.");
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Release request failed.";
@@ -251,6 +269,12 @@ export function EscrowTransactionPanel({
         invoiceId,
       });
 
+      await createWorkspaceAuditEvent({
+        event_type: "release_completed",
+        title: "Invoice released",
+        detail: `Invoice ${invoiceId} was released and completed.`,
+        metadata: { invoiceId, releaseTxHash },
+      });
       setMessage("Invoice marked as released and completed.");
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Release update failed.";

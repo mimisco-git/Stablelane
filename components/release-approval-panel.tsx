@@ -8,6 +8,7 @@ import {
   fetchInvoiceApprovalGate,
   updateInvoiceWorkflowState,
   updateReleaseApprovalRequest,
+  createWorkspaceAuditEvent,
 } from "@/lib/supabase-data";
 import { canCreateApprovals, readActingRole } from "@/lib/role-session";
 import { fetchRealAccessContext } from "@/lib/workspace-access";
@@ -140,6 +141,12 @@ export function ReleaseApprovalPanel({
 
       setSelectedEmails([]);
       setNote("");
+      await createWorkspaceAuditEvent({
+        event_type: "release_approvals_created",
+        title: "Release approvals created",
+        detail: `Release approvals were created for invoice ${invoiceId}.`,
+        metadata: { invoiceId, approvers: selectedMembers.map((member) => member.member_email) },
+      });
       setMessage("Release approvals created.");
       await loadAll();
     } catch {
@@ -170,6 +177,12 @@ export function ReleaseApprovalPanel({
         );
       }
 
+      await createWorkspaceAuditEvent({
+        event_type: nextStatus === "Approved" ? "release_approval_approved" : "release_approval_rejected",
+        title: nextStatus === "Approved" ? "Release approval approved" : "Release approval rejected",
+        detail: nextStatus === "Approved" ? `An approval was approved for invoice ${invoiceId}.` : `An approval was rejected for invoice ${invoiceId}.`,
+        metadata: { invoiceId, requestId, note },
+      });
       setMessage(nextStatus === "Approved" ? "Approval recorded." : "Rejection recorded.");
       await loadAll();
     } catch {

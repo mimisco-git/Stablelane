@@ -6,6 +6,7 @@ import {
   acceptWorkspaceInvitation,
   declineWorkspaceInvitation,
   fetchInvitationsAssignedToMe,
+  createWorkspaceAuditEvent,
 } from "@/lib/supabase-data";
 import type { WorkspaceInvitation } from "@/lib/types";
 import { EmptyState, InlineNotice, LoadingState } from "@/components/ui-state";
@@ -42,6 +43,12 @@ export function InvitationAcceptanceCenter() {
     setMessage("");
     try {
       await acceptWorkspaceInvitation(id);
+      await createWorkspaceAuditEvent({
+        event_type: "workspace_invitation_accepted",
+        title: "Workspace invitation accepted",
+        detail: "An invited user accepted workspace access.",
+        metadata: { invitationId: id },
+      });
       setMessage("Invitation accepted. You now exist as a real workspace member in this build.");
       await loadRows();
       setTimeout(() => router.push("/app/team"), 700);
@@ -57,6 +64,12 @@ export function InvitationAcceptanceCenter() {
     setMessage("");
     try {
       await declineWorkspaceInvitation(id);
+      await createWorkspaceAuditEvent({
+        event_type: "workspace_invitation_declined",
+        title: "Workspace invitation declined",
+        detail: "An invited user declined workspace access.",
+        metadata: { invitationId: id },
+      });
       setMessage("Invitation declined.");
       await loadRows();
     } catch {

@@ -6,6 +6,7 @@ import {
   fetchApprovalsAssignedToMe,
   fetchRemoteInvoiceDrafts,
   respondToAssignedApproval,
+  createWorkspaceAuditEvent,
 } from "@/lib/supabase-data";
 import type { ReleaseApprovalRequest, RemoteInvoiceDraftRow } from "@/lib/types";
 import { EmptyState, InlineNotice, LoadingState } from "@/components/ui-state";
@@ -88,6 +89,12 @@ export function MyApprovalsPanel() {
     setMessage("");
     try {
       await respondToAssignedApproval(requestId, invoiceId, nextStatus, note || undefined);
+      await createWorkspaceAuditEvent({
+        event_type: nextStatus === "Approved" ? "approver_inbox_approved" : "approver_inbox_rejected",
+        title: nextStatus === "Approved" ? "Approval completed from inbox" : "Approval rejected from inbox",
+        detail: nextStatus === "Approved" ? `An approver approved invoice ${invoiceId} from the approver inbox.` : `An approver rejected invoice ${invoiceId} from the approver inbox.`,
+        metadata: { requestId, invoiceId, note },
+      });
       setMessage(nextStatus === "Approved" ? "Approval recorded from the approver inbox." : "Rejection recorded from the approver inbox.");
       setNote("");
       await loadRows();

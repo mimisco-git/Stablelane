@@ -5,6 +5,7 @@ import {
   createWorkspaceInvitation,
   fetchWorkspaceInvitations,
   updateWorkspaceInvitationStatus,
+  createWorkspaceAuditEvent,
 } from "@/lib/supabase-data";
 import type { WorkspaceInvitation, WorkspaceMemberRole } from "@/lib/types";
 import Link from "next/link";
@@ -67,6 +68,12 @@ export function WorkspaceInvitationsManager() {
       setInviteEmail("");
       setInviteRole("Operator");
       setInviteNote("");
+      await createWorkspaceAuditEvent({
+        event_type: "workspace_invitation_created",
+        title: "Workspace invitation created",
+        detail: `Invitation created for ${inviteEmail.trim()}.`,
+        metadata: { inviteRole, inviteNote },
+      });
       setMessage("Invitation created.");
       await loadInvitations();
     } catch {
@@ -77,6 +84,12 @@ export function WorkspaceInvitationsManager() {
   async function updateStatus(invitationId: string, status: "Accepted" | "Revoked" | "Declined") {
     try {
       await updateWorkspaceInvitationStatus(invitationId, status);
+      await createWorkspaceAuditEvent({
+        event_type: "workspace_invitation_updated",
+        title: "Workspace invitation updated",
+        detail: `Invitation status changed to ${status}.`,
+        metadata: { invitationId, status },
+      });
       setMessage(`Invitation ${status.toLowerCase()}.`);
       await loadInvitations();
     } catch {

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { arcFundingEnv, arcFundingReadiness } from "@/lib/arc-funding";
 import { arcTestnetFinance } from "@/lib/arc-finance";
 import { ensureSelectedNetwork, sendErc20Transfer } from "@/lib/onchain";
+import { createWorkspaceAuditEvent } from "@/lib/supabase-data";
 import { pushActivityItem } from "@/lib/activity-feed";
 import { useAppEnvironment } from "@/lib/use-app-environment";
 import { InlineNotice } from "@/components/ui-state";
@@ -67,6 +68,12 @@ export function GatewayTransferPanel() {
         status: "submitted",
         txHash,
         targetAddress: arcFundingEnv.gatewayAddress,
+      });
+      await createWorkspaceAuditEvent({
+        event_type: "gateway_transfer_submitted",
+        title: "Gateway transfer submitted",
+        detail: `${amount} ${assetConfig.symbol} was submitted into the Gateway lane.`,
+        metadata: { txHash, gatewayAddress: arcFundingEnv.gatewayAddress, tokenAddress: assetConfig.tokenAddress },
       });
       setMessage(`Gateway transfer submitted. Tx: ${txHash}`);
     } catch (error) {

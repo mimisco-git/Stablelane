@@ -14,6 +14,17 @@ export default function SettingsPage() {
       <div className="grid gap-4">
         <EnvironmentSwitcher />
 
+        <div className="rounded-[20px] border border-white/8 bg-white/3 p-5">
+          <div className="mb-2 text-base font-bold tracking-normal">Workspace controls</div>
+          <p className="mb-4 text-[0.84rem] leading-6 text-[var(--muted)]">
+            Open the new preferences page for database-backed notification settings and the audit page for saved operational events.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <a href="/app/preferences" className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]">Open preferences</a>
+            <a href="/app/audit" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.92rem] font-bold text-[var(--text)]">Open audit trail</a>
+          </div>
+        </div>
+
         <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
           <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
           <h2 className="mb-4 text-base font-bold tracking-normal">Workspace defaults</h2>
