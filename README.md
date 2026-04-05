@@ -314,3 +314,12 @@ This package fixes the missing approval-op files and exports:
 - adds `components/acting-role-switcher.tsx`
 - restores `fetchApprovalOverview`
 - restores `fetchInvoiceApprovalGate`
+
+
+## Stage 24 package
+This stage adds a more premium operational command center:
+- new Ops page at `/app/ops`
+- operational readiness score
+- blocker tracking
+- recent Arc activity summary
+- role, approvals, contracts, gateway, and team checks in one workspace console
