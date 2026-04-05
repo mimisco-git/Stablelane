@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
@@ -65,10 +66,10 @@ export function AuthPanel() {
           Stage 4 auth
         </div>
         <h1 className="mb-3 font-[family-name:var(--font-cormorant)] text-5xl leading-none tracking-[-0.05em] text-[var(--text)]">
-          Sign in to save real invoice drafts
+          Sign in with email, then connect wallet later
         </h1>
         <p className="mb-6 max-w-2xl text-[0.96rem] leading-7 text-[var(--muted)]">
-          This stage connects Stablelane to Supabase so draft invoices can live in a real database instead of only inside one browser.
+          Email sign-in handles synced account access and saved workspace records. Wallet connection is optional and can be done later only when you need Arc funding, Gateway, or release actions.
         </p>
 
         <div className="mb-5 flex gap-2">

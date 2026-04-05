@@ -37,7 +37,7 @@ export function SiteNav() {
             Sign in
           </Link>
           <Link
-            href="/app"
+            href="/start"
             className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]"
           >
             Open app

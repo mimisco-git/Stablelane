@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { AuthBanner } from "@/components/auth-banner";
 import { EnvironmentBadge } from "@/components/environment-badge";
+import { AccessModeBanner } from "@/components/access-mode-banner";
 
 type DashboardShellProps = {
   currentPath: string;
@@ -24,6 +25,7 @@ export function DashboardShell({
         <DashboardSidebar currentPath={currentPath} />
         <div className="grid gap-4">
           <AuthBanner />
+          <AccessModeBanner />
           <div className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(14,25,18,.86),rgba(10,18,13,.82))] p-6 shadow-[0_24px_80px_rgba(0,0,0,.36)] backdrop-blur-xl">
             <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
               <div>

@@ -140,7 +140,7 @@ export function WalletConnectPanel() {
 
   const statusTitle = useMemo(() => {
     if (!installed) return "Wallet not detected";
-    if (!walletAddress) return "Connect a wallet";
+    if (!walletAddress) return "Connect wallet when needed";
     if (!onExpectedNetwork) return "Wrong network";
     return "Wallet ready";
   }, [installed, walletAddress, onExpectedNetwork]);
@@ -159,11 +159,11 @@ export function WalletConnectPanel() {
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="mb-1 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-            Wallet and environment
+            Optional wallet and environment
           </div>
           <h2 className="text-base font-bold tracking-normal">{statusTitle}</h2>
           <p className="mt-1 max-w-xl text-[0.84rem] leading-6 text-[var(--muted)]">
-            This panel checks your browser wallet, the selected chain, and whether the app is ready for the selected environment for the first escrow steps.
+            Wallet connection is optional. Use it only when you need Arc funding, Gateway, escrow, or release actions. You can stay signed in with email first and connect wallet later.
           </p>
         </div>
         <div className={`rounded-full px-3 py-2 text-[0.72rem] font-extrabold uppercase tracking-[0.08em] ${
@@ -179,7 +179,7 @@ export function WalletConnectPanel() {
         <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
           <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Wallet</div>
           <div className="font-semibold text-[var(--text)]">
-            {walletAddress ? shortAddress(walletAddress) : installed ? "Not connected" : "No wallet found"}
+            {walletAddress ? shortAddress(walletAddress) : installed ? "Optional for now" : "No wallet found"}
           </div>
         </div>
         <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
