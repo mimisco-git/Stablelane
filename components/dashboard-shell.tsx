@@ -17,7 +17,7 @@ export function DashboardShell({
   title,
   description,
   children,
-  badge = "Testnet preview",
+  badge = "Arc testnet",
 }: DashboardShellProps) {
   return (
     <section className="mx-auto w-[min(calc(100%-36px),1280px)] py-10">
@@ -29,9 +29,6 @@ export function DashboardShell({
           <div className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(14,25,18,.86),rgba(10,18,13,.82))] p-6 shadow-[0_24px_80px_rgba(0,0,0,.36)] backdrop-blur-xl">
             <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
               <div>
-                <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-3 py-2 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-                  Workspace app
-                </div>
                 <h1 className="mb-2 font-[family-name:var(--font-cormorant)] text-5xl leading-none tracking-[-0.05em] text-[var(--text)]">
                   {title}
                 </h1>

@@ -37,11 +37,15 @@ export function OverviewDraftNotice() {
     };
   }, [supabase]);
 
-  if (!localCount && !remoteCount) return null;
+  const total = remoteCount + localCount;
+  if (!total) return null;
 
   return (
     <div className="rounded-[20px] border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4 text-[0.84rem] leading-6 text-[var(--accent)]">
-      You currently have {remoteCount} Supabase draft {remoteCount === 1 ? "invoice" : "invoices"} and {localCount} local browser draft {localCount === 1 ? "invoice" : "invoices"} in this preview build.
+      You have {total} unsaved invoice {total === 1 ? "draft" : "drafts"}.{" "}
+      <a href="/app/invoices" className="font-bold underline underline-offset-2">
+        Open invoices to continue.
+      </a>
     </div>
   );
 }

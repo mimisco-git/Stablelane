@@ -39,12 +39,15 @@ export function DashboardSidebar({ currentPath }: DashboardSidebarProps) {
         })}
       </div>
 
-      <div className="mt-5 rounded-2xl border border-white/8 bg-white/[.03] p-4">
-        <div className="mb-2 text-[0.72rem] font-bold uppercase tracking-[0.11em] text-[var(--muted-2)]">
-          Build status
+      <div className="mt-5 rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.06)] p-4">
+        <div className="mb-2 flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-[var(--accent)]" />
+          <div className="text-[0.72rem] font-bold uppercase tracking-[0.11em] text-[var(--accent)]">
+            Arc testnet
+          </div>
         </div>
         <p className="text-[0.82rem] leading-6 text-[var(--muted)]">
-          UI is now mapped across overview, invoices, escrow, payouts, and settings. Next comes real form handling and data wiring.
+          Running on Arc testnet. All transactions are simulation-only until mainnet launch.
         </p>
       </div>
     </aside>
