@@ -294,3 +294,7 @@ This stage pushes Stablelane toward a more complete operational workspace:
 - approval-based release workflow on invoice detail
 - release approval requests and decision queue
 - team page now reads and writes real workspace members instead of only local preview data
+
+
+## Stage 22 fix v2
+This package fixes the TypeScript union issue in `components/crosschain-execution-desk.tsx` by explicitly typing the mapped execution-intent arrays.

@@ -94,7 +94,7 @@ export function CrosschainExecutionDesk() {
 
   function broadcastIntent(intentId: string) {
     const txHash = `0x${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`;
-    const next = intents.map((intent) => {
+    const next: ExecutionIntent[] = intents.map((intent): ExecutionIntent => {
       if (intent.id !== intentId) return intent;
       if (intent.activityId) {
         replaceActivityItem(intent.activityId, {
@@ -110,14 +110,14 @@ export function CrosschainExecutionDesk() {
         status: "submitted",
         txHash,
       });
-      return { ...intent, status: "broadcasted", txHash };
+      return { ...intent, status: "broadcasted" as const, txHash };
     });
     sync(next);
     setMessage("Crosschain execution broadcasted.");
   }
 
   function settleIntent(intentId: string) {
-    const next = intents.map((intent) => {
+    const next: ExecutionIntent[] = intents.map((intent): ExecutionIntent => {
       if (intent.id !== intentId) return intent;
       if (intent.activityId) {
         replaceActivityItem(intent.activityId, {
@@ -132,7 +132,7 @@ export function CrosschainExecutionDesk() {
         status: "confirmed",
         txHash: intent.txHash,
       });
-      return { ...intent, status: "settled" };
+      return { ...intent, status: "settled" as const };
     });
     sync(next);
     setMessage("Crosschain execution settled.");
