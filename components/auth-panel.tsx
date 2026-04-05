@@ -5,6 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 import { getBaseUrl } from "@/lib/url";
+import {
+  getSocialProviderOptions,
+  getWalletProviderOptions,
+  type SocialProviderKey,
+} from "@/lib/auth-options";
 import { readWalletHint, shortWallet, writeAccessMode, writeWalletHint } from "@/lib/access-flow";
 
 type AuthMode = "signin" | "signup";
@@ -18,14 +23,10 @@ function getEthereumProvider(): EthereumProvider | undefined {
   return (window as Window & { ethereum?: EthereumProvider }).ethereum;
 }
 
-function WalletIcon({ label }: { label: "MetaMask" | "Coinbase" | "WalletConnect" }) {
+function WalletIcon({ label }: { label: string }) {
   const base = "flex h-9 w-9 items-center justify-center rounded-full text-[0.82rem] font-black";
-  if (label === "MetaMask") {
-    return <div className={`${base} bg-[rgba(249,115,22,.16)] text-[#fb923c]`}>M</div>;
-  }
-  if (label === "Coinbase") {
-    return <div className={`${base} bg-[rgba(59,130,246,.16)] text-[#60a5fa]`}>C</div>;
-  }
+  if (label.toLowerCase().includes("meta")) return <div className={`${base} bg-[rgba(249,115,22,.16)] text-[#fb923c]`}>M</div>;
+  if (label.toLowerCase().includes("coin")) return <div className={`${base} bg-[rgba(59,130,246,.16)] text-[#60a5fa]`}>C</div>;
   return <div className={`${base} bg-[rgba(168,85,247,.16)] text-[#c084fc]`}>W</div>;
 }
 
@@ -39,6 +40,8 @@ function SocialIcon({ label }: { label: "Google" | "Apple" | "X" }) {
 export function AuthPanel() {
   const router = useRouter();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const socialProviders = useMemo(() => getSocialProviderOptions().filter((item) => item.enabled), []);
+  const walletProviders = useMemo(() => getWalletProviderOptions(), []);
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -147,7 +150,11 @@ export function AuthPanel() {
       });
       if (error) throw error;
       writeAccessMode("email");
-      setMessage(mode === "signup" ? "Magic signup link sent. Open your email to finish joining." : "Magic sign-in link sent. Open your email to continue securely.");
+      setMessage(
+        mode === "signup"
+          ? "Magic signup link sent. Open your email to finish joining."
+          : "Magic sign-in link sent. Open your email to continue securely."
+      );
     } catch (error) {
       const text = error instanceof Error ? error.message : "Magic link failed.";
       setMessage(text);
@@ -156,7 +163,7 @@ export function AuthPanel() {
     }
   }
 
-  async function handleOAuth(provider: "google" | "apple" | "twitter") {
+  async function handleOAuth(provider: SocialProviderKey) {
     if (!supabase) {
       setMessage("Supabase environment variables are missing. Add them first.");
       return;
@@ -181,15 +188,15 @@ export function AuthPanel() {
     }
   }
 
-  async function handleWallet(providerLabel: "MetaMask" | "Coinbase" | "WalletConnect") {
+  async function handleWallet() {
     const provider = getEthereumProvider();
 
     if (!provider) {
-      setMessage(`${providerLabel} connection was requested, but no browser wallet was detected. You can still sign in with email or use preview mode.`);
+      setMessage("No browser wallet was detected. Use email or preview mode, or install a supported wallet first.");
       return;
     }
 
-    setLoading(providerLabel.toLowerCase());
+    setLoading("wallet");
     setMessage("");
 
     try {
@@ -200,7 +207,7 @@ export function AuthPanel() {
       writeAccessMode("wallet");
       writeWalletHint(selected);
       setWalletHint(selected);
-      setMessage(`Wallet connected as ${shortWallet(selected)}. You can use the workspace now and add email later when you want synced account access.`);
+      setMessage(`Wallet connected as ${shortWallet(selected)}. You can use the workspace now and add email later.`);
       setTimeout(() => router.push("/app"), 650);
     } catch (error) {
       const text = error instanceof Error ? error.message : "Wallet connection failed.";
@@ -210,7 +217,7 @@ export function AuthPanel() {
     }
   }
 
-  async function continueExistingSession() {
+  function continueExistingSession() {
     writeAccessMode(activeEmail ? "email" : "wallet");
     router.push("/app");
   }
@@ -223,10 +230,10 @@ export function AuthPanel() {
         </div>
 
         <h1 className="mb-3 font-[family-name:var(--font-cormorant)] text-[clamp(2.8rem,5vw,4.5rem)] leading-none tracking-[-0.055em] text-[var(--text)]">
-          One premium login, all entry paths.
+          One premium login, now more truthful.
         </h1>
         <p className="mb-6 max-w-2xl text-[0.96rem] leading-7 text-[var(--muted)]">
-          Email, wallet, Google, Apple, and X now sit inside one smarter access screen. Sign in like a premium web3 finance product, then move into the workspace without awkward separation.
+          Email, wallet, and social entry now live on one screen, but only the methods that are really enabled or detected are shown.
         </p>
 
         <div className="mb-5 flex flex-wrap gap-2">
@@ -340,58 +347,66 @@ export function AuthPanel() {
             </div>
           </div>
 
-          <div className="grid gap-2 md:grid-cols-3">
-            {(["MetaMask", "Coinbase", "WalletConnect"] as const).map((wallet) => (
-              <button
-                key={wallet}
-                type="button"
-                onClick={() => handleWallet(wallet)}
-                disabled={Boolean(loading)}
-                className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-left transition hover:bg-white/5 disabled:opacity-70"
-              >
-                <WalletIcon label={wallet} />
-                <div>
-                  <div className="text-[0.9rem] font-semibold text-[var(--text)]">{wallet}</div>
-                  <div className="text-[0.72rem] text-[var(--muted)]">Wallet access</div>
-                </div>
-              </button>
-            ))}
-          </div>
+          {walletProviders.length ? (
+            <div className="grid gap-2 md:grid-cols-2">
+              {walletProviders.map((wallet) => (
+                <button
+                  key={wallet.key}
+                  type="button"
+                  onClick={handleWallet}
+                  disabled={Boolean(loading)}
+                  className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-left transition hover:bg-white/5 disabled:opacity-70"
+                >
+                  <WalletIcon label={wallet.label} />
+                  <div>
+                    <div className="text-[0.9rem] font-semibold text-[var(--text)]">{wallet.label}</div>
+                    <div className="text-[0.72rem] text-[var(--muted)]">Detected wallet</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-white/8 bg-white/3 p-4 text-[0.84rem] leading-6 text-[var(--muted)]">
+              No supported browser wallet is detected on this device right now.
+            </div>
+          )}
 
-          <div className="grid gap-2 md:grid-cols-3">
-            {[
-              { label: "Google", provider: "google" as const },
-              { label: "Apple", provider: "apple" as const },
-              { label: "X", provider: "twitter" as const },
-            ].map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={() => handleOAuth(item.provider)}
-                disabled={Boolean(loading)}
-                className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-left transition hover:bg-white/5 disabled:opacity-70"
-              >
-                <SocialIcon label={item.label as "Google" | "Apple" | "X"} />
-                <div>
-                  <div className="text-[0.9rem] font-semibold text-[var(--text)]">Continue with {item.label}</div>
-                  <div className="text-[0.72rem] text-[var(--muted)]">Social access</div>
-                </div>
-              </button>
-            ))}
-          </div>
+          {socialProviders.length ? (
+            <div className="grid gap-2 md:grid-cols-3">
+              {socialProviders.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => handleOAuth(item.key)}
+                  disabled={Boolean(loading)}
+                  className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-left transition hover:bg-white/5 disabled:opacity-70"
+                >
+                  <SocialIcon label={item.label} />
+                  <div>
+                    <div className="text-[0.9rem] font-semibold text-[var(--text)]">Continue with {item.label}</div>
+                    <div className="text-[0.72rem] text-[var(--muted)]">Enabled provider</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-white/8 bg-white/3 p-4 text-[0.84rem] leading-6 text-[var(--muted)]">
+              No social providers are enabled yet. Turn them on in Supabase and Vercel first.
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-2">
             <Link href="/app" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.86rem] font-semibold text-[var(--text)]">
               Browse in preview
             </Link>
-            <Link href="/start" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.86rem] font-semibold text-[var(--text)]">
-              More access options
+            <Link href="/app/account" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-[0.86rem] font-semibold text-[var(--text)]">
+              Manage methods
             </Link>
           </div>
 
           {message ? (
             <div className={`rounded-2xl px-4 py-3 text-[0.84rem] leading-6 ${
-              message.toLowerCase().includes("failed") || message.toLowerCase().includes("missing") || message.toLowerCase().includes("no wallet")
+              message.toLowerCase().includes("failed") || message.toLowerCase().includes("missing") || message.toLowerCase().includes("no supported")
                 ? "border border-white/8 bg-white/3 text-[var(--muted)]"
                 : "border border-[var(--line)] bg-[rgba(201,255,96,.08)] text-[var(--accent)]"
             }`}>
@@ -403,39 +418,34 @@ export function AuthPanel() {
 
       <aside className="rounded-[30px] border border-white/8 bg-white/3 p-6">
         <div className="mb-4 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-          Premium web3 access
+          Auth hardening
         </div>
 
         <div className="grid gap-3">
-          {[
-            {
-              title: "One screen, smarter flow",
-              body: "Email, wallet, and social entry now live together in one premium access layout instead of separate disconnected flows.",
-            },
-            {
-              title: "Wallets inside login",
-              body: "Wallet connection is now presented as a first-class login path on the same screen, closer to premium web3 products.",
-            },
-            {
-              title: "Better fintech feel",
-              body: "The page now looks and behaves more like a modern finance product, with cleaner hierarchy and smarter entry options.",
-            },
-            {
-              title: "Still practical",
-              body: "Email remains the path for synced account access, while wallet-first access still works for users who want to move fast.",
-            },
-          ].map((item) => (
-            <div key={item.title} className="rounded-2xl border border-white/8 bg-white/3 p-4">
-              <div className="mb-2 font-semibold text-[var(--text)]">{item.title}</div>
-              <div className="text-[0.84rem] leading-6 text-[var(--muted)]">{item.body}</div>
+          <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+            <div className="mb-2 font-semibold text-[var(--text)]">Only real methods are shown</div>
+            <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
+              Social buttons only render when their providers are actually enabled. Wallet buttons only render when a compatible browser wallet is actually detected.
             </div>
-          ))}
+          </div>
+          <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+            <div className="mb-2 font-semibold text-[var(--text)]">Cleaner entry truth</div>
+            <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
+              This keeps the login screen feeling premium without pretending every method is available before it is configured.
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+            <div className="mb-2 font-semibold text-[var(--text)]">Better access management</div>
+            <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
+              The new account page lets you inspect the active email session, browser wallet hint, and enabled providers in one place.
+            </div>
+          </div>
         </div>
 
         <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4">
-          <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--accent)]">Implementation note</div>
+          <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--accent)]">Environment flags</div>
           <p className="text-[0.84rem] leading-6 text-[var(--accent)]">
-            Google, Apple, and X require Supabase OAuth provider setup. Wallet buttons work as wallet-first workspace access, not full SIWE yet.
+            Enable social providers with NEXT_PUBLIC_AUTH_GOOGLE_ENABLED, NEXT_PUBLIC_AUTH_APPLE_ENABLED, and NEXT_PUBLIC_AUTH_X_ENABLED.
           </p>
         </div>
       </aside>

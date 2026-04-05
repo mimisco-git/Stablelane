@@ -1,7 +1,9 @@
+import { WorkspaceAuthGate } from "@/components/workspace-auth-gate";
+
 export default function AppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <div>{children}</div>;
+  return <WorkspaceAuthGate>{children}</WorkspaceAuthGate>;
 }

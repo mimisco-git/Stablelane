@@ -90,6 +90,9 @@ export function AuthBanner() {
         <div className="font-semibold">{email}</div>
       </div>
       <div className="flex flex-wrap gap-2">
+        <Link href="/app/account" className="rounded-full border border-white/8 bg-white/3 px-4 py-2 text-[0.84rem] font-semibold text-[var(--text)]">
+          Manage account methods
+        </Link>
         <Link href="/app/invoices/new" className="rounded-full border border-white/8 bg-white/3 px-4 py-2 text-[0.84rem] font-semibold text-[var(--text)]">
           Create invoice
         </Link>
