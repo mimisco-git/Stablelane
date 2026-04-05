@@ -1122,3 +1122,33 @@ export async function saveLinkedAuthMethod(method: "email_password" | "email_mag
   if (error) throw error;
   return data;
 }
+
+
+export async function saveVerifiedWalletLink(walletAddress: string) {
+  const { supabase, user } = await getSignedInUser();
+  if (!supabase || !user) return null;
+
+  const workspace = await ensureWorkspaceProfile();
+  if (!workspace) return null;
+
+  const currentMethods = Array.isArray((workspace as any).linked_auth_methods)
+    ? ((workspace as any).linked_auth_methods as string[])
+    : [];
+
+  const nextMethods = Array.from(new Set([...currentMethods, "wallet_siwe"]));
+
+  const { data, error } = await supabase
+    .from("workspace_profiles")
+    .update({
+      linked_wallet_address: walletAddress,
+      linked_wallet_verified_at: new Date().toISOString(),
+      linked_auth_methods: nextMethods,
+    })
+    .eq("id", workspace.id)
+    .eq("user_id", user.id)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}

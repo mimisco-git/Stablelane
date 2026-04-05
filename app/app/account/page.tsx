@@ -6,7 +6,7 @@ export default function AccountPage() {
     <DashboardShell
       currentPath="/app/account"
       title="Account"
-      description="Inspect active email session, browser-linked wallet access, and which providers are truly enabled."
+      description="Inspect current email session, wallet state, verified wallet access, and enabled providers."
       badge="Account methods"
     >
       <AccountMethodsPanel />

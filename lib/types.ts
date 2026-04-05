@@ -181,7 +181,8 @@ export type IdentityMethod =
   | "google_oauth"
   | "apple_oauth"
   | "x_oauth"
-  | "wallet_hint";
+  | "wallet_hint"
+  | "wallet_siwe";
 
 export type IdentitySummary = {
   workspace_name: string;
@@ -190,4 +191,10 @@ export type IdentitySummary = {
   linked_wallet_address: string | null;
   linked_auth_methods: IdentityMethod[];
   email: string | null;
+};
+
+
+export type VerifiedWalletSession = {
+  address: string;
+  issued_at: string;
 };

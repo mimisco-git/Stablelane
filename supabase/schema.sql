@@ -449,3 +449,7 @@ alter table public.workspace_profiles
   add column if not exists linked_auth_methods jsonb not null default '[]'::jsonb;
 
 create index if not exists idx_workspace_profiles_user_id on public.workspace_profiles(user_id);
+
+
+alter table public.workspace_profiles
+  add column if not exists linked_wallet_verified_at timestamptz;

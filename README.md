@@ -423,3 +423,13 @@ This stage starts making identity linkage more real:
 - wallet hint can now be saved into the workspace profile as a linked wallet
 - auth methods begin to be recorded on the workspace profile
 - identity linking actions now write audit events
+
+
+## Stage 36 package
+This stage makes wallet access more real:
+- adds `viem` dependency
+- adds signed wallet challenge endpoints under `/api/wallet-auth/*`
+- unified auth page now uses server-verified wallet access instead of plain connect-only flow
+- workspace gate now prefers verified wallet session over plain wallet hints
+- identity center can link the verified wallet into the workspace profile
+- linked wallet verification time is now stored on `workspace_profiles`

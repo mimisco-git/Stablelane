@@ -33,3 +33,20 @@ export function shortWallet(value: string) {
   if (!value || value.length < 10) return value;
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
 }
+
+
+const VERIFIED_WALLET_KEY = "stablelane_verified_wallet_v1";
+
+export function readVerifiedWallet() {
+  if (typeof window === "undefined") return "";
+  return window.localStorage.getItem(VERIFIED_WALLET_KEY) || "";
+}
+
+export function writeVerifiedWallet(address: string) {
+  if (typeof window === "undefined") return;
+  if (!address) {
+    window.localStorage.removeItem(VERIFIED_WALLET_KEY);
+    return;
+  }
+  window.localStorage.setItem(VERIFIED_WALLET_KEY, address);
+}
