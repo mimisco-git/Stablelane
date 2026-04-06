@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SiteNav } from "@/components/site-nav";
-import { siteConfig } from "@/lib/site";
+import { WaitlistForm } from "@/components/waitlist-form";
 
 const productFlow = [
   { icon: "▣", title: "Invoice created", desc: "$4,800 USDC · Design sprint · 3 milestones · Client portal ready", badge: "Sent", tone: "done" },
@@ -71,8 +71,6 @@ function toneClasses(tone: string) {
 }
 
 export default function HomePage() {
-  const waitlistHref = `mailto:${siteConfig.waitlistEmail}?subject=Stablelane%20waitlist`;
-
   return (
     <div className="pb-10">
       <SiteNav />
@@ -384,9 +382,8 @@ export default function HomePage() {
               Join the early list for Stablelane. The first version is for freelancers, small agencies, and remote teams that want invoicing, escrow, and payout flow in one place.
             </p>
             <div className="mx-auto w-full max-w-[600px] rounded-[30px] border border-white/8 bg-[linear-gradient(180deg,rgba(14,25,18,.9),rgba(10,18,13,.84))] p-6 shadow-[0_28px_90px_rgba(0,0,0,.38)] backdrop-blur-xl">
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row">
-                <input type="email" placeholder="your@email.com" aria-label="Email address for waitlist" className="flex-1 rounded-full border border-white/8 bg-white/3 px-5 py-4 text-[var(--text)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--line)]" />
-                <a href={waitlistHref} className="rounded-full bg-[var(--accent)] px-6 py-4 text-center text-[0.95rem] font-bold text-[#08100b] transition hover:-translate-y-px">Join waitlist</a>
+              <div className="mb-4">
+                <WaitlistForm />
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/8 bg-white/[.02] px-4 py-3 text-left">
