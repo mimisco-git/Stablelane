@@ -106,4 +106,3 @@ The build requires Google Fonts access during build. Vercel handles this automat
 ```bash
 npm run typecheck
 ```
-
