@@ -52,15 +52,6 @@ function GoogleIcon() {
   );
 }
 
-function AppleIcon() {
-  return (
-    <svg width="16" height="18" viewBox="0 0 16 18" fill="currentColor">
-      <path d="M13.173 9.545c-.022-2.177 1.775-3.23 1.856-3.28-1.014-1.48-2.588-1.682-3.143-1.704-1.334-.135-2.61.78-3.286.78-.674 0-1.713-.762-2.82-.74C4.2 4.623 2.7 5.576 1.875 7.062.183 10.076 1.443 14.57 3.073 17.03c.812 1.207 1.775 2.559 3.042 2.51 1.22-.05 1.683-.797 3.156-.797 1.474 0 1.887.797 3.173.773 1.313-.022 2.144-1.23 2.948-2.443.934-1.402 1.313-2.775 1.335-2.845-.03-.012-2.545-.983-2.554-3.683Z"/>
-      <path d="M10.905 2.835C11.563 2.027 12.01.93 11.882 0c-.951.04-2.121.64-2.804 1.43-.61.7-1.15 1.83-1.005 2.905 1.065.082 2.156-.543 2.832-1.5Z"/>
-    </svg>
-  );
-}
-
 function XIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -241,7 +232,7 @@ export function AuthPanel() {
 
     setLoading(provider);
     setMessage("");
-    writePendingAuthMethod(provider === "google" ? "google_oauth" : provider === "apple" ? "apple_oauth" : "x_oauth");
+    writePendingAuthMethod(provider === "google" ? "google_oauth" : "x_oauth");
     writePostAuthNextPath(nextPath);
 
     try {
@@ -633,7 +624,7 @@ export function AuthPanel() {
 
         {/* Social buttons */}
         {socialProviders.length > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: socialProviders.length === 1 ? "1fr" : socialProviders.length === 2 ? "1fr 1fr" : "1fr 1fr 1fr", gap: "0.5rem", marginBottom: "1rem" }}>
+          <div style={{ display: "grid", gap: "0.5rem", marginBottom: "1rem" }}>
             {socialProviders.map((item) => (
               <button
                 key={item.key}
@@ -643,25 +634,35 @@ export function AuthPanel() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  gap: "0.5rem",
-                  padding: "0.8rem 0.5rem",
+                  gap: "0.875rem",
+                  width: "100%",
+                  padding: "0.8rem 1.25rem",
                   borderRadius: "12px",
                   border: "0.5px solid rgba(255,255,255,0.1)",
                   background: "rgba(255,255,255,0.03)",
                   cursor: isLoading ? "not-allowed" : "pointer",
-                  transition: "background 0.15s",
+                  transition: "background 0.15s, border-color 0.15s",
                   opacity: isLoading && loading !== item.key ? 0.5 : 1,
                   color: "#ecf4ec",
+                  position: "relative",
                 }}
-                onMouseEnter={(e) => { if (!isLoading) (e.currentTarget).style.background = "rgba(255,255,255,0.07)"; }}
-                onMouseLeave={(e) => { (e.currentTarget).style.background = "rgba(255,255,255,0.03)"; }}
-                title={`Continue with ${item.label}`}
+                onMouseEnter={(e) => { if (!isLoading) { (e.currentTarget).style.background = "rgba(255,255,255,0.07)"; (e.currentTarget).style.borderColor = "rgba(255,255,255,0.18)"; }}}
+                onMouseLeave={(e) => { (e.currentTarget).style.background = "rgba(255,255,255,0.03)"; (e.currentTarget).style.borderColor = "rgba(255,255,255,0.1)"; }}
               >
-                {item.key === "google" ? <GoogleIcon /> : item.key === "apple" ? <AppleIcon /> : <XIcon />}
-                <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
-                  {loading === item.key ? "..." : item.label}
+                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: 9, background: "rgba(255,255,255,0.06)", flexShrink: 0 }}>
+                  {item.key === "google" ? <GoogleIcon /> : <XIcon />}
                 </span>
+                <span style={{ flex: 1, textAlign: "left" }}>
+                  <span style={{ display: "block", fontSize: "0.9rem", fontWeight: 600, color: "#ecf4ec" }}>
+                    {loading === item.key ? "Connecting..." : `Continue with ${item.label}`}
+                  </span>
+                  <span style={{ display: "block", fontSize: "0.74rem", color: "#85938b", marginTop: 1 }}>
+                    {item.key === "google" ? "Sign in with your Google account" : "Sign in with your X account"}
+                  </span>
+                </span>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ color: "#85938b", flexShrink: 0 }}>
+                  <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </button>
             ))}
           </div>
