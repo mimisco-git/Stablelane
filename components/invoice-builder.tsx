@@ -19,6 +19,7 @@ type FormState = {
   reference: string;
   description: string;
   freelancerWallet: string;
+  freelancerWallet: string;
   milestones: Array<{
     id: string;
     title: string;
@@ -46,6 +47,7 @@ const initialState: FormState = {
   dueDate: "",
   reference: "",
   description: "",
+  freelancerWallet: "",
   freelancerWallet: "",
   milestones: [
     { id: "m1", title: "Milestone 1", amount: "", detail: "Discovery and strategy" },
