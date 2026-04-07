@@ -52,14 +52,6 @@ function GoogleIcon() {
   );
 }
 
-function XIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-      <path d="M9.294 6.928 14.818 0h-1.309L8.7 6.031 4.548 0H0l5.8 8.445L0 15.169h1.309l5.072-5.9 4.053 5.9H16L9.294 6.928ZM7.01 8.521l-.588-.84-4.676-6.69h2.014l3.775 5.4.588.84 4.906 7.016H10.83L7.01 8.521Z"/>
-    </svg>
-  );
-}
-
 function MetaMaskIcon() {
   return (
     <svg width="20" height="18" viewBox="0 0 20 18" fill="none">
@@ -232,7 +224,7 @@ export function AuthPanel() {
 
     setLoading(provider);
     setMessage("");
-    writePendingAuthMethod(provider === "google" ? "google_oauth" : "x_oauth");
+    writePendingAuthMethod("google_oauth");
     writePostAuthNextPath(nextPath);
 
     try {
@@ -634,35 +626,28 @@ export function AuthPanel() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "0.875rem",
+                  justifyContent: "center",
+                  gap: "0.75rem",
                   width: "100%",
-                  padding: "0.8rem 1.25rem",
+                  padding: "0.9rem 1.25rem",
                   borderRadius: "12px",
-                  border: "0.5px solid rgba(255,255,255,0.1)",
-                  background: "rgba(255,255,255,0.03)",
+                  border: "0.5px solid rgba(255,255,255,0.12)",
+                  background: "rgba(255,255,255,0.05)",
                   cursor: isLoading ? "not-allowed" : "pointer",
-                  transition: "background 0.15s, border-color 0.15s",
+                  transition: "background 0.15s, border-color 0.15s, transform 0.1s",
                   opacity: isLoading && loading !== item.key ? 0.5 : 1,
                   color: "#ecf4ec",
                   position: "relative",
                 }}
-                onMouseEnter={(e) => { if (!isLoading) { (e.currentTarget).style.background = "rgba(255,255,255,0.07)"; (e.currentTarget).style.borderColor = "rgba(255,255,255,0.18)"; }}}
-                onMouseLeave={(e) => { (e.currentTarget).style.background = "rgba(255,255,255,0.03)"; (e.currentTarget).style.borderColor = "rgba(255,255,255,0.1)"; }}
+                onMouseEnter={(e) => { if (!isLoading) { (e.currentTarget).style.background = "rgba(255,255,255,0.09)"; (e.currentTarget).style.borderColor = "rgba(255,255,255,0.22)"; (e.currentTarget).style.transform = "translateY(-1px)"; }}}
+                onMouseLeave={(e) => { (e.currentTarget).style.background = "rgba(255,255,255,0.05)"; (e.currentTarget).style.borderColor = "rgba(255,255,255,0.12)"; (e.currentTarget).style.transform = "translateY(0)"; }}
               >
-                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: 9, background: "rgba(255,255,255,0.06)", flexShrink: 0 }}>
-                  {item.key === "google" ? <GoogleIcon /> : <XIcon />}
+                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0 }}>
+                  <GoogleIcon />
                 </span>
-                <span style={{ flex: 1, textAlign: "left" }}>
-                  <span style={{ display: "block", fontSize: "0.9rem", fontWeight: 600, color: "#ecf4ec" }}>
-                    {loading === item.key ? "Connecting..." : `Continue with ${item.label}`}
-                  </span>
-                  <span style={{ display: "block", fontSize: "0.74rem", color: "#85938b", marginTop: 1 }}>
-                    {item.key === "google" ? "Sign in with your Google account" : "Sign in with your X account"}
-                  </span>
+                <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "#ecf4ec", letterSpacing: "0.01em" }}>
+                  {loading === item.key ? "Connecting to Google..." : "Continue with Google"}
                 </span>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ color: "#85938b", flexShrink: 0 }}>
-                  <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
               </button>
             ))}
           </div>

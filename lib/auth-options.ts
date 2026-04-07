@@ -1,9 +1,9 @@
-export type SocialProviderKey = "google" | "twitter";
+export type SocialProviderKey = "google";
 export type WalletProviderKey = "metamask" | "coinbase" | "injected";
 
 export type SocialProviderOption = {
   key: SocialProviderKey;
-  label: "Google" | "X";
+  label: "Google";
   enabled: boolean;
 };
 
@@ -30,11 +30,6 @@ export function getSocialProviderOptions(): SocialProviderOption[] {
       key: "google",
       label: "Google",
       enabled: envEnabled(process.env.NEXT_PUBLIC_AUTH_GOOGLE_ENABLED),
-    },
-    {
-      key: "twitter",
-      label: "X",
-      enabled: envEnabled(process.env.NEXT_PUBLIC_AUTH_X_ENABLED),
     },
   ];
 }
