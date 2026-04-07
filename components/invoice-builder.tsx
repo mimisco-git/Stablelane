@@ -94,6 +94,7 @@ function invoiceToForm(invoice: InvoiceDraft): FormState {
     description: invoice.description || "",
     milestones: invoice.milestones?.length ? invoice.milestones : initialState.milestones,
     splits: invoice.splits?.length ? invoice.splits : initialState.splits,
+    freelancerWallet: (invoice as any).freelancerWallet || "",
   };
 }
 
