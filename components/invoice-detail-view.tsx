@@ -243,6 +243,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
           invoiceAmount={invoice.amount}
           escrowAddress={invoice.escrowAddress || null}
           currentEscrowStatus={invoice.escrowStatus || "draft"}
+          milestones={invoice.milestones || []}
         />
       </div>
 

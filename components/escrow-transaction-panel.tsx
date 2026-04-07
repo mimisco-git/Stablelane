@@ -11,6 +11,7 @@ import { fetchRealAccessContext } from "@/lib/workspace-access";
 import { InlineNotice } from "@/components/ui-state";
 import { pushActivityItem } from "@/lib/activity-feed";
 import { createOnChainEscrow, fundEscrow as fundOnChainEscrow, approveMilestone as approveOnChainMilestone, FACTORY_ADDRESS } from "@/lib/escrow-client";
+import { useState as useLocalState } from "react";
 
 function ethHexFromDecimalAmount(amount: string) {
   const numeric = Number(amount || 0);
@@ -27,11 +28,13 @@ export function EscrowTransactionPanel({
   invoiceAmount,
   escrowAddress,
   currentEscrowStatus,
+  milestones = [],
 }: {
   invoiceId: string;
   invoiceAmount: string;
   escrowAddress: string | null;
   currentEscrowStatus: string;
+  milestones?: Array<{ title?: string; amount?: string | number }>;
 }) {
   const { environment } = useAppEnvironment();
   const contractConfig = {
@@ -252,14 +255,12 @@ export function EscrowTransactionPanel({
     setMessage("");
     try {
       if (!canFinalizeRelease(effectiveRole)) {
-        throw new Error(`${effectiveRole} cannot finalize release in this access state.`);
+        throw new Error(`${effectiveRole} cannot finalize release.`);
       }
-      if (!contractConfig.ready) throw new Error("Contract addresses are not configured yet.");
-      if (!approvalGate.allApproved) {
-        throw new Error("All release approvals must be approved before final release.");
-      }
+      if (!escrowAddress) throw new Error("No escrow found. Create and fund escrow first.");
 
-      const releaseTxHash = `0x${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`;
+      setMessage("Approving milestone release on Arc testnet. Confirm in your wallet...");
+      const releaseTxHash = await approveOnChainMilestone(escrowAddress, 0);
 
       await updateInvoiceWorkflowState(
         invoiceId,
@@ -273,7 +274,6 @@ export function EscrowTransactionPanel({
           detail: "Invoice marked as released through the contract path.",
           metadata: {
             environment,
-            releaseModuleAddress: contractConfig.releaseModuleAddress,
             releaseTxHash,
           },
         }
@@ -294,7 +294,7 @@ export function EscrowTransactionPanel({
         amount: Number(invoiceAmount || 0),
         currency: "USDC",
         tx_hash: releaseTxHash,
-        target_address: contractConfig.releaseModuleAddress,
+        target_address: escrowAddress || "",
         note: "Release completed through the contract path.",
       });
 
