@@ -27,6 +27,7 @@ function toRemoteDraftPayload(draft: InvoiceDraft, ownerId: string) {
     milestones: draft.milestones,
     splits: draft.splits,
     status: draft.status,
+    freelancer_wallet: draft.freelancerWallet || null,
     escrow_status: draft.escrowStatus || "draft",
     escrow_address: draft.escrowAddress || null,
     funding_tx_hash: draft.fundingTxHash || null,

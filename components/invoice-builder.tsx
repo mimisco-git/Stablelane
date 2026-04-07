@@ -18,6 +18,7 @@ type FormState = {
   dueDate: string;
   reference: string;
   description: string;
+  freelancerWallet: string;
   milestones: Array<{
     id: string;
     title: string;
@@ -45,6 +46,7 @@ const initialState: FormState = {
   dueDate: "",
   reference: "",
   description: "",
+  freelancerWallet: "",
   milestones: [
     { id: "m1", title: "Milestone 1", amount: "", detail: "Discovery and strategy" },
     { id: "m2", title: "Milestone 2", amount: "", detail: "Core delivery" },
@@ -257,6 +259,7 @@ export function InvoiceBuilder({ draftId }: InvoiceBuilderProps) {
       splits: form.splits,
       createdAt: activeDraft?.createdAt || new Date().toISOString(),
       status: activeDraft?.status || "Draft",
+      freelancerWallet: form.freelancerWallet || null,
     };
 
     setSaving(true);
@@ -438,6 +441,17 @@ export function InvoiceBuilder({ draftId }: InvoiceBuilderProps) {
                 onChange={(e) => updateField("description", e.target.value)}
                 placeholder="Outline scope, delivery terms, and payment expectations."
                 className="rounded-[20px] border border-white/8 bg-white/3 px-4 py-3 text-[var(--text)] outline-none placeholder:text-[var(--muted-2)]"
+              />
+            </label>
+
+            <label className="grid gap-2 text-[0.84rem] text-[var(--muted)]">
+              <span>Your wallet address <span className="text-[0.78rem] text-[var(--muted-2)]">(receives released funds on Arc)</span></span>
+              <input
+                type="text"
+                value={form.freelancerWallet}
+                onChange={(e) => updateField("freelancerWallet", e.target.value)}
+                placeholder="0x... your Arc testnet wallet"
+                className="rounded-[14px] border border-white/8 bg-white/3 px-4 py-3 font-mono text-[0.88rem] text-[var(--text)] outline-none placeholder:text-[var(--muted-2)] focus:border-[var(--line)]"
               />
             </label>
 

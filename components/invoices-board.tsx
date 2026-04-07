@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { StatusPill } from "@/components/status-pill";
-import { invoicesTable } from "@/lib/mock-data";
 import { readLocalInvoices } from "@/lib/storage";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 import { fetchClients, fetchRemoteInvoiceDrafts } from "@/lib/supabase-data";
@@ -21,7 +20,7 @@ type BoardRow = {
   status: FilterKey;
   dueDate: string;
   funded: string;
-  source: "workspace" | "browser" | "sample";
+  source: "workspace" | "browser";
 };
 
 const filters: FilterKey[] = ["All", "Draft", "Sent", "In escrow", "Completed"];
@@ -132,18 +131,6 @@ export function InvoicesBoard() {
     const merged: BoardRow[] = [
       ...remoteDrafts.map(remoteToRow),
       ...localDrafts.map(draftToRow),
-      ...invoicesTable.map((item) => ({
-        id: item.id,
-        title: item.title,
-        clientName: item.client,
-        clientId: null,
-        currency: (item.currency === "EURC" ? "EURC" : "USDC") as "USDC" | "EURC",
-        total: item.total,
-        status: item.status as FilterKey,
-        dueDate: item.dueDate,
-        funded: item.funded,
-        source: "sample" as const,
-      })),
     ];
 
     return merged.filter((row) => {
@@ -162,8 +149,8 @@ export function InvoicesBoard() {
     <div className="grid gap-4">
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "Workspace drafts", value: String(remoteDrafts.length) },
-          { label: "Browser drafts", value: String(localDrafts.length) },
+          { label: "Saved invoices", value: String(remoteDrafts.length) },
+          { label: "Local drafts", value: String(localDrafts.length) },
           { label: "Linked to clients", value: String([
             ...remoteDrafts.filter((item) => Boolean(item.client_id)),
             ...localDrafts.filter((item) => Boolean(item.clientId)),

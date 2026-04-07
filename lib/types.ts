@@ -30,6 +30,7 @@ export type InvoiceDraft = {
   }>;
   createdAt: string;
   status: InvoiceWorkflowStatus;
+  freelancerWallet?: string | null;
 };
 
 export type RemoteInvoiceDraftRow = {
@@ -53,6 +54,7 @@ export type RemoteInvoiceDraftRow = {
   milestones: InvoiceDraft["milestones"];
   splits: InvoiceDraft["splits"];
   status: InvoiceWorkflowStatus;
+  freelancer_wallet?: string | null;
   created_at: string;
   updated_at: string;
 };

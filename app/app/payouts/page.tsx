@@ -1,8 +1,51 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { StatusPill } from "@/components/status-pill";
-import { payoutSplits, payoutTemplates, payouts } from "@/lib/mock-data";
+import { getSupabaseBrowserClient } from "@/lib/supabase-client";
+import type { RemoteInvoiceDraftRow } from "@/lib/types";
+import Link from "next/link";
 
 export default function PayoutsPage() {
+  const [invoices, setInvoices] = useState<RemoteInvoiceDraftRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) { setLoading(false); return; }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+
+      const { data } = await supabase
+        .from("invoice_drafts")
+        .select("*")
+        .eq("owner_id", user.id)
+        .order("updated_at", { ascending: false });
+
+      setInvoices((data || []) as RemoteInvoiceDraftRow[]);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  const completed = invoices.filter((r) => r.status === "Completed" || r.escrow_status === "released");
+  const inEscrow = invoices.filter((r) => r.escrow_status === "funded" || r.status === "In escrow");
+
+  // Compute splits from all invoices with splits defined
+  const allSplits = invoices.flatMap((r) =>
+    Array.isArray(r.splits) ? r.splits.map((s: any) => ({ ...s, invoiceTitle: r.title, amount: r.amount, currency: r.currency })) : []
+  );
+
+  const splitTotals = allSplits.reduce((acc: Record<string, { percent: number; total: number; currency: string; count: number }>, s: any) => {
+    const key = s.member || "Unknown";
+    if (!acc[key]) acc[key] = { percent: s.percent, total: 0, currency: s.currency || "USDC", count: 0 };
+    acc[key].total += (Number(s.amount || 0) * s.percent) / 100;
+    acc[key].count += 1;
+    return acc;
+  }, {});
+
   return (
     <DashboardShell
       currentPath="/app/payouts"
@@ -10,69 +53,73 @@ export default function PayoutsPage() {
       description="Configure payout splits, manage templates, and view completed payout records for your workspace."
       badge="Payouts"
     >
-      <div className="grid gap-4 xl:grid-cols-[.95fr_1.05fr]">
-        <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
-          <h2 className="mb-4 text-base font-bold tracking-normal">Active payout template</h2>
-          <div className="grid gap-3">
-            {payoutSplits.map((split) => (
-              <div key={split.member} className="grid gap-2 rounded-2xl border border-white/8 bg-white/3 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <strong>{split.member}</strong>
-                  <span className="text-[0.92rem] font-extrabold">{split.amount}</span>
-                </div>
-                <div className="text-[0.8rem] text-[var(--muted)]">{split.percent}% of settlement</div>
-                <div className="h-3 overflow-hidden rounded-full border border-white/5 bg-white/5">
-                  <span
-                    className="block h-full rounded-full bg-[linear-gradient(90deg,var(--accent),var(--accent-2))]"
-                    style={{ width: `${split.percent}%` }}
-                  />
-                </div>
+      {loading ? (
+        <div className="py-12 text-center text-[0.9rem] text-[var(--muted)]">Loading payouts...</div>
+      ) : (
+        <div className="grid gap-4 xl:grid-cols-[.95fr_1.05fr]">
+          <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
+            <h2 className="mb-1 text-base font-bold tracking-normal">Payout splits</h2>
+            <p className="mb-4 text-[0.82rem] text-[var(--muted)]">Calculated from splits defined across your saved invoices.</p>
+            {Object.keys(splitTotals).length === 0 ? (
+              <div className="py-6 text-center text-[0.88rem] text-[var(--muted)]">
+                No splits configured yet. Add payout splits when creating invoices.
               </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
-          <h2 className="mb-4 text-base font-bold tracking-normal">Recent payout records</h2>
-          <div className="grid gap-3">
-            {payouts.map((payout) => (
-              <div key={payout.id} className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                <div className="mb-1 flex items-center justify-between gap-3">
-                  <strong>{payout.recipient}</strong>
-                  <span className="font-semibold">{payout.amount}</span>
-                </div>
-                <div className="mb-2 text-[0.84rem] text-[var(--muted)]">
-                  {payout.settlement} · Wallet {payout.wallet}
-                </div>
-                <StatusPill label={payout.status} tone="done" />
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
-
-      <div className="mt-4 rounded-[20px] border border-white/8 bg-white/3 p-5">
-        <h2 className="mb-4 text-base font-bold tracking-normal">Reusable payout templates</h2>
-        <div className="grid gap-3 xl:grid-cols-2">
-          {payoutTemplates.map((template) => (
-            <div key={template.name} className="rounded-2xl border border-white/8 bg-white/3 p-4">
-              <div className="mb-1 flex items-center justify-between gap-3">
-                <strong>{template.name}</strong>
-                <StatusPill label="Template" tone="live" />
-              </div>
-              <p className="mb-3 text-[0.84rem] leading-6 text-[var(--muted)]">{template.description}</p>
-              <div className="grid gap-2">
-                {template.members.map((member) => (
-                  <div key={member.name} className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[.02] px-3 py-2">
-                    <span>{member.name}</span>
-                    <span className="text-[0.84rem] font-semibold text-[var(--muted)]">{member.split}</span>
+            ) : (
+              <div className="grid gap-3">
+                {Object.entries(splitTotals).map(([member, data]) => (
+                  <div key={member} className="grid gap-2 rounded-2xl border border-white/8 bg-white/3 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <strong>{member}</strong>
+                      <span className="text-[0.92rem] font-extrabold">
+                        {data.total.toFixed(2)} {data.currency}
+                      </span>
+                    </div>
+                    <div className="text-[0.8rem] text-[var(--muted)]">{data.percent}% split across {data.count} invoice{data.count !== 1 ? "s" : ""}</div>
+                    <div className="h-3 overflow-hidden rounded-full border border-white/5 bg-white/5">
+                      <span
+                        className="block h-full rounded-full bg-[linear-gradient(90deg,var(--accent),var(--accent-2))]"
+                        style={{ width: `${Math.min(100, data.percent)}%` }}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
-          ))}
+            )}
+          </section>
+
+          <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
+            <h2 className="mb-1 text-base font-bold tracking-normal">Settlement records</h2>
+            <p className="mb-4 text-[0.82rem] text-[var(--muted)]">Completed and active escrow invoices from your workspace.</p>
+            {completed.length === 0 && inEscrow.length === 0 ? (
+              <div className="py-6 text-center">
+                <p className="mb-3 text-[0.88rem] text-[var(--muted)]">No completed settlements yet.</p>
+                <Link href="/app/invoices" className="text-[0.84rem] text-[var(--accent)] underline underline-offset-2">
+                  View invoices
+                </Link>
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {[...completed, ...inEscrow].map((row) => (
+                  <Link key={row.id} href={`/app/invoices/${row.id}`} className="rounded-2xl border border-white/8 bg-white/3 p-4 transition hover:border-white/12">
+                    <div className="mb-1 flex items-center justify-between gap-3">
+                      <strong>{row.title}</strong>
+                      <span className="font-semibold">{row.amount} {row.currency}</span>
+                    </div>
+                    <div className="mb-2 text-[0.84rem] text-[var(--muted)]">
+                      {row.client_name}
+                      {row.escrow_address && ` · ${row.escrow_address.slice(0, 8)}...`}
+                    </div>
+                    <StatusPill
+                      label={row.status === "Completed" ? "Settled" : "In escrow"}
+                      tone={row.status === "Completed" ? "done" : "live"}
+                    />
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
-      </div>
+      )}
     </DashboardShell>
   );
 }

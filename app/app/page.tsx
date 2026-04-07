@@ -1,12 +1,6 @@
 import Link from "next/link";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { StatusPill } from "@/components/status-pill";
-import {
-  activityTimeline,
-  payoutSplits,
-  readinessChecklist,
-  releaseQueue,
-} from "@/lib/mock-data";
 import { OverviewDraftNotice } from "@/components/overview-draft-notice";
 import { DashboardLiveStats } from "@/components/dashboard-live-stats";
 import { DashboardMetricCards } from "@/components/dashboard-metric-cards";
@@ -57,7 +51,12 @@ export default function AppOverviewPage() {
               </Link>
             </div>
             <div className="grid gap-3">
-              {readinessChecklist.map((item) => (
+              {[
+                { title: "Create invoice", detail: "Add milestones, set amount, save to workspace.", done: true },
+                { title: "Send payment link", detail: "Copy the /pay/ link and share it with your client.", done: true },
+                { title: "Client funds escrow", detail: "Client connects wallet and locks USDC on Arc testnet.", done: true },
+                { title: "Approve milestone", detail: "Review work and release each milestone on-chain.", done: false },
+              ].map((item) => (
                 <div key={item.title} className="rounded-2xl border border-white/8 bg-white/3 p-4">
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <strong>{item.title}</strong>
@@ -81,18 +80,11 @@ export default function AppOverviewPage() {
                 Open escrows
               </Link>
             </div>
-            <div className="grid gap-3">
-              {releaseQueue.map((item) => (
-                <div key={`${item.invoice}-${item.milestone}`} className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                  <div className="mb-2 flex items-center justify-between gap-3">
-                    <strong>{item.invoice}</strong>
-                    <span className="text-[0.84rem] font-semibold text-[var(--text)]">{item.amount}</span>
-                  </div>
-                  <div className="text-[0.84rem] leading-6 text-[var(--muted)]">
-                    {item.milestone} · {item.state} · {item.due}
-                  </div>
-                </div>
-              ))}
+            <div className="rounded-2xl border border-white/8 bg-white/3 p-5 text-center">
+              <p className="mb-3 text-[0.88rem] text-[var(--muted)]">Active escrow releases appear here. Open the escrows page to review and approve milestones.</p>
+              <Link href="/app/escrows" className="rounded-full bg-[var(--accent)] px-4 py-2 text-[0.82rem] font-bold text-[#08100b]">
+                Open escrows
+              </Link>
             </div>
           </section>
         </div>
@@ -127,18 +119,11 @@ export default function AppOverviewPage() {
                 Open payouts
               </Link>
             </div>
-            <div className="grid gap-3">
-              {payoutSplits.map((split) => (
-                <div key={split.member} className="grid gap-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <strong>{split.member} · {split.percent}%</strong>
-                    <span className="text-[0.92rem] font-extrabold">{split.amount}</span>
-                  </div>
-                  <div className="h-3 overflow-hidden rounded-full border border-white/5 bg-white/5">
-                    <span className="block h-full rounded-full bg-[linear-gradient(90deg,var(--accent),var(--accent-2))]" style={{ width: `${split.percent}%` }} />
-                  </div>
-                </div>
-              ))}
+            <div className="rounded-2xl border border-white/8 bg-white/3 p-5 text-center">
+              <p className="mb-3 text-[0.88rem] text-[var(--muted)]">Payout splits from your saved invoices appear here. Configure splits when creating invoices.</p>
+              <Link href="/app/payouts" className="rounded-full bg-[var(--accent)] px-4 py-2 text-[0.82rem] font-bold text-[#08100b]">
+                Open payouts
+              </Link>
             </div>
           </section>
         </div>
@@ -153,7 +138,12 @@ export default function AppOverviewPage() {
             </div>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            {activityTimeline.map((item) => (
+            {[
+              { title: "Invoice created", time: "Create", tone: "done", meta: "Create an invoice with milestones and USDC amount." },
+              { title: "Payment link sent", time: "Send", tone: "done", meta: "Share the /pay/ link with your client." },
+              { title: "Escrow funded", time: "Lock", tone: "live", meta: "Client connects wallet and locks USDC on Arc testnet." },
+              { title: "Milestone released", time: "Settle", tone: "lock", meta: "Approve work and funds release on-chain instantly." },
+            ].map((item) => (
               <div key={`${item.title}-${item.time}`} className="rounded-2xl border border-white/8 bg-white/3 p-4">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <strong>{item.title}</strong>
