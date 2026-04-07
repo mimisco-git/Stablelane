@@ -623,20 +623,45 @@ export function InvoiceBuilder({ draftId }: InvoiceBuilderProps) {
         )}
       </section>
 
-      <aside className="rounded-[20px] border border-white/8 bg-white/3 p-5">
-        <h2 className="mb-4 text-base font-bold tracking-normal">Builder notes</h2>
-        <div className="grid gap-3">
-          {[
-            activeDraft
-              ? "You are editing an existing draft. Saving now updates the same record instead of creating a new one."
-              : "Drafts are saved to your account when signed in, or locally to this browser when not.",
-            "Saved clients now feed directly into invoice creation so the workflow feels closer to a real workspace product.",
-            "The next step after this is connecting approved invoices to real Arc testnet escrow contracts.",
-          ].map((note) => (
-            <div key={note} className="rounded-2xl border border-white/8 bg-white/3 p-4 text-[0.84rem] leading-6 text-[var(--muted)]">
-              {note}
+      <aside className="grid gap-4">
+        <div className="rounded-[20px] border border-white/8 bg-white/3 p-5">
+          <h2 className="mb-4 text-base font-bold tracking-normal">Invoice actions</h2>
+          <div className="grid gap-3">
+            {activeDraft && (
+              <button
+                type="button"
+                onClick={() => {
+                  const link = `${typeof window !== "undefined" ? window.location.origin : ""}/app/invoices/${activeDraft.id}`;
+                  navigator.clipboard?.writeText(link);
+                  setMessage("Invoice link copied to clipboard.");
+                }}
+                className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.06)] px-4 py-3 text-left text-[0.88rem] font-semibold text-[var(--accent)] hover:bg-[rgba(201,255,96,.1)] transition"
+              >
+                <span>Copy invoice link</span>
+                <span className="text-[0.8rem] opacity-60">↗</span>
+              </button>
+            )}
+            <div className="rounded-2xl border border-white/8 bg-white/[.03] p-4">
+              <div className="mb-1 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">Save status</div>
+              <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
+                {activeDraft
+                  ? "Editing an existing draft. Save to update the record."
+                  : "Drafts save to your account when signed in, or to this browser when not."}
+              </p>
             </div>
-          ))}
+            <div className="rounded-2xl border border-white/8 bg-white/[.03] p-4">
+              <div className="mb-1 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">Settlement</div>
+              <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
+                USDC and EURC on Arc testnet. Escrow contract connection coming next.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/8 bg-white/[.03] p-4">
+              <div className="mb-1 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">Clients</div>
+              <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
+                Save clients in the Clients page to reuse them across invoices without re-entering details.
+              </p>
+            </div>
+          </div>
         </div>
       </aside>
     </div>

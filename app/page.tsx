@@ -408,6 +408,75 @@ export default function HomePage() {
         </section>
 
       </main>
+
+      {/* FOOTER */}
+      <footer className="border-t border-white/8 mt-10">
+        <div className="mx-auto w-[min(calc(100%-36px),1280px)] py-10">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 mb-10">
+            <div>
+              <div className="mb-3 font-[family-name:var(--font-cormorant)] text-[1.4rem] font-semibold tracking-[-0.02em] text-[var(--text)]">
+                Stablelane<span className="text-[var(--accent)]">.</span>
+              </div>
+              <p className="text-[0.83rem] leading-6 text-[var(--muted)] max-w-[200px]">
+                Stablecoin revenue OS for freelancers and agencies. Built on Arc.
+              </p>
+              <div className="mt-4 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-[var(--accent)]" />
+                <span className="text-[0.78rem] text-[var(--muted)]">Arc testnet</span>
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-3 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">Product</div>
+              <div className="grid gap-2">
+                {["#how", "#features", "#arc", "#waitlist"].map((href, i) => (
+                  <a key={href} href={href} className="text-[0.85rem] text-[var(--muted)] hover:text-[var(--text)] transition-colors">
+                    {["How it works", "Features", "Why Arc", "Join waitlist"][i]}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-3 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">Workspace</div>
+              <div className="grid gap-2">
+                {["/auth", "/app/invoices", "/app/escrows", "/app/payouts"].map((href, i) => (
+                  <a key={href} href={href} className="text-[0.85rem] text-[var(--muted)] hover:text-[var(--text)] transition-colors">
+                    {["Sign in", "Invoices", "Escrow", "Payouts"][i]}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-3 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">Built on</div>
+              <div className="grid gap-2">
+                {[
+                  ["https://arc.network", "Arc Network"],
+                  ["https://circle.com/usdc", "USDC by Circle"],
+                  ["https://docs.arc.network", "Arc Docs"],
+                  ["https://testnet.arcscan.app", "Arc Explorer"],
+                ].map(([href, label]) => (
+                  <a key={href} href={href} target="_blank" rel="noopener noreferrer" className="text-[0.85rem] text-[var(--muted)] hover:text-[var(--text)] transition-colors">
+                    {label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 border-t border-white/8 pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-[0.78rem] text-[var(--muted)]">
+              &copy; {new Date().getFullYear()} Stablelane. All rights reserved.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <a href="/privacy" className="text-[0.78rem] text-[var(--muted)] hover:text-[var(--text)] transition-colors">Privacy Policy</a>
+              <a href="/terms" className="text-[0.78rem] text-[var(--muted)] hover:text-[var(--text)] transition-colors">Terms of Service</a>
+              <a href="https://community.arc.network" target="_blank" rel="noopener noreferrer" className="text-[0.78rem] text-[var(--muted)] hover:text-[var(--text)] transition-colors">Arc Community</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
