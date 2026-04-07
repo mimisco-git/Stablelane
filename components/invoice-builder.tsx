@@ -47,7 +47,6 @@ const initialState: FormState = {
   reference: "",
   description: "",
   freelancerWallet: "",
-  freelancerWallet: "",
   milestones: [
     { id: "m1", title: "Milestone 1", amount: "", detail: "Discovery and strategy" },
     { id: "m2", title: "Milestone 2", amount: "", detail: "Core delivery" },
