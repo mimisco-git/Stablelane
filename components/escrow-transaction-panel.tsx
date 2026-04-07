@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { updateInvoiceWorkflowState, fetchInvoiceApprovalGate, createWorkspaceAuditEvent, createSettlementLedgerEntry } from "@/lib/supabase-data";
-import { sendNativeTransaction, ensureSelectedNetwork, getActiveWalletAddress } from "@/lib/onchain";
+import { getActiveWalletAddress } from "@/lib/onchain";
 import { useAppEnvironment } from "@/lib/use-app-environment";
-import { getEscrowContractConfig, getEscrowExplorerLink } from "@/lib/contracts";
+import { getEscrowExplorerLink } from "@/lib/contracts";
 import { canFinalizeRelease, canPrepareFunding, readActingRole } from "@/lib/role-session";
 import { fetchRealAccessContext } from "@/lib/workspace-access";
 import { InlineNotice } from "@/components/ui-state";
 import { pushActivityItem } from "@/lib/activity-feed";
+import { createOnChainEscrow, fundEscrow as fundOnChainEscrow, approveMilestone as approveOnChainMilestone, FACTORY_ADDRESS } from "@/lib/escrow-client";
 
 function ethHexFromDecimalAmount(amount: string) {
   const numeric = Number(amount || 0);
@@ -33,7 +34,12 @@ export function EscrowTransactionPanel({
   currentEscrowStatus: string;
 }) {
   const { environment } = useAppEnvironment();
-  const contractConfig = getEscrowContractConfig(environment);
+  const contractConfig = {
+    ready: Boolean(FACTORY_ADDRESS),
+    factoryAddress: FACTORY_ADDRESS || "",
+    implementationAddress: "",
+    releaseModuleAddress: "",
+  };
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [actingRole, setActingRole] = useState("Owner");
@@ -84,43 +90,52 @@ export function EscrowTransactionPanel({
     setMessage("");
     try {
       if (!canPrepareFunding(effectiveRole)) {
-        throw new Error(`${effectiveRole} cannot create escrow records in this access state.`);
+        throw new Error(`${effectiveRole} cannot create escrow records.`);
       }
-      if (!contractConfig.ready) {
-        throw new Error("Configure the escrow factory, implementation, and release module addresses first.");
+      if (!FACTORY_ADDRESS) {
+        throw new Error("Escrow factory address is not configured. Add NEXT_PUBLIC_TESTNET_ESCROW_FACTORY_ADDRESS to Vercel.");
       }
 
-      const wallet = await getActiveWalletAddress();
-      const derivedEscrowAddress = contractConfig.implementationAddress || wallet || escrowAddress || null;
-      if (!derivedEscrowAddress) throw new Error("No escrow target address could be derived.");
+      const freelancerAddress = await getActiveWalletAddress();
+      if (!freelancerAddress) throw new Error("Connect your wallet first.");
+
+      const amount = parseFloat(invoiceAmount || "0");
+      if (!amount) throw new Error("Invoice amount is required.");
+
+      setMessage("Creating escrow on Arc testnet. Approve the transactions in your wallet...");
+
+      const { txHash, escrowAddress: newEscrowAddress } = await createOnChainEscrow({
+        invoiceId,
+        freelancerAddress,
+        totalAmountUSDC: amount,
+        milestoneTitles: ["Milestone 1"],
+        milestoneAmountsUSDC: [amount],
+        disputeWindowDays: 7,
+      });
 
       await updateInvoiceWorkflowState(
         invoiceId,
         {
           status: "In escrow",
           escrow_status: "created",
-          escrow_address: derivedEscrowAddress,
+          escrow_address: newEscrowAddress,
+          funding_tx_hash: txHash,
         },
         {
           eventType: "escrow_record_created",
-          detail: "Escrow record linked to the contract path.",
-          metadata: {
-            environment,
-            factoryAddress: contractConfig.factoryAddress,
-            implementationAddress: contractConfig.implementationAddress,
-            releaseModuleAddress: contractConfig.releaseModuleAddress,
-          },
+          detail: "On-chain escrow created on Arc testnet.",
+          metadata: { environment, txHash, escrowAddress: newEscrowAddress },
         }
       );
       await createWorkspaceAuditEvent({
-        event_type: "escrow_record_created",
-        title: "Escrow record created",
-        detail: `A contract-aware escrow record was created for invoice ${invoiceId}.`,
-        metadata: { invoiceId, escrowAddress: derivedEscrowAddress },
+        event_type: "escrow_created_onchain",
+        title: "Escrow created on Arc testnet",
+        detail: `Escrow deployed for invoice ${invoiceId} at ${newEscrowAddress}.`,
+        metadata: { invoiceId, escrowAddress: newEscrowAddress, txHash },
       });
-      setMessage("Escrow record created with contract-path awareness.");
+      setMessage(`Escrow created on Arc testnet. Address: ${newEscrowAddress.slice(0, 10)}...`);
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "Escrow record could not be created.";
+      const detail = error instanceof Error ? error.message : "Escrow creation failed.";
       setMessage(detail);
     } finally {
       setBusy(false);
@@ -132,20 +147,14 @@ export function EscrowTransactionPanel({
     setMessage("");
     try {
       if (!canPrepareFunding(effectiveRole)) {
-        throw new Error(`${effectiveRole} cannot prepare escrow funding in this access state.`);
+        throw new Error(`${effectiveRole} cannot fund escrow.`);
       }
-      if (!contractConfig.ready) throw new Error("Contract addresses are not configured yet.");
-      const targetAddress = escrowAddress || contractConfig.implementationAddress;
-      if (!targetAddress) throw new Error("No contract-aware escrow target is available.");
+      const targetAddress = escrowAddress;
+      if (!targetAddress) throw new Error("Create the escrow first before funding.");
 
-      const networkOk = await ensureSelectedNetwork(environment);
-      if (!networkOk.ok) throw new Error(networkOk.reason);
+      setMessage("Funding escrow on Arc testnet. Approve the transactions in your wallet...");
 
-      const txHash = await sendNativeTransaction({
-        environment,
-        to: targetAddress,
-        valueHex: ethHexFromDecimalAmount(invoiceAmount || "0"),
-      });
+      const txHash = await fundOnChainEscrow(targetAddress);
 
       await updateInvoiceWorkflowState(
         invoiceId,
@@ -352,7 +361,7 @@ export function EscrowTransactionPanel({
         <button type="button" onClick={createEscrowRecord} disabled={busy} className="rounded-full bg-[var(--accent)] px-4 py-3 text-left text-[0.92rem] font-bold text-[#08100b] disabled:opacity-70">
           {busy ? "Working..." : "Create contract-aware escrow record"}
         </button>
-        <button type="button" onClick={fundEscrow} disabled={busy || !contractConfig.ready} className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-45">
+        <button type="button" onClick={fundEscrow} disabled={busy} className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-45">
           {busy ? "Submitting..." : "Fund escrow from wallet"}
         </button>
         <button type="button" onClick={requestRelease} disabled={busy || currentEscrowStatus !== "funded" || !contractConfig.ready} className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-45">
