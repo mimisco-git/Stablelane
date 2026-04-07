@@ -454,3 +454,19 @@ create index if not exists idx_workspace_profiles_user_id on public.workspace_pr
 
 alter table public.workspace_profiles
   add column if not exists linked_wallet_verified_at timestamptz;
+
+-- Allow public read access to invoice_drafts by ID (for client payment page)
+-- Clients don't need to be signed in to view and pay an invoice
+drop policy if exists "Public can view invoices by id" on public.invoice_drafts;
+create policy "Public can view invoices by id"
+on public.invoice_drafts
+for select
+using (true);
+
+-- Allow public update for escrow status (client payment updates)
+drop policy if exists "Public can update escrow status" on public.invoice_drafts;
+create policy "Public can update escrow status"
+on public.invoice_drafts
+for update
+using (true)
+with check (true);

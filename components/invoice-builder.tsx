@@ -631,13 +631,13 @@ export function InvoiceBuilder({ draftId }: InvoiceBuilderProps) {
               <button
                 type="button"
                 onClick={() => {
-                  const link = `${typeof window !== "undefined" ? window.location.origin : ""}/app/invoices/${activeDraft.id}`;
+                  const link = `${typeof window !== "undefined" ? window.location.origin : ""}/pay/${activeDraft.id}`;
                   navigator.clipboard?.writeText(link);
-                  setMessage("Invoice link copied to clipboard.");
+                  setMessage("Payment link copied. Share it with your client to pay directly.");
                 }}
                 className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.06)] px-4 py-3 text-left text-[0.88rem] font-semibold text-[var(--accent)] hover:bg-[rgba(201,255,96,.1)] transition"
               >
-                <span>Copy invoice link</span>
+                <span>Copy client payment link</span>
                 <span className="text-[0.8rem] opacity-60">↗</span>
               </button>
             )}
