@@ -52,8 +52,10 @@ function GoogleIcon() {
   );
 }
 
-function MetaMaskIcon() {
-  return (
+function WalletIcon({ label }: { label: string }) {
+  const l = label.toLowerCase();
+
+  if (l.includes("meta")) return (
     <svg width="20" height="18" viewBox="0 0 20 18" fill="none">
       <path d="M18.7 0 11.04 5.8l1.44-3.42L18.7 0Z" fill="#E17726"/>
       <path d="M1.3 0l7.6 5.86L7.52 2.38 1.3 0Z" fill="#E27625"/>
@@ -62,19 +64,49 @@ function MetaMaskIcon() {
       <path d="M6.02 15.96l2.58-1.24-2.22-1.73-.36 2.97ZM11.4 14.72l2.58 1.24-.36-2.97-2.22 1.73Z" fill="#E27625"/>
     </svg>
   );
-}
 
-function WalletIcon({ label }: { label: string }) {
-  if (label.toLowerCase().includes("meta")) return <MetaMaskIcon />;
-  if (label.toLowerCase().includes("coin")) {
-    return (
-      <span style={{ display: "flex", width: 20, height: 20, borderRadius: "50%", background: "#0052FF", alignItems: "center", justifyContent: "center" }}>
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="white"><circle cx="5" cy="5" r="4" fill="white"/><circle cx="5" cy="5" r="2" fill="#0052FF"/></svg>
-      </span>
-    );
-  }
+  if (l.includes("coinbase")) return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="10" fill="#0052FF"/>
+      <path d="M10 4a6 6 0 1 0 0 12A6 6 0 0 0 10 4Zm-1.5 7.5v-3h3v3h-3Z" fill="white"/>
+    </svg>
+  );
+
+  if (l.includes("rabby")) return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="10" fill="#7B5EA7"/>
+      <text x="10" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="700">R</text>
+    </svg>
+  );
+
+  if (l.includes("okx")) return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="10" fill="#000"/>
+      <text x="10" y="14" textAnchor="middle" fill="white" fontSize="7" fontWeight="700">OKX</text>
+    </svg>
+  );
+
+  if (l.includes("trust")) return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="10" fill="#3375BB"/>
+      <path d="M10 4l5 2.5v4c0 2.5-2 4.5-5 5.5C7 15 5 13 5 10.5v-4L10 4Z" fill="white" opacity="0.9"/>
+    </svg>
+  );
+
+  if (l.includes("rainbow")) return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="10" fill="#174299"/>
+      <path d="M4 13c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#FF4500" strokeWidth="2" fill="none"/>
+      <path d="M6 13c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="#FF8C00" strokeWidth="2" fill="none"/>
+      <path d="M8 13c0-1.1.9-2 2-2s2 .9 2 2" stroke="#FFD700" strokeWidth="2" fill="none"/>
+    </svg>
+  );
+
   return (
-    <span style={{ display: "flex", width: 20, height: 20, borderRadius: "50%", background: "#3B99FC", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "white" }}>W</span>
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="10" fill="#3B99FC"/>
+      <text x="10" y="14" textAnchor="middle" fill="white" fontSize="9" fontWeight="700">W</text>
+    </svg>
   );
 }
 
@@ -576,41 +608,54 @@ export function AuthPanel() {
 
         {/* Wallet buttons */}
         {walletProviders.length > 0 && (
-          <div style={{ display: "grid", gap: "0.5rem", marginBottom: socialProviders.length > 0 ? "0.5rem" : "1rem" }}>
-            {walletProviders.map((wallet) => (
-              <button
-                key={wallet.key}
-                type="button"
-                onClick={handleWalletVerify}
-                disabled={isLoading}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  width: "100%",
-                  padding: "0.8rem 1rem",
-                  borderRadius: "12px",
-                  border: "0.5px solid rgba(255,255,255,0.1)",
-                  background: "rgba(255,255,255,0.03)",
-                  cursor: isLoading ? "not-allowed" : "pointer",
-                  transition: "background 0.15s, border-color 0.15s",
-                  opacity: isLoading && loading !== "wallet" ? 0.5 : 1,
-                  textAlign: "left",
-                }}
-                onMouseEnter={(e) => { if (!isLoading) { (e.currentTarget).style.background = "rgba(255,255,255,0.06)"; (e.currentTarget).style.borderColor = "rgba(255,255,255,0.16)"; }}}
-                onMouseLeave={(e) => { (e.currentTarget).style.background = "rgba(255,255,255,0.03)"; (e.currentTarget).style.borderColor = "rgba(255,255,255,0.1)"; }}
-              >
-                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.05)", flexShrink: 0 }}>
-                  <WalletIcon label={wallet.label} />
-                </span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#ecf4ec" }}>
-                    {loading === "wallet" ? "Connecting wallet..." : `Continue with ${wallet.label}`}
-                  </div>
-                  <div style={{ fontSize: "0.74rem", color: "#85938b", marginTop: 1 }}>Sign a message to verify ownership</div>
-                </div>
-              </button>
-            ))}
+          <div style={{ marginBottom: socialProviders.length > 0 ? "0.5rem" : "1rem" }}>
+            <div style={{ fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#85938b", textAlign: "center", marginBottom: "0.6rem" }}>
+              Connect wallet
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: walletProviders.length === 1 ? "1fr" : walletProviders.length === 2 ? "1fr 1fr" : "repeat(auto-fit, minmax(80px, 1fr))", gap: "0.5rem" }}>
+              {walletProviders.map((wallet) => (
+                <button
+                  key={wallet.key}
+                  type="button"
+                  onClick={handleWalletVerify}
+                  disabled={isLoading}
+                  title={wallet.label}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.4rem",
+                    padding: "0.875rem 0.5rem",
+                    borderRadius: "12px",
+                    border: "0.5px solid rgba(255,255,255,0.1)",
+                    background: "rgba(255,255,255,0.03)",
+                    cursor: isLoading ? "not-allowed" : "pointer",
+                    transition: "background 0.15s, border-color 0.15s, transform 0.1s",
+                    opacity: isLoading && loading !== "wallet" ? 0.5 : 1,
+                  }}
+                  onMouseEnter={(e) => { if (!isLoading) { (e.currentTarget).style.background = "rgba(255,255,255,0.07)"; (e.currentTarget).style.borderColor = "rgba(255,255,255,0.18)"; (e.currentTarget).style.transform = "translateY(-1px)"; }}}
+                  onMouseLeave={(e) => { (e.currentTarget).style.background = "rgba(255,255,255,0.03)"; (e.currentTarget).style.borderColor = "rgba(255,255,255,0.1)"; (e.currentTarget).style.transform = "translateY(0)"; }}
+                >
+                  <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.06)" }}>
+                    <WalletIcon label={wallet.label} />
+                  </span>
+                  <span style={{ fontSize: "0.72rem", fontWeight: 500, color: "#a5b4aa", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>
+                    {loading === "wallet" ? "..." : wallet.label.replace(" Wallet", "").replace("Browser", "Web3")}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <p style={{ textAlign: "center", fontSize: "0.72rem", color: "#85938b", marginTop: "0.5rem" }}>
+              Sign a message to verify wallet ownership
+            </p>
+          </div>
+        )}
+
+        {walletProviders.length === 0 && (
+          <div style={{ marginBottom: "1rem", padding: "0.875rem", borderRadius: "12px", border: "0.5px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)", textAlign: "center" }}>
+            <p style={{ fontSize: "0.82rem", color: "#85938b", marginBottom: "0.3rem" }}>No wallet detected</p>
+            <p style={{ fontSize: "0.75rem", color: "#5f6e66" }}>Install MetaMask, Rabby, OKX, Trust, or Coinbase Wallet to connect on Arc</p>
           </div>
         )}
 
