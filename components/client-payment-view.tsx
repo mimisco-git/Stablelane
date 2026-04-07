@@ -102,9 +102,10 @@ export function ClientPaymentView({ invoiceId }: { invoiceId: string }) {
       const milestones = Array.isArray(invoice.milestones) ? invoice.milestones : [];
       const hasMilestones = milestones.length > 0;
 
+      const freelancerAddr = invoice.freelancer_wallet || walletAddress;
       const { txHash: createTx, escrowAddress: addr } = await createOnChainEscrow({
         invoiceId,
-        freelancerAddress: walletAddress, // temporary - should be freelancer's address
+        freelancerAddress: freelancerAddr,
         totalAmountUSDC: amount,
         milestoneTitles: hasMilestones
           ? milestones.map((m: any, i: number) => m.title || `Milestone ${i + 1}`)
@@ -134,6 +135,38 @@ export function ClientPaymentView({ invoiceId }: { invoiceId: string }) {
             funding_tx_hash: fundTx,
           })
           .eq("id", invoiceId);
+      }
+
+      // Notify the invoice owner by email
+      try {
+        const supabaseForOwner = getSupabaseBrowserClient();
+        if (supabaseForOwner && invoice.owner_id) {
+          // Fetch owner email from workspace_profiles
+          const { data: profile } = await supabaseForOwner
+            .from("workspace_profiles")
+            .select("contact_email")
+            .eq("user_id", invoice.owner_id)
+            .maybeSingle();
+
+          const ownerEmail = (profile as any)?.contact_email;
+          if (ownerEmail) {
+            await fetch("/api/notify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                invoiceId,
+                invoiceTitle: invoice.title,
+                clientName: invoice.client_name,
+                amount: invoice.amount,
+                currency: invoice.currency,
+                escrowAddress: addr,
+                ownerEmail,
+              }),
+            });
+          }
+        }
+      } catch {
+        // Email failure should never break the payment flow
       }
 
       setStep("paid");

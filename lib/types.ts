@@ -86,6 +86,7 @@ export type WorkspaceProfile = {
   role_type: "Freelancer" | "Agency";
   default_currency: "USDC" | "EURC";
   wallet_address: string | null;
+  contact_email?: string | null;
   created_at: string;
 };
 
