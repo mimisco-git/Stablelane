@@ -19,7 +19,6 @@ type FormState = {
   reference: string;
   description: string;
   freelancerWallet: string;
-  freelancerWallet: string;
   milestones: Array<{
     id: string;
     title: string;
