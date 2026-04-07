@@ -2,46 +2,88 @@
 
 import { useEffect, useState } from "react";
 import { fetchDashboardStatsDetailed } from "@/lib/supabase-data";
+import Link from "next/link";
 
 export function DashboardLiveStats() {
-  const [stats, setStats] = useState<null | {
+  const [stats, setStats] = useState<{
     workspaceName: string;
-    defaultCurrency: string;
-    roleType: string;
-    clientCount: number;
     draftCount: number;
-    totalDraftValue: number;
-    recent: Array<{
-      amount: number | null;
-      title: string;
-      client_name: string;
-      status: string;
-      created_at: string;
-      currency: "USDC" | "EURC";
-    }>;
-  }>(null);
+    inEscrow: number;
+    pendingReleases: number;
+    defaultCurrency: string;
+  } | null>(null);
 
   useEffect(() => {
     let mounted = true;
     fetchDashboardStatsDetailed().then((data) => {
-      if (mounted && data) setStats(data);
+      if (mounted && data) {
+        setStats({
+          workspaceName: data.workspaceName,
+          draftCount: data.draftCount,
+          inEscrow: data.inEscrow,
+          pendingReleases: data.pendingReleases,
+          defaultCurrency: data.defaultCurrency,
+        });
+      }
     });
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
   if (!stats) return null;
 
-  const formattedValue = new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 2,
-  }).format(stats.totalDraftValue);
+  if (stats.pendingReleases > 0) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4">
+        <p className="text-[0.84rem] leading-6 text-[var(--accent)]">
+          <strong>{stats.pendingReleases}</strong> escrow{stats.pendingReleases > 1 ? "s" : ""} funded and waiting for milestone approval.
+        </p>
+        <Link
+          href="/app/escrows"
+          className="rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.1)] px-4 py-2 text-[0.82rem] font-bold text-[var(--accent)] transition hover:-translate-y-px"
+        >
+          Review escrows
+        </Link>
+      </div>
+    );
+  }
+
+  if (stats.inEscrow > 0) {
+    return (
+      <div className="rounded-[20px] border border-[var(--line)] bg-[rgba(201,255,96,.06)] p-4 text-[0.84rem] leading-6 text-[var(--accent)]">
+        <strong>{stats.workspaceName}</strong> has{" "}
+        <strong>{stats.inEscrow.toLocaleString()} {stats.defaultCurrency}</strong> locked in active escrows.
+      </div>
+    );
+  }
+
+  if (stats.draftCount > 0) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-white/8 bg-white/3 p-4">
+        <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
+          <strong className="text-[var(--text)]">{stats.workspaceName}</strong> has {stats.draftCount} invoice {stats.draftCount === 1 ? "draft" : "drafts"} saved.
+          Send payment links to clients to lock funds in escrow.
+        </p>
+        <Link
+          href="/app/invoices/new"
+          className="rounded-full bg-[var(--accent)] px-4 py-2 text-[0.82rem] font-bold text-[#08100b] transition hover:-translate-y-px"
+        >
+          Create invoice
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="rounded-[20px] border border-[var(--line)] bg-[rgba(201,255,96,.08)] p-4 text-[0.84rem] leading-6 text-[var(--accent)]">
-      <strong>{stats.workspaceName}</strong> is active as a {stats.roleType.toLowerCase()} workspace.
-      You now have <strong>{stats.draftCount}</strong> saved invoice drafts worth about <strong>{formattedValue} {stats.defaultCurrency}</strong>,
-      plus <strong>{stats.clientCount}</strong> saved client records.
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-white/8 bg-white/3 p-4">
+      <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
+        Welcome to <strong className="text-[var(--text)]">{stats.workspaceName}</strong>. Create your first invoice to get started.
+      </p>
+      <Link
+        href="/app/invoices/new"
+        className="rounded-full bg-[var(--accent)] px-4 py-2 text-[0.82rem] font-bold text-[#08100b] transition hover:-translate-y-px"
+      >
+        Create invoice
+      </Link>
     </div>
   );
 }

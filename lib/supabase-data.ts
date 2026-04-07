@@ -380,7 +380,7 @@ export async function fetchDashboardStatsDetailed() {
   const [{ data: invoiceRows }, { count: clientCount }] = await Promise.all([
     supabase
       .from("invoice_drafts")
-      .select("amount,status,created_at,title,client_name,currency")
+      .select("amount,status,escrow_status,created_at,title,client_name,currency,client_id")
       .eq("owner_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
@@ -392,14 +392,36 @@ export async function fetchDashboardStatsDetailed() {
   const rows = (invoiceRows || []) as Array<{
     amount: number | null;
     status: string;
+    escrow_status: string | null;
     created_at: string;
     title: string;
     client_name: string;
+    client_id: string | null;
     currency: "USDC" | "EURC";
   }>;
 
   const totalDraftValue = rows.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const draftCount = rows.length;
+
+  // Real metrics from invoice data
+  const inEscrow = rows
+    .filter((r) => r.escrow_status === "funded" || r.escrow_status === "created" || r.status === "In escrow")
+    .reduce((sum, r) => sum + Number(r.amount || 0), 0);
+
+  const released = rows
+    .filter((r) => r.escrow_status === "released" || r.status === "Completed")
+    .reduce((sum, r) => sum + Number(r.amount || 0), 0);
+
+  const pendingReleases = rows.filter(
+    (r) => r.escrow_status === "funded" || r.status === "In escrow"
+  ).length;
+
+  const uniqueClients = new Set(rows.map((r) => r.client_name).filter(Boolean)).size;
+  const repeatClients = rows.reduce((acc, r) => {
+    acc[r.client_name] = (acc[r.client_name] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const repeatClientCount = Object.values(repeatClients).filter((n) => n > 1).length;
 
   return {
     workspaceName: workspace.workspace_name,
@@ -408,6 +430,11 @@ export async function fetchDashboardStatsDetailed() {
     clientCount: clientCount || 0,
     draftCount,
     totalDraftValue,
+    inEscrow,
+    released,
+    pendingReleases,
+    uniqueClients,
+    repeatClientCount,
     recent: rows.slice(0, 5),
   };
 }

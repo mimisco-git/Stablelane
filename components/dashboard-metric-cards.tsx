@@ -3,63 +3,110 @@
 import { useEffect, useState } from "react";
 import { fetchDashboardStatsDetailed } from "@/lib/supabase-data";
 
+type Stats = {
+  defaultCurrency: string;
+  draftCount: number;
+  totalDraftValue: number;
+  inEscrow: number;
+  released: number;
+  pendingReleases: number;
+  clientCount: number;
+  repeatClientCount: number;
+};
+
+function fmt(value: number, currency: string) {
+  if (value >= 1000) {
+    return `$${(value / 1000).toFixed(1)}k`;
+  }
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
+}
+
 export function DashboardMetricCards() {
-  const [stats, setStats] = useState<null | {
-    workspaceName: string;
-    defaultCurrency: string;
-    roleType: string;
-    clientCount: number;
-    draftCount: number;
-    totalDraftValue: number;
-  }>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     fetchDashboardStatsDetailed().then((data) => {
       if (mounted && data) {
         setStats({
-          workspaceName: data.workspaceName,
           defaultCurrency: data.defaultCurrency,
-          roleType: data.roleType,
-          clientCount: data.clientCount,
           draftCount: data.draftCount,
           totalDraftValue: data.totalDraftValue,
+          inEscrow: data.inEscrow,
+          released: data.released,
+          pendingReleases: data.pendingReleases,
+          clientCount: data.clientCount,
+          repeatClientCount: data.repeatClientCount,
         });
       }
+      if (mounted) setLoading(false);
     });
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
-
-  const money = stats
-    ? new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(stats.totalDraftValue)
-    : "18,240";
 
   const cards = stats
     ? [
-        { label: "Workspace drafts", value: String(stats.draftCount), note: "Invoice drafts saved in your Supabase workspace." },
-        { label: "Saved clients", value: String(stats.clientCount), note: "Client records ready to reuse in invoice creation." },
-        { label: "Draft value", value: `${money} ${stats.defaultCurrency}`, note: "Total value across current saved invoice drafts." },
-        { label: "Workspace type", value: stats.roleType, note: "Saved in your workspace settings and used as context." },
+        {
+          label: "Released this month",
+          value: fmt(stats.released, stats.defaultCurrency),
+          suffix: stats.defaultCurrency,
+          note: "Settled stablecoin revenue from completed milestones.",
+          highlight: stats.released > 0,
+        },
+        {
+          label: "Locked in escrow",
+          value: fmt(stats.inEscrow, stats.defaultCurrency),
+          suffix: stats.defaultCurrency,
+          note: "Client-committed funds awaiting milestone approval.",
+          highlight: false,
+        },
+        {
+          label: "Pending releases",
+          value: String(stats.pendingReleases),
+          suffix: null,
+          note: "Active escrows with funded milestones ready to approve.",
+          highlight: stats.pendingReleases > 0,
+        },
+        {
+          label: "Clients",
+          value: String(stats.clientCount),
+          suffix: stats.repeatClientCount > 0 ? `${stats.repeatClientCount} repeat` : null,
+          note: "Saved client records in your workspace.",
+          highlight: false,
+        },
       ]
     : [
-        { label: "Received this month", value: "$18.2k", note: "Settled stablecoin revenue across active invoices." },
-        { label: "Locked in escrow", value: "$9.6k", note: "Capital committed by clients but not released yet." },
-        { label: "Pending payouts", value: "7", note: "Collaborator splits waiting on release events." },
-        { label: "Repeat clients", value: "4", note: "A trust signal that later feeds credibility and financing." },
+        { label: "Released this month", value: "—", suffix: null, note: "Sign in to see real revenue data.", highlight: false },
+        { label: "Locked in escrow", value: "—", suffix: null, note: "Escrow balance from active invoices.", highlight: false },
+        { label: "Pending releases", value: "—", suffix: null, note: "Milestones awaiting approval.", highlight: false },
+        { label: "Clients", value: "—", suffix: null, note: "Saved client records.", highlight: false },
       ];
 
   return (
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
       {cards.map((metric) => (
-        <div key={metric.label} className="rounded-[18px] border border-white/8 bg-white/3 p-4">
+        <div
+          key={metric.label}
+          className={`rounded-[18px] border p-4 ${
+            metric.highlight
+              ? "border-[var(--line)] bg-[rgba(201,255,96,.06)]"
+              : "border-white/8 bg-white/3"
+          }`}
+        >
           <div className="mb-2 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">
             {metric.label}
           </div>
-          <strong className="mb-1 block font-[family-name:var(--font-cormorant)] text-[1.9rem] tracking-[-0.04em]">
-            {metric.value}
-          </strong>
+          <div className="mb-1 flex items-baseline gap-2">
+            <strong className={`font-[family-name:var(--font-cormorant)] text-[1.9rem] tracking-[-0.04em] ${
+              metric.highlight ? "text-[var(--accent)]" : "text-[var(--text)]"
+            }`}>
+              {loading ? "—" : metric.value}
+            </strong>
+            {metric.suffix && !loading && (
+              <span className="text-[0.78rem] text-[var(--muted)]">{metric.suffix}</span>
+            )}
+          </div>
           <p className="text-[0.8rem] leading-6 text-[var(--muted)]">{metric.note}</p>
         </div>
       ))}
