@@ -43,9 +43,9 @@ export default function AppOverviewPage() {
           <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <h2 className="mb-1 text-base font-bold tracking-normal">Launch readiness</h2>
+                <h2 className="mb-1 text-base font-bold tracking-normal">How it works</h2>
                 <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-                  A quick view of what is live and what is pending implementation.
+                  The four steps from invoice to settled revenue on Arc testnet.
                 </p>
               </div>
               <Link href="/app/settings" className="rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-3 py-2 text-[0.72rem] font-extrabold uppercase tracking-[0.08em] text-[var(--accent)]">
@@ -57,7 +57,7 @@ export default function AppOverviewPage() {
                 { title: "Create invoice", detail: "Add milestones, set amount, save to workspace.", done: true },
                 { title: "Send payment link", detail: "Copy the /pay/ link and share it with your client.", done: true },
                 { title: "Client funds escrow", detail: "Client connects wallet and locks USDC on Arc testnet.", done: true },
-                { title: "Approve milestone", detail: "Review work and release each milestone on-chain.", done: false },
+                { title: "Approve milestone", detail: "Review work and release each milestone on-chain.", done: true },
               ].map((item) => (
                 <div key={item.title} className="rounded-2xl border border-white/8 bg-white/3 p-4">
                   <div className="mb-2 flex items-center justify-between gap-3">

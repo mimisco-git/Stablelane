@@ -31,10 +31,37 @@ type Analytics = {
 };
 
 function toneForStatus(status: string) {
-  if (status === "Completed") return "done" as const;
-  if (status === "In escrow") return "live" as const;
-  if (status === "Sent") return "lock" as const;
+  if (status === "Completed" || status === "released") return "done" as const;
+  if (status === "In escrow" || status === "funded") return "live" as const;
+  if (status === "Sent" || status === "created") return "lock" as const;
   return "neutral" as const;
+}
+
+function BarChart({ data, max, currency }: { data: { label: string; value: number }[]; max: number; currency: string }) {
+  if (!data.length) return null;
+  return (
+    <div className="grid gap-3">
+      {data.map((item) => {
+        const pct = max > 0 ? Math.round((item.value / max) * 100) : 0;
+        return (
+          <div key={item.label}>
+            <div className="mb-1 flex items-center justify-between gap-3">
+              <span className="text-[0.85rem] font-semibold truncate">{item.label}</span>
+              <span className="shrink-0 text-[0.82rem] text-[var(--muted)]">
+                {item.value.toLocaleString("en-US", { maximumFractionDigits: 0 })} {currency}
+              </span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-white/8">
+              <div
+                className="h-full rounded-full bg-[var(--accent)] transition-all duration-700"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export function WorkspaceAnalytics() {
@@ -43,150 +70,136 @@ export function WorkspaceAnalytics() {
 
   useEffect(() => {
     let mounted = true;
-    async function load() {
-      try {
-        const data = await fetchWorkspaceAnalytics();
-        if (mounted) setAnalytics(data as Analytics | null);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      mounted = false;
-    };
+    fetchWorkspaceAnalytics().then((data) => {
+      if (mounted && data) setAnalytics(data as unknown as Analytics);
+      if (mounted) setLoading(false);
+    });
+    return () => { mounted = false; };
   }, []);
 
-  if (loading) {
-    return <LoadingState title="Loading analytics" detail="Stablelane is calculating workspace and client performance from your saved records." />;
-  }
+  if (loading) return <LoadingState title="Analytics" detail="Loading analytics..." />;
+  if (!analytics) return <EmptyState title="No data" detail="Sign in to see analytics." />;
 
-  if (!analytics || analytics.totalInvoices === 0) {
-    return (
-      <EmptyState
-        title="No analytics yet"
-        detail="Create invoices and save clients first. Stablelane will use those records to build workspace analytics here."
-        action={
-          <Link href="/app/invoices/new" className="inline-flex rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]">
-            Create invoice
-          </Link>
-        }
-      />
-    );
-  }
+  const clientChartData = analytics.clientTotals
+    .slice(0, 6)
+    .map((c) => ({ label: c.name, value: c.value }));
+  const maxClientValue = Math.max(...clientChartData.map((c) => c.value), 1);
 
-  const cards = [
-    { label: "Total invoices", value: String(analytics.totalInvoices), note: "Saved drafts and active invoice records." },
-    { label: "Linked invoices", value: String(analytics.linkedInvoices), note: "Invoices currently connected to a saved client record." },
-    { label: "Client records", value: String(analytics.totalClients), note: "Saved client entities inside this workspace." },
-    { label: "Tracked value", value: `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(analytics.totalValue)} ${analytics.defaultCurrency}`, note: "Recorded invoice value in your default workspace currency." },
-  ];
+  const statusChartData = Object.entries(analytics.statusTotals).map(([label, value]) => ({
+    label,
+    value,
+  }));
+  const maxStatusValue = Math.max(...statusChartData.map((s) => s.value), 1);
+
+  const fmt = (n: number) =>
+    n >= 1000
+      ? `${(n / 1000).toFixed(1)}k`
+      : n.toLocaleString("en-US", { maximumFractionDigits: 2 });
 
   return (
     <div className="grid gap-4">
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {cards.map((card) => (
+      {/* Summary cards */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: "Total invoices", value: String(analytics.totalInvoices), note: "Saved in your workspace" },
+          { label: "Total value", value: `${fmt(analytics.totalValue)} ${analytics.defaultCurrency}`, note: "Across all invoices" },
+          { label: "Clients", value: String(analytics.totalClients), note: "Unique client records" },
+          { label: "Linked clients", value: String(analytics.linkedInvoices), note: "Invoices with saved clients" },
+        ].map((card) => (
           <div key={card.label} className="rounded-[18px] border border-white/8 bg-white/3 p-4">
-            <div className="mb-2 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">
-              {card.label}
-            </div>
-            <strong className="mb-1 block font-[family-name:var(--font-cormorant)] text-[1.85rem] tracking-[-0.04em] text-[var(--text)]">
-              {card.value}
-            </strong>
-            <p className="text-[0.8rem] leading-6 text-[var(--muted)]">{card.note}</p>
+            <div className="mb-1 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">{card.label}</div>
+            <div className="mb-1 font-[family-name:var(--font-cormorant)] text-[1.8rem] tracking-[-0.04em]">{card.value}</div>
+            <div className="text-[0.78rem] text-[var(--muted)]">{card.note}</div>
           </div>
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.05fr_.95fr]">
+      <div className="grid gap-4 xl:grid-cols-2">
+        {/* Revenue by client */}
         <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <h2 className="mb-1 text-base font-bold tracking-normal">Top clients by value</h2>
-              <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-                The strongest client relationships in your workspace based on saved invoice records.
-              </p>
-            </div>
-            <Link href="/app/clients" className="rounded-full border border-white/8 bg-white/3 px-4 py-2 text-[0.82rem] font-semibold text-[var(--text)]">
-              Open clients
-            </Link>
-          </div>
-
-          <div className="grid gap-3">
-            {analytics.clientTotals.slice(0, 6).map((client) => (
-              <div key={client.name} className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <strong>{client.name}</strong>
-                  <span className="font-semibold">{new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(client.value)} {analytics.defaultCurrency}</span>
-                </div>
-                <div className="h-3 overflow-hidden rounded-full border border-white/5 bg-white/5">
-                  <span
-                    className="block h-full rounded-full bg-[linear-gradient(90deg,var(--accent),var(--accent-2))]"
-                    style={{
-                      width: `${Math.max(12, analytics.totalValue ? (client.value / analytics.totalValue) * 100 : 12)}%`,
-                    }}
-                  />
-                </div>
-                <div className="mt-2 text-[0.8rem] text-[var(--muted)]">{client.count} invoice record{client.count === 1 ? "" : "s"}</div>
-              </div>
-            ))}
-          </div>
+          <h2 className="mb-1 text-base font-bold tracking-normal">Revenue by client</h2>
+          <p className="mb-4 text-[0.82rem] text-[var(--muted)]">Total invoice value per client.</p>
+          {clientChartData.length > 0 ? (
+            <BarChart data={clientChartData} max={maxClientValue} currency={analytics.defaultCurrency} />
+          ) : (
+            <p className="text-[0.88rem] text-[var(--muted)]">No client data yet. Add clients and create invoices.</p>
+          )}
         </section>
 
+        {/* Invoice status breakdown */}
         <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
-          <div className="mb-4">
-            <h2 className="mb-1 text-base font-bold tracking-normal">Workflow health</h2>
-            <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-              A quick summary of invoice and escrow movement across the workspace.
-            </p>
-          </div>
-
-          <div className="grid gap-3">
-            {Object.entries(analytics.statusTotals).map(([status, count]) => (
-              <div key={status} className="flex items-center justify-between gap-3 rounded-2xl border border-white/8 bg-white/3 px-4 py-3">
-                <div className="text-[0.9rem] font-semibold text-[var(--text)]">{status}</div>
-                <StatusPill label={`${count}`} tone={toneForStatus(status)} />
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4 grid gap-3">
-            {Object.entries(analytics.escrowTotals).map(([status, count]) => (
-              <div key={status} className="flex items-center justify-between gap-3 rounded-2xl border border-white/8 bg-white/3 px-4 py-3">
-                <div className="text-[0.9rem] font-semibold text-[var(--text)]">Escrow: {status}</div>
-                <div className="text-[0.88rem] font-semibold text-[var(--muted)]">{count}</div>
-              </div>
-            ))}
-          </div>
+          <h2 className="mb-1 text-base font-bold tracking-normal">Invoice status</h2>
+          <p className="mb-4 text-[0.82rem] text-[var(--muted)]">Breakdown by workflow stage.</p>
+          {statusChartData.length > 0 ? (
+            <div className="grid gap-3">
+              {statusChartData.map((item) => {
+                const pct = maxStatusValue > 0 ? Math.round((item.value / maxStatusValue) * 100) : 0;
+                return (
+                  <div key={item.label}>
+                    <div className="mb-1 flex items-center justify-between gap-3">
+                      <StatusPill label={item.label} tone={toneForStatus(item.label)} />
+                      <span className="text-[0.88rem] font-semibold">{item.value}</span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-white/8">
+                      <div
+                        className="h-full rounded-full bg-[var(--accent)] transition-all duration-700"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-[0.88rem] text-[var(--muted)]">No invoices yet.</p>
+          )}
         </section>
       </div>
 
-      <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
-        <div className="mb-4">
-          <h2 className="mb-1 text-base font-bold tracking-normal">Recent linked invoices</h2>
-          <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-            These are the latest saved invoice records feeding your workspace analytics.
-          </p>
-        </div>
+      {/* Escrow breakdown */}
+      {Object.keys(analytics.escrowTotals).length > 0 && (
+        <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
+          <h2 className="mb-1 text-base font-bold tracking-normal">Escrow breakdown</h2>
+          <p className="mb-4 text-[0.82rem] text-[var(--muted)]">On-chain escrow status across your invoices.</p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {Object.entries(analytics.escrowTotals).map(([status, count]) => (
+              <div key={status} className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/3 px-4 py-3">
+                <span className="text-[0.88rem] font-semibold capitalize">{status.replace(/_/g, " ")}</span>
+                <span className="text-[0.88rem] font-bold text-[var(--accent)]">{count}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
-        <div className="grid gap-3">
-          {analytics.recentInvoices.map((invoice) => (
-            <Link
-              key={invoice.id}
-              href={`/app/invoices/${invoice.id}`}
-              className="grid gap-3 rounded-2xl border border-white/8 bg-white/3 p-4 md:grid-cols-[1fr_auto_auto]"
-            >
-              <div>
-                <div className="mb-1 font-semibold">{invoice.client_name}</div>
-                <div className="text-[0.8rem] text-[var(--muted)]">{invoice.title}</div>
-              </div>
-              <div className="text-[0.92rem] font-semibold text-[var(--text)]">
-                {new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(Number(invoice.amount || 0))} {invoice.currency}
-              </div>
-              <StatusPill label={invoice.status} tone={toneForStatus(invoice.status)} />
-            </Link>
-          ))}
+      {/* Recent invoices */}
+      <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-base font-bold tracking-normal">Recent invoices</h2>
+          <Link href="/app/invoices" className="text-[0.82rem] font-semibold text-[var(--accent)]">View all</Link>
         </div>
+        {analytics.recentInvoices.length === 0 ? (
+          <p className="text-[0.88rem] text-[var(--muted)]">No invoices yet.</p>
+        ) : (
+          <div className="grid gap-2">
+            {analytics.recentInvoices.map((invoice) => (
+              <Link
+                key={invoice.id}
+                href={`/app/invoices/${invoice.id}`}
+                className="grid items-center gap-3 rounded-2xl border border-white/8 bg-white/3 p-3 transition hover:border-white/12 md:grid-cols-[1fr_auto_auto]"
+              >
+                <div>
+                  <div className="font-semibold">{invoice.client_name}</div>
+                  <div className="text-[0.8rem] text-[var(--muted)]">{invoice.title}</div>
+                </div>
+                <div className="text-[0.9rem] font-semibold">
+                  {Number(invoice.amount || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })} {invoice.currency}
+                </div>
+                <StatusPill label={invoice.status} tone={toneForStatus(invoice.status)} />
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

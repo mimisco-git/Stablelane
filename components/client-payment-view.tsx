@@ -157,6 +157,7 @@ export function ClientPaymentView({ invoiceId }: { invoiceId: string }) {
                 invoiceId,
                 invoiceTitle: invoice.title,
                 clientName: invoice.client_name,
+                clientEmail: invoice.client_email || null,
                 amount: invoice.amount,
                 currency: invoice.currency,
                 escrowAddress: addr,
