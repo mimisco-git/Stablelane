@@ -1,15 +1,19 @@
 import { DashboardShell } from "@/components/dashboard-shell";
 import { WorkspaceAnalytics } from "@/components/workspace-analytics";
+import { PaymentAnalytics } from "@/components/payment-analytics";
 
 export default function AnalyticsPage() {
   return (
     <DashboardShell
       currentPath="/app/analytics"
       title="Analytics"
-      description="Revenue signals, client patterns, and payment reliability metrics built from your real invoice history."
+      description="Revenue signals, client performance, payment timing, and conversion metrics from your real invoice history."
       badge="Analytics"
     >
-      <WorkspaceAnalytics />
+      <div className="grid gap-6">
+        <PaymentAnalytics />
+        <WorkspaceAnalytics />
+      </div>
     </DashboardShell>
   );
 }

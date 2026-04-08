@@ -4,10 +4,20 @@ import Link from "next/link";
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
+import { GlobalSearch } from "@/components/global-search";
+
+function getUnreadCount(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const notifs = JSON.parse(localStorage.getItem("stablelane_notifications") || "[]");
+    return notifs.filter((n: { read: boolean }) => !n.read).length;
+  } catch { return 0; }
+}
 
 export function AppHeader() {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [email, setEmail] = useState("");
+  const [unread, setUnread] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -15,6 +25,7 @@ export function AppHeader() {
     supabase.auth.getSession().then(({ data }) => {
       setEmail(data.session?.user?.email || "");
     });
+    setUnread(getUnreadCount());
   }, [supabase]);
 
   async function handleSignOut() {
@@ -51,6 +62,11 @@ export function AppHeader() {
           </Link>
         </div>
 
+        {/* Center: search */}
+        <div className="hidden flex-1 items-center justify-center sm:flex">
+          <GlobalSearch />
+        </div>
+
         {/* Right: user + quick actions */}
         <div className="flex items-center gap-2">
           {email && (
@@ -59,6 +75,29 @@ export function AppHeader() {
               {email}
             </span>
           )}
+          <Link
+            href="/app/notifications"
+            className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/8 bg-white/3 text-[var(--muted)] transition hover:text-[var(--text)]"
+            title="Notifications"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 1.5a4.5 4.5 0 0 0-4.5 4.5v2.5L2 10h12l-1.5-1.5V6A4.5 4.5 0 0 0 8 1.5ZM6.5 12a1.5 1.5 0 0 0 3 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </Link>
+          <Link
+            href="/app/notifications"
+            className="relative rounded-full border border-white/8 bg-white/3 p-2 text-[var(--muted)] transition hover:text-[var(--text)]"
+            title="Notifications"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 1.5a5 5 0 0 1 5 5v2.5l1 2H2l1-2V6.5a5 5 0 0 1 5-5ZM6.5 13a1.5 1.5 0 0 0 3 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            {unread > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--accent)] text-[0.6rem] font-bold text-[#08100b]">
+                {unread > 9 ? "9+" : unread}
+              </span>
+            )}
+          </Link>
           <Link
             href="/app/invoices/new"
             className="rounded-full border border-white/8 bg-white/3 px-3 py-2 text-[0.82rem] font-semibold text-[var(--text)] transition hover:bg-white/5"
