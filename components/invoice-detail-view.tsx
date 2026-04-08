@@ -196,26 +196,33 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
         <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
           <h2 className="mb-4 text-base font-bold tracking-normal">Actions</h2>
           <div className="grid gap-3">
-            <Link href={`/app/invoices/${invoiceId}/edit`} className="rounded-full bg-[var(--accent)] px-4 py-3 text-left text-[0.92rem] font-bold text-[#08100b]">
-              Edit draft
+            <button
+              type="button"
+              onClick={() => {
+                const link = `${window.location.origin}/pay/${invoiceId}`;
+                navigator.clipboard?.writeText(link);
+                const btn = document.getElementById("copy-pay-btn");
+                if (btn) { btn.textContent = "Link copied!"; setTimeout(() => { btn.textContent = "Copy client payment link"; }, 2000); }
+              }}
+              id="copy-pay-btn"
+              className="rounded-full bg-[var(--accent)] px-4 py-3 text-left text-[0.92rem] font-bold text-[#08100b]"
+            >
+              Copy client payment link
+            </button>
+            <Link href={`/app/invoices/${invoiceId}/edit`} className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">
+              Edit invoice
+            </Link>
+            <Link href="/app/invoices/new" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">
+              Create another invoice
             </Link>
             <button
               type="button"
               disabled={busy}
               onClick={handleDelete}
-              className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-70"
+              className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--danger,#e05252)] disabled:opacity-70"
             >
-              {busy ? "Deleting..." : "Delete draft"}
+              {busy ? "Deleting..." : "Delete invoice"}
             </button>
-            <Link href="/app/invoices/new" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">
-              Create another invoice
-            </Link>
-            <Link href={`/app/escrows/${invoiceId}`} className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">
-              Open escrow center
-            </Link>
-            <Link href="/app/clients" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">
-              Open clients
-            </Link>
             <Link href="/app/settings" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">
               Open settings
             </Link>
@@ -244,6 +251,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
           escrowAddress={invoice.escrowAddress || null}
           currentEscrowStatus={invoice.escrowStatus || "draft"}
           milestones={invoice.milestones || []}
+          freelancerWallet={(invoice as any).freelancerWallet || null}
         />
       </div>
 
