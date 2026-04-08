@@ -1,5 +1,6 @@
 "use client";
 
+import { generateInvoicePDF } from "@/lib/invoice-pdf";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -209,6 +210,38 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
             >
               Copy client payment link
             </button>
+            {invoice && (invoice.status === "Draft" || invoice.status === "Sent") && invoice.clientEmail && (
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const paymentLink = `${window.location.origin}/pay/${invoiceId}`;
+                    const res = await fetch("/api/send-reminder", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        invoiceId,
+                        invoiceTitle: invoice.title,
+                        amount: invoice.amount,
+                        currency: invoice.currency,
+                        clientName: invoice.clientName,
+                        clientEmail: invoice.clientEmail,
+                        ownerWorkspace: invoice.workspaceName || "Stablelane",
+                        paymentLink,
+                      }),
+                    });
+                    const data = await res.json();
+                    alert(data.sent ? `Reminder sent to ${invoice.clientEmail}` : "Could not send reminder. Check your Resend API key.");
+                  } catch {
+                    alert("Reminder failed to send.");
+                  }
+                }}
+                className="rounded-full border border-[var(--line)] bg-[rgba(216,196,139,.08)] px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--accent-3)]"
+              >
+                Send payment reminder
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => {
@@ -226,11 +259,30 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
                 };
                 const existing = JSON.parse(localStorage.getItem("stablelane_invoice_templates") || "[]");
                 localStorage.setItem("stablelane_invoice_templates", JSON.stringify([template, ...existing]));
-                alert(`Template "${invoice.title}" saved. Find it in Templates.`);
+                // Template saved - show brief toast
+const btn = document.activeElement as HTMLButtonElement; if (btn) { const orig = btn.textContent; btn.textContent = "Saved!"; setTimeout(() => { btn.textContent = orig; }, 2000); }
               }}
               className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]"
             >
               Save as template
+            </button>
+            <button
+              type="button"
+              onClick={() => { if (invoice) generateInvoicePDF(invoice as any); }}
+              className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]"
+            >
+              Export PDF
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const link = `${window.location.origin}/invoice/${invoiceId}`;
+                navigator.clipboard?.writeText(link);
+                alert("Status page link copied. Share with anyone to let them track this invoice.");
+              }}
+              className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]"
+            >
+              Copy status page link
             </button>
             <Link href={`/app/invoices/${invoiceId}/edit`} className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">
               Edit invoice
@@ -245,6 +297,50 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
               className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--danger,#e05252)] disabled:opacity-70"
             >
               {busy ? "Deleting..." : "Delete invoice"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!invoice) return;
+                const milestones = Array.isArray(invoice.milestones) ? invoice.milestones : [];
+                const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${invoice.title}</title>
+                <style>
+                  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 700px; margin: 40px auto; padding: 40px; color: #1a2e1f; }
+                  h1 { font-size: 2.5rem; margin: 0 0 4px; }
+                  .label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #5f6e66; margin-bottom: 4px; }
+                  .amount { font-size: 2.8rem; color: #1a2e1f; margin: 8px 0; }
+                  table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+                  th { text-align: left; padding: 8px 12px; background: #f0f5f0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+                  td { padding: 10px 12px; border-bottom: 1px solid #e8ede8; font-size: 14px; }
+                  .footer { margin-top: 40px; font-size: 12px; color: #85938b; border-top: 1px solid #e8ede8; padding-top: 16px; }
+                  .badge { display: inline-block; background: #e8f5e8; color: #2d6a2d; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+                </style></head><body>
+                <div class="label">Invoice</div>
+                <h1>${invoice.title}</h1>
+                <p style="color:#5f6e66;margin:0 0 24px">${invoice.clientName} &middot; ${invoice.clientEmail}</p>
+                <div class="label">Amount due</div>
+                <div class="amount">${Number(invoice.amount || 0).toLocaleString()} ${invoice.currency}</div>
+                <span class="badge">${invoice.status}</span>
+                ${invoice.description ? `<p style="margin-top:24px;color:#5f6e66">${invoice.description}</p>` : ""}
+                ${milestones.length > 0 ? `
+                <table>
+                  <thead><tr><th>Milestone</th><th>Amount</th></tr></thead>
+                  <tbody>${milestones.map((m: any) => `<tr><td>${m.title || "Milestone"}</td><td>${m.amount} ${invoice.currency}</td></tr>`).join("")}</tbody>
+                </table>` : ""}
+                ${invoice.escrowAddress ? `<p style="margin-top:24px"><strong>Escrow:</strong> <span style="font-family:monospace;font-size:13px">${invoice.escrowAddress}</span></p>` : ""}
+                <div class="footer">Generated by Stablelane &middot; Arc testnet &middot; ${new Date().toLocaleDateString()}</div>
+                </body></html>`;
+                const blob = new Blob([html], { type: "text/html" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `${invoice.title.replace(/\s+/g, "-").toLowerCase()}-invoice.html`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]"
+            >
+              Export invoice
             </button>
             <Link href="/app/settings" className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">
               Open settings

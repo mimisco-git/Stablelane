@@ -411,6 +411,26 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* SOCIAL PROOF */}
+        <section className="mx-auto w-[min(calc(100%-36px),1280px)] py-8">
+          <div className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(14,25,18,.6),rgba(10,18,13,.5))] px-6 py-5">
+            <div className="grid gap-4 sm:grid-cols-4 sm:divide-x sm:divide-white/8">
+              {[
+                { value: "100+", label: "Companies on Arc testnet", note: "Including BlackRock, Visa, AWS" },
+                { value: "<1s", label: "Settlement finality", note: "Deterministic on Arc" },
+                { value: "USDC", label: "Native gas token", note: "No ETH needed" },
+                { value: "Free", label: "Platform fees", note: "For the first 12 months" },
+              ].map((item) => (
+                <div key={item.label} className="text-center sm:px-6 first:pl-0 last:pr-0">
+                  <div className="font-[family-name:var(--font-cormorant)] text-[2.2rem] tracking-[-0.05em] text-[var(--accent)]">{item.value}</div>
+                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">{item.label}</div>
+                  <div className="text-[0.74rem] text-[var(--muted)]">{item.note}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* COMPARISON */}
         <section className="mx-auto w-[min(calc(100%-36px),1280px)] py-16">
           <div className="mb-10 text-center">

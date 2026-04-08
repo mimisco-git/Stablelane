@@ -77,15 +77,6 @@ export function AppHeader() {
           )}
           <Link
             href="/app/notifications"
-            className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/8 bg-white/3 text-[var(--muted)] transition hover:text-[var(--text)]"
-            title="Notifications"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 1.5a4.5 4.5 0 0 0-4.5 4.5v2.5L2 10h12l-1.5-1.5V6A4.5 4.5 0 0 0 8 1.5ZM6.5 12a1.5 1.5 0 0 0 3 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </Link>
-          <Link
-            href="/app/notifications"
             className="relative rounded-full border border-white/8 bg-white/3 p-2 text-[var(--muted)] transition hover:text-[var(--text)]"
             title="Notifications"
           >
