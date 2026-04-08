@@ -2,6 +2,7 @@ import Link from "next/link";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { StatusPill } from "@/components/status-pill";
 import { OverviewDraftNotice } from "@/components/overview-draft-notice";
+import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import { DashboardLiveStats } from "@/components/dashboard-live-stats";
 import { DashboardMetricCards } from "@/components/dashboard-metric-cards";
 import { RecentInvoicesLive } from "@/components/recent-invoices-live";
@@ -17,6 +18,7 @@ export default function AppOverviewPage() {
     >
       <div className="grid gap-4">
         <OverviewDraftNotice />
+        <OnboardingChecklist />
         <DashboardLiveStats />
         <WalletConnectPanel />
         <DashboardMetricCards />
