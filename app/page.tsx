@@ -76,6 +76,35 @@ export default function HomePage() {
       <SiteNav />
       <main>
 
+        {/* TICKER */}
+        <div className="overflow-hidden border-b border-white/5 bg-[rgba(10,18,13,.6)] py-2.5">
+          <div className="flex animate-[ticker_30s_linear_infinite] items-center gap-12 whitespace-nowrap">
+            {[
+              "Arc testnet live",
+              "USDC gas · Chain ID 5042002",
+              "Sub-second finality",
+              "Escrow factory deployed",
+              "Milestone release: on-chain",
+              "Cross-border payments",
+              "Stablecoin-native revenue",
+              "Zero platform fees · First 12 months",
+              "Arc testnet live",
+              "USDC gas · Chain ID 5042002",
+              "Sub-second finality",
+              "Escrow factory deployed",
+              "Milestone release: on-chain",
+              "Cross-border payments",
+              "Stablecoin-native revenue",
+              "Zero platform fees · First 12 months",
+            ].map((item, i) => (
+              <span key={i} className="flex items-center gap-3 text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--muted-2)]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)] opacity-60" />
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+
         {/* HERO */}
         <section className="mx-auto w-[min(calc(100%-36px),1280px)] px-0 pb-14 pt-24">
           <div className="grid items-center gap-7 lg:grid-cols-[1.06fr_.94fr]">
@@ -91,8 +120,8 @@ export default function HomePage() {
                 split payouts to collaborators, and turn payment history into business credibility, all on Arc.
               </p>
               <div className="mb-8 flex flex-wrap gap-3">
-                <Link href="#waitlist" className="rounded-full bg-[var(--accent)] px-5 py-3.5 text-[0.95rem] font-bold text-[#08100b] transition hover:-translate-y-px">
-                  Get early access
+                <Link href="/auth" className="rounded-full bg-[var(--accent)] px-5 py-3.5 text-[0.95rem] font-bold text-[#08100b] transition hover:-translate-y-px">
+                  Start for free
                 </Link>
                 <Link href="#preview" className="rounded-full border border-white/8 bg-white/3 px-5 py-3.5 text-[0.95rem] font-bold text-[var(--text)] transition hover:-translate-y-px">
                   See the product
@@ -102,6 +131,19 @@ export default function HomePage() {
                 <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[var(--accent)]" />Invoice to payout in one flow</div>
                 <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[var(--accent)]" />USDC gas on Arc</div>
                 <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[var(--accent)]" />Built for remote work revenue</div>
+              </div>
+              <div className="mt-6 flex flex-wrap gap-3">
+                {[
+                  { label: "Built on Arc", sub: "Testnet live" },
+                  { label: "USDC settlement", sub: "6 decimals" },
+                  { label: "EVM compatible", sub: "Solidity contracts" },
+                  { label: "Zero fees", sub: "First 12 months" },
+                ].map((badge) => (
+                  <div key={badge.label} className="rounded-2xl border border-white/8 bg-white/3 px-4 py-2.5">
+                    <div className="text-[0.78rem] font-bold text-[var(--text)]">{badge.label}</div>
+                    <div className="text-[0.7rem] text-[var(--muted)]">{badge.sub}</div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -363,6 +405,62 @@ export default function HomePage() {
                     </div>
                     <div className="font-[family-name:var(--font-cormorant)] text-[1.35rem] tracking-[-0.04em] text-[var(--accent)]">{item.value}</div>
                   </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* COMPARISON */}
+        <section className="mx-auto w-[min(calc(100%-36px),1280px)] py-16">
+          <div className="mb-10 text-center">
+            <div className="mb-3 inline-flex items-center gap-2 text-[0.75rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
+              <span className="block h-px w-4 bg-[var(--accent)]" />Why Stablelane
+            </div>
+            <h2 className="font-[family-name:var(--font-cormorant)] text-[clamp(2.2rem,3.5vw,3.2rem)] leading-[0.98] tracking-[-0.05em]">
+              One lane vs <em className="text-[var(--accent)]">four broken tools</em>.
+            </h2>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="rounded-[24px] border border-white/8 bg-white/3 p-6">
+              <div className="mb-4 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">The old way</div>
+              <div className="grid gap-3">
+                {[
+                  { label: "Invoice in Notion or Google Docs", cost: "Manual, no tracking" },
+                  { label: "Collect payment via bank transfer", cost: "3-5 day delay, 8%+ fees" },
+                  { label: "Split manually via WhatsApp", cost: "Error-prone, no audit trail" },
+                  { label: "Chase clients for milestone sign-off", cost: "Zero accountability" },
+                  { label: "Zero revenue history for credit access", cost: "Invisible to lenders" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/3 px-4 py-3">
+                    <span className="mt-0.5 text-[var(--danger,#e05252)]">✗</span>
+                    <div>
+                      <div className="text-[0.86rem] font-semibold text-[var(--text)]">{item.label}</div>
+                      <div className="text-[0.78rem] text-[var(--muted)]">{item.cost}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-[24px] border border-[var(--line)] bg-[rgba(201,255,96,.04)] p-6">
+              <div className="mb-4 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--accent)]">Stablelane on Arc</div>
+              <div className="grid gap-3">
+                {[
+                  { label: "Invoice with milestones and payment link", cost: "One URL, client pays directly" },
+                  { label: "Client locks USDC in escrow before work starts", cost: "Funds guaranteed, no chasing" },
+                  { label: "Split payouts route automatically on release", cost: "Exact amounts, on-chain proof" },
+                  { label: "Milestone approval triggers instant settlement", cost: "Sub-second on Arc testnet" },
+                  { label: "Every invoice builds verifiable revenue history", cost: "Foundation for credit products" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-start gap-3 rounded-xl border border-[var(--line)] bg-[rgba(201,255,96,.04)] px-4 py-3">
+                    <span className="mt-0.5 text-[var(--accent)]">✓</span>
+                    <div>
+                      <div className="text-[0.86rem] font-semibold text-[var(--text)]">{item.label}</div>
+                      <div className="text-[0.78rem] text-[var(--muted)]">{item.cost}</div>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
