@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/toast";
 import { generateInvoicePDF } from "@/lib/invoice-pdf";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -231,9 +232,9 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
                       }),
                     });
                     const data = await res.json();
-                    alert(data.sent ? `Reminder sent to ${invoice.clientEmail}` : "Could not send reminder. Check your Resend API key.");
+                    toast(data.sent ? `Reminder sent to ${invoice.clientEmail}` : "Reminder failed. Check your Resend API key.", data.sent ? "ok" : "err");
                   } catch {
-                    alert("Reminder failed to send.");
+                    toast("Reminder failed to send.", "err");
                   }
                 }}
                 className="rounded-full border border-[var(--line)] bg-[rgba(216,196,139,.08)] px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--accent-3)]"
@@ -278,7 +279,7 @@ const btn = document.activeElement as HTMLButtonElement; if (btn) { const orig =
               onClick={() => {
                 const link = `${window.location.origin}/invoice/${invoiceId}`;
                 navigator.clipboard?.writeText(link);
-                alert("Status page link copied. Share with anyone to let them track this invoice.");
+                toast("Status page link copied to clipboard.");
               }}
               className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]"
             >

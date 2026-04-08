@@ -1,5 +1,7 @@
 "use client";
 
+import { toast } from "@/components/toast";
+
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -648,7 +650,7 @@ export function InvoiceBuilder({ draftId }: InvoiceBuilderProps) {
                 onClick={() => {
                   const link = `${typeof window !== "undefined" ? window.location.origin : ""}/pay/${activeDraft.id}`;
                   navigator.clipboard?.writeText(link);
-                  setMessage("Payment link copied. Share it with your client to pay directly.");
+                  toast("Payment link copied. Share it with your client to pay directly."); setMessage("");
                 }}
                 className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.06)] px-4 py-3 text-left text-[0.88rem] font-semibold text-[var(--accent)] hover:bg-[rgba(201,255,96,.1)] transition"
               >

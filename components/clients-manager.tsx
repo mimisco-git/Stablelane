@@ -1,5 +1,7 @@
 "use client";
 
+import { toast } from "@/components/toast";
+
 import { useEffect, useState } from "react";
 import { createClient, deleteClientRecord, fetchClients } from "@/lib/supabase-data";
 import type { ClientRecord } from "@/lib/types";
@@ -140,6 +142,7 @@ export function ClientsManager() {
                       onClick={() => {
                         const url = `${window.location.origin}/client/${client.id}`;
                         navigator.clipboard?.writeText(url);
+                        toast("Client portal link copied to clipboard.");
                       }}
                       className="rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.06)] px-3 py-2 text-[0.78rem] font-semibold text-[var(--accent)] transition hover:bg-[rgba(201,255,96,.1)]"
                     >
