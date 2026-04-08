@@ -209,6 +209,29 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
             >
               Copy client payment link
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!invoice) return;
+                const template = {
+                  id: `tpl_${Date.now()}`,
+                  name: invoice.title,
+                  description: invoice.description || "",
+                  currency: invoice.currency,
+                  paymentMode: invoice.paymentMode,
+                  milestones: invoice.milestones || [],
+                  splits: invoice.splits || [],
+                  createdAt: new Date().toISOString(),
+                  usageCount: 0,
+                };
+                const existing = JSON.parse(localStorage.getItem("stablelane_invoice_templates") || "[]");
+                localStorage.setItem("stablelane_invoice_templates", JSON.stringify([template, ...existing]));
+                alert(`Template "${invoice.title}" saved. Find it in Templates.`);
+              }}
+              className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]"
+            >
+              Save as template
+            </button>
             <Link href={`/app/invoices/${invoiceId}/edit`} className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)]">
               Edit invoice
             </Link>

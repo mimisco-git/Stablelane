@@ -8,18 +8,23 @@ const coreNav = [
   { href: "/app", label: "Overview" },
   { href: "/app/invoices", label: "Invoices" },
   { href: "/app/escrows", label: "Escrows" },
-  { href: "/app/payouts", label: "Payouts" },
   { href: "/app/clients", label: "Clients" },
+  { href: "/app/payouts", label: "Payouts" },
+];
+
+const toolsNav = [
   { href: "/app/treasury", label: "Treasury" },
   { href: "/app/escrow-mini", label: "Escrow Mini" },
   { href: "/app/templates", label: "Templates" },
+  { href: "/app/recurring", label: "Recurring" },
+  { href: "/app/savings", label: "Savings Pot" },
 ];
 
 const revenueNav = [
   { href: "/app/ledger", label: "Ledger" },
   { href: "/app/analytics", label: "Analytics" },
+  { href: "/app/passport", label: "Passport" },
   { href: "/app/arc", label: "Arc" },
-  { href: "/app/passport", label: "Revenue Passport" },
 ];
 
 const workspaceNav = [
@@ -79,6 +84,7 @@ export function DashboardSidebar({ currentPath }: DashboardSidebarProps) {
       </Link>
 
       <NavGroup label="Workspace" items={coreNav} currentPath={currentPath} />
+      <NavGroup label="Tools" items={toolsNav} currentPath={currentPath} />
       <NavGroup label="Revenue" items={revenueNav} currentPath={currentPath} />
       <NavGroup label="Account" items={workspaceNav} currentPath={currentPath} />
 
