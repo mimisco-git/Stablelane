@@ -29,12 +29,14 @@ export function EscrowTransactionPanel({
   escrowAddress,
   currentEscrowStatus,
   milestones = [],
+  freelancerWallet,
 }: {
   invoiceId: string;
   invoiceAmount: string;
   escrowAddress: string | null;
   currentEscrowStatus: string;
   milestones?: Array<{ title?: string; amount?: string | number }>;
+  freelancerWallet?: string | null;
 }) {
   const { environment } = useAppEnvironment();
   const contractConfig = {
@@ -44,6 +46,7 @@ export function EscrowTransactionPanel({
     releaseModuleAddress: "",
   };
   const [message, setMessage] = useState("");
+  const [selectedMilestone, setSelectedMilestone] = useState(0);
   const [busy, setBusy] = useState(false);
   const [actingRole, setActingRole] = useState("Owner");
   const [realRole, setRealRole] = useState<"Owner" | "Admin" | "Operator" | "Viewer" | "">("");
@@ -99,8 +102,12 @@ export function EscrowTransactionPanel({
         throw new Error("Escrow factory address is not configured. Add NEXT_PUBLIC_TESTNET_ESCROW_FACTORY_ADDRESS to Vercel.");
       }
 
-      const freelancerAddress = await getActiveWalletAddress();
-      if (!freelancerAddress) throw new Error("Connect your wallet first.");
+      const connectedAddress = await getActiveWalletAddress();
+      if (!connectedAddress) throw new Error("Connect your wallet first.");
+      const freelancerAddress = freelancerWallet || connectedAddress;
+      if (!freelancerWallet) {
+        setMessage("Warning: no freelancer wallet set on invoice. Using your connected wallet as fallback.");
+      }
 
       const amount = parseFloat(invoiceAmount || "0");
       if (!amount) throw new Error("Invoice amount is required.");
@@ -250,7 +257,38 @@ export function EscrowTransactionPanel({
     }
   }
 
-  async function markReleased() {
+  async function approveSpecificMilestone(index: number) {
+    setBusy(true);
+    setMessage("");
+    try {
+      if (!escrowAddress) throw new Error("No escrow found. Create and fund escrow first.");
+      setMessage(`Approving milestone ${index + 1} on Arc testnet. Confirm in your wallet...`);
+      const txHash = await approveOnChainMilestone(escrowAddress, index);
+      await updateInvoiceWorkflowState(
+        invoiceId,
+        { escrow_status: "release_requested", release_tx_hash: txHash },
+        {
+          eventType: "escrow_milestone_released",
+          detail: `Milestone ${index + 1} approved and funds released on Arc testnet.`,
+          metadata: { environment, txHash, escrowAddress, milestoneIndex: index },
+        }
+      );
+      await createWorkspaceAuditEvent({
+        event_type: "escrow_milestone_released_onchain",
+        title: `Milestone ${index + 1} released`,
+        detail: `Funds released for invoice ${invoiceId} milestone ${index + 1}.`,
+        metadata: { invoiceId, txHash, escrowAddress, milestoneIndex: index },
+      });
+      setMessage(`Milestone ${index + 1} released. Tx: ${txHash.slice(0, 10)}...`);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Milestone release failed.";
+      setMessage(detail);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+    async function markReleased() {
     setBusy(true);
     setMessage("");
     try {
@@ -316,60 +354,93 @@ export function EscrowTransactionPanel({
   return (
     <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
       <div className="mb-4">
-        <div className="mb-2 flex flex-wrap items-center gap-2"><span className="rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-3 py-2 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">Resolved role: {effectiveRole}</span></div>
-        <h2 className="mb-1 text-base font-bold tracking-normal">Escrow transaction wiring</h2>
+        <h2 className="mb-1 text-base font-bold tracking-normal">Escrow actions</h2>
         <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-          This layer now uses the configured contract path so funding and release state are tied to real environment addresses, not only placeholders.
+          Create and fund a milestone escrow on Arc testnet. Release funds on-chain when work is approved.
         </p>
       </div>
 
-      <div className="mb-4 rounded-2xl border border-white/8 bg-white/3 p-4">
-        <div className="mb-2 font-semibold">Release gate</div>
-        <div className="grid gap-3 md:grid-cols-4">
-          <div className="rounded-xl border border-white/8 bg-white/[.03] px-3 py-3 text-[0.84rem] text-[var(--muted)]">Approvals: {approvalGate.total}</div>
-          <div className="rounded-xl border border-white/8 bg-white/[.03] px-3 py-3 text-[0.84rem] text-[var(--muted)]">Pending: {approvalGate.pending}</div>
-          <div className="rounded-xl border border-white/8 bg-white/[.03] px-3 py-3 text-[0.84rem] text-[var(--muted)]">Approved: {approvalGate.approved}</div>
-          <div className="rounded-xl border border-white/8 bg-white/[.03] px-3 py-3 text-[0.84rem] text-[var(--muted)]">
-            {approvalGate.allApproved ? "Final release unlocked" : approvalGate.hasRejection ? "A rejection blocks final release" : "Waiting on approvals"}
+      {escrowAddress && (
+        <div className="mb-4 rounded-2xl border border-white/8 bg-white/3 p-4">
+          <div className="mb-1 text-[0.72rem] font-bold uppercase tracking-[0.08em] text-[var(--muted-2)]">Escrow contract</div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="break-all font-mono text-[0.82rem] text-[var(--accent)]">{escrowAddress}</span>
+            <Link
+              href={`https://testnet.arcscan.app/address/${escrowAddress}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 text-[0.78rem] font-semibold text-[var(--accent)]"
+            >
+              View
+            </Link>
           </div>
         </div>
-      </div>
-
-      <div className="mb-4 grid gap-3 md:grid-cols-3">
-        {[
-          ["Factory", contractConfig.factoryAddress],
-          ["Implementation", contractConfig.implementationAddress],
-          ["Release module", contractConfig.releaseModuleAddress],
-        ].map(([label, value]) => (
-          <div key={label} className="rounded-2xl border border-white/8 bg-white/3 p-4">
-            <div className="mb-1 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">{label}</div>
-            {value ? (
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="text-[0.86rem] font-semibold text-[var(--text)]">{shortValue(value)}</div>
-                <Link href={getEscrowExplorerLink(environment, value)} target="_blank" className="text-[0.8rem] font-semibold text-[var(--accent)]">
-                  View
-                </Link>
-              </div>
-            ) : (
-              <div className="text-[0.82rem] text-[var(--muted)]">Not configured</div>
-            )}
-          </div>
-        ))}
-      </div>
+      )}
 
       <div className="grid gap-3">
-        <button type="button" onClick={createEscrowRecord} disabled={busy} className="rounded-full bg-[var(--accent)] px-4 py-3 text-left text-[0.92rem] font-bold text-[#08100b] disabled:opacity-70">
-          {busy ? "Working..." : "Create contract-aware escrow record"}
+        <button
+          type="button"
+          onClick={createEscrowRecord}
+          disabled={busy}
+          className="rounded-full bg-[var(--accent)] px-4 py-3 text-center text-[0.92rem] font-bold text-[#08100b] disabled:opacity-70"
+        >
+          {busy ? "Working..." : escrowAddress ? "Re-create escrow" : "Create escrow on Arc"}
         </button>
-        <button type="button" onClick={fundEscrow} disabled={busy} className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-45">
-          {busy ? "Submitting..." : "Fund escrow from wallet"}
-        </button>
-        <button type="button" onClick={requestRelease} disabled={busy || currentEscrowStatus !== "funded" || !contractConfig.ready} className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-45">
-          Request release
-        </button>
-        <button type="button" onClick={markReleased} disabled={busy || currentEscrowStatus !== "release_requested" || !contractConfig.ready || !approvalGate.allApproved} className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-left text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-45">
-          Mark released
-        </button>
+
+        {escrowAddress && (
+          <button
+            type="button"
+            onClick={fundEscrow}
+            disabled={busy}
+            className="rounded-full border border-white/8 bg-white/3 px-4 py-3 text-center text-[0.92rem] font-bold text-[var(--text)] disabled:opacity-45"
+          >
+            {busy ? "Processing..." : "Fund escrow with USDC"}
+          </button>
+        )}
+
+        {escrowAddress && milestones.length > 0 && (
+          <div className="rounded-[16px] border border-white/8 bg-white/3 p-4">
+            <div className="mb-3 text-[0.78rem] font-bold uppercase tracking-[0.08em] text-[var(--muted-2)]">
+              Approve milestone release
+            </div>
+            <div className="grid gap-2 mb-3">
+              {milestones.map((m, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setSelectedMilestone(i)}
+                  className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left text-[0.86rem] transition ${
+                    selectedMilestone === i
+                      ? "border-[var(--accent)] bg-[rgba(201,255,96,.08)] text-[var(--accent)]"
+                      : "border-white/8 bg-white/3 text-[var(--text)]"
+                  }`}
+                >
+                  <span className="font-semibold">{(m as any).title || `Milestone ${i + 1}`}</span>
+                  <span>{(m as any).amount} USDC</span>
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => approveSpecificMilestone(selectedMilestone)}
+              disabled={busy}
+              className="w-full rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.1)] px-4 py-3 text-center text-[0.88rem] font-bold text-[var(--accent)] disabled:opacity-50"
+            >
+              {busy ? "Releasing on Arc..." : `Release Milestone ${selectedMilestone + 1} on-chain`}
+            </button>
+          </div>
+        )}
+
+        {escrowAddress && milestones.length === 0 && (
+          <button
+            type="button"
+            onClick={() => approveSpecificMilestone(0)}
+            disabled={busy}
+            className="rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.1)] px-4 py-3 text-center text-[0.88rem] font-bold text-[var(--accent)] disabled:opacity-50"
+          >
+            {busy ? "Releasing on Arc..." : "Approve full release on-chain"}
+          </button>
+        )}
       </div>
 
       {message ? (

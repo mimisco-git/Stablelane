@@ -101,7 +101,7 @@ export function RecentInvoicesLive() {
           <div>
             <strong className="mb-1 block">{invoice.client}</strong>
             <small className="text-[0.8rem] text-[var(--muted)]">
-              {invoice.title} · {invoice.stage} · {invoice.source}
+              {invoice.title} · {invoice.stage}
             </small>
           </div>
           <div className="text-[0.92rem] font-extrabold">{invoice.amount}</div>
