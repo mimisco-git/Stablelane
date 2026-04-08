@@ -84,22 +84,13 @@ export function AuthBanner() {
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-white/8 bg-white/3 p-4">
-      <div>
-        <div className="text-[0.82rem] uppercase tracking-[0.08em] text-[var(--muted-2)]">Signed in</div>
-        <div className="font-semibold">{email}</div>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <Link href="/app/account" className="rounded-full border border-white/8 bg-white/3 px-4 py-2 text-[0.84rem] font-semibold text-[var(--text)]">
-          Manage account methods
-        </Link>
-        <Link href="/app/invoices/new" className="rounded-full border border-white/8 bg-white/3 px-4 py-2 text-[0.84rem] font-semibold text-[var(--text)]">
-          Create invoice
-        </Link>
-        <button onClick={signOut} className="rounded-full border border-white/8 bg-white/3 px-4 py-2 text-[0.84rem] font-semibold text-[var(--text)]">
-          Sign out
-        </button>
-      </div>
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-white/8 bg-white/3 px-4 py-3 text-[0.84rem]">
+      <p className="text-[var(--muted)]">
+        Signed in as <strong className="text-[var(--text)]">{email}</strong>. Wallet connection stays optional until you need a wallet action.
+      </p>
+      <Link href="/app/account" className="rounded-full border border-white/8 bg-white/3 px-3 py-1.5 text-[0.8rem] font-semibold text-[var(--text)] transition hover:bg-white/5">
+        Access options
+      </Link>
     </div>
   );
 }
