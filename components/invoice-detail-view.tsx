@@ -1,7 +1,6 @@
 "use client";
 
 import { toast } from "@/components/toast";
-import { generateInvoicePDF } from "@/lib/invoice-pdf";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
