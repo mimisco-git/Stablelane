@@ -10,6 +10,8 @@ const coreNav = [
   { href: "/app/escrows", label: "Escrows" },
   { href: "/app/payouts", label: "Payouts" },
   { href: "/app/clients", label: "Clients" },
+  { href: "/app/treasury", label: "Treasury" },
+  { href: "/app/escrow-mini", label: "Escrow Mini" },
 ];
 
 const revenueNav = [
