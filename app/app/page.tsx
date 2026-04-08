@@ -13,7 +13,7 @@ export default function AppOverviewPage() {
     <DashboardShell
       currentPath="/app"
       title="Overview"
-      description="Your revenue workspace. Track incoming payments, manage escrow releases, route payouts to collaborators, and monitor your growing revenue history."
+      description="Your revenue command center. Everything from invoice to settled USDC in one view."
       badge="Workspace overview"
     >
       <div className="grid gap-4">
@@ -57,7 +57,7 @@ export default function AppOverviewPage() {
                 { title: "Create invoice", detail: "Add milestones, set amount, save to workspace.", done: true },
                 { title: "Send payment link", detail: "Copy the /pay/ link and share it with your client.", done: true },
                 { title: "Client funds escrow", detail: "Client connects wallet and locks USDC on Arc testnet.", done: true },
-                { title: "Approve milestone", detail: "Review work and release each milestone on-chain.", done: true },
+                { title: "Approve milestone on-chain", detail: "Review work, release funds on Arc. Settles in under 1 second.", done: true },
               ].map((item) => (
                 <div key={item.title} className="rounded-2xl border border-white/8 bg-white/3 p-4">
                   <div className="mb-2 flex items-center justify-between gap-3">

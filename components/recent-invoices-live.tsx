@@ -12,7 +12,6 @@ type Item = {
   id: string;
   client: string;
   title: string;
-  stage: string;
   amount: string;
   status: string;
   source: "workspace" | "browser";
@@ -24,7 +23,6 @@ function normalizeRemote(row: RemoteInvoiceDraftRow): Item {
     id: row.id,
     client: row.client_name || "Unnamed client",
     title: row.title || "Untitled invoice",
-    stage: row.payment_mode || "Draft",
     amount: `${symbol}${row.amount ?? 0}`,
     status: row.status || "Draft",
     source: "workspace",
@@ -37,7 +35,6 @@ function normalizeLocal(row: InvoiceDraft): Item {
     id: row.id,
     client: row.clientName || "Unnamed client",
     title: row.title || "Untitled invoice",
-    stage: row.paymentMode || "Draft",
     amount: `${symbol}${row.amount || 0}`,
     status: row.status || "Draft",
     source: "browser",
@@ -101,7 +98,7 @@ export function RecentInvoicesLive() {
           <div>
             <strong className="mb-1 block">{invoice.client}</strong>
             <small className="text-[0.8rem] text-[var(--muted)]">
-              {invoice.title} · {invoice.stage}
+              {invoice.title}
             </small>
           </div>
           <div className="text-[0.92rem] font-extrabold">{invoice.amount}</div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchWorkspaceAnalytics } from "@/lib/supabase-data";
+import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 import { LoadingState, EmptyState } from "@/components/ui-state";
 import { StatusPill } from "@/components/status-pill";
 
@@ -27,7 +28,18 @@ type Analytics = {
     currency: "USDC" | "EURC";
     status: string;
     escrow_status: string | null;
+    created_at: string;
+    updated_at: string;
   }>;
+};
+
+type PaymentInsight = {
+  clientName: string;
+  invoiceCount: number;
+  avgDaysToEscrow: number | null;
+  totalPaid: number;
+  currency: string;
+  lastInvoiceDate: string;
 };
 
 function toneForStatus(status: string) {
@@ -46,7 +58,7 @@ function BarChart({ data, max, currency }: { data: { label: string; value: numbe
         return (
           <div key={item.label}>
             <div className="mb-1 flex items-center justify-between gap-3">
-              <span className="text-[0.85rem] font-semibold truncate">{item.label}</span>
+              <span className="truncate text-[0.85rem] font-semibold">{item.label}</span>
               <span className="shrink-0 text-[0.82rem] text-[var(--muted)]">
                 {item.value.toLocaleString("en-US", { maximumFractionDigits: 0 })} {currency}
               </span>
@@ -66,35 +78,87 @@ function BarChart({ data, max, currency }: { data: { label: string; value: numbe
 
 export function WorkspaceAnalytics() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [insights, setInsights] = useState<PaymentInsight[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    fetchWorkspaceAnalytics().then((data) => {
-      if (mounted && data) setAnalytics(data as unknown as Analytics);
-      if (mounted) setLoading(false);
-    });
+    loadAll().then(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
   }, []);
+
+  async function loadAll() {
+    const [data] = await Promise.all([
+      fetchWorkspaceAnalytics(),
+      loadPaymentInsights(),
+    ]);
+    if (data) setAnalytics(data as unknown as Analytics);
+  }
+
+  async function loadPaymentInsights() {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: rows } = await supabase
+      .from("invoice_drafts")
+      .select("client_name,status,escrow_status,amount,currency,created_at,updated_at")
+      .eq("owner_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (!rows) return;
+
+    // Group by client
+    const byClient: Record<string, typeof rows> = {};
+    for (const row of rows) {
+      const key = row.client_name || "Unknown";
+      if (!byClient[key]) byClient[key] = [];
+      byClient[key].push(row);
+    }
+
+    const result: PaymentInsight[] = Object.entries(byClient).map(([name, invs]) => {
+      const funded = invs.filter((i) => i.escrow_status === "funded" || i.status === "In escrow" || i.status === "Completed");
+      
+      // Calculate avg days from created to funded (using updated_at as proxy)
+      const daysList = funded.map((i) => {
+        const created = new Date(i.created_at).getTime();
+        const updated = new Date(i.updated_at).getTime();
+        return Math.max(0, Math.round((updated - created) / (1000 * 60 * 60 * 24)));
+      }).filter((d) => d < 365); // filter out outliers
+
+      const avgDays = daysList.length > 0
+        ? Math.round(daysList.reduce((a, b) => a + b, 0) / daysList.length)
+        : null;
+
+      const totalPaid = funded.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+
+      return {
+        clientName: name,
+        invoiceCount: invs.length,
+        avgDaysToEscrow: avgDays,
+        totalPaid,
+        currency: invs[0]?.currency || "USDC",
+        lastInvoiceDate: invs[0]?.created_at || "",
+      };
+    }).sort((a, b) => b.totalPaid - a.totalPaid);
+
+    setInsights(result);
+  }
 
   if (loading) return <LoadingState title="Analytics" detail="Loading analytics..." />;
   if (!analytics) return <EmptyState title="No data" detail="Sign in to see analytics." />;
 
-  const clientChartData = analytics.clientTotals
-    .slice(0, 6)
-    .map((c) => ({ label: c.name, value: c.value }));
+  const clientChartData = analytics.clientTotals.slice(0, 6).map((c) => ({ label: c.name, value: c.value }));
   const maxClientValue = Math.max(...clientChartData.map((c) => c.value), 1);
 
-  const statusChartData = Object.entries(analytics.statusTotals).map(([label, value]) => ({
-    label,
-    value,
-  }));
+  const statusChartData = Object.entries(analytics.statusTotals).map(([label, value]) => ({ label, value }));
   const maxStatusValue = Math.max(...statusChartData.map((s) => s.value), 1);
 
   const fmt = (n: number) =>
-    n >= 1000
-      ? `${(n / 1000).toFixed(1)}k`
-      : n.toLocaleString("en-US", { maximumFractionDigits: 2 });
+    n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : n.toLocaleString("en-US", { maximumFractionDigits: 2 });
+
+  const fastestPayer = insights.filter(i => i.avgDaysToEscrow !== null).sort((a, b) => (a.avgDaysToEscrow || 999) - (b.avgDaysToEscrow || 999))[0];
 
   return (
     <div className="grid gap-4">
@@ -104,7 +168,7 @@ export function WorkspaceAnalytics() {
           { label: "Total invoices", value: String(analytics.totalInvoices), note: "Saved in your workspace" },
           { label: "Total value", value: `${fmt(analytics.totalValue)} ${analytics.defaultCurrency}`, note: "Across all invoices" },
           { label: "Clients", value: String(analytics.totalClients), note: "Unique client records" },
-          { label: "Linked clients", value: String(analytics.linkedInvoices), note: "Invoices with saved clients" },
+          { label: "Fastest payer", value: fastestPayer ? `${fastestPayer.avgDaysToEscrow}d` : "—", note: fastestPayer ? fastestPayer.clientName : "No payment data yet" },
         ].map((card) => (
           <div key={card.label} className="rounded-[18px] border border-white/8 bg-white/3 p-4">
             <div className="mb-1 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">{card.label}</div>
@@ -122,7 +186,7 @@ export function WorkspaceAnalytics() {
           {clientChartData.length > 0 ? (
             <BarChart data={clientChartData} max={maxClientValue} currency={analytics.defaultCurrency} />
           ) : (
-            <p className="text-[0.88rem] text-[var(--muted)]">No client data yet. Add clients and create invoices.</p>
+            <p className="text-[0.88rem] text-[var(--muted)]">No client data yet.</p>
           )}
         </section>
 
@@ -141,10 +205,7 @@ export function WorkspaceAnalytics() {
                       <span className="text-[0.88rem] font-semibold">{item.value}</span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-white/8">
-                      <div
-                        className="h-full rounded-full bg-[var(--accent)] transition-all duration-700"
-                        style={{ width: `${pct}%` }}
-                      />
+                      <div className="h-full rounded-full bg-[var(--accent)] transition-all duration-700" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 );
@@ -155,6 +216,48 @@ export function WorkspaceAnalytics() {
           )}
         </section>
       </div>
+
+      {/* Payment intelligence */}
+      {insights.length > 0 && (
+        <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
+          <h2 className="mb-1 text-base font-bold tracking-normal">Payment intelligence</h2>
+          <p className="mb-4 text-[0.82rem] text-[var(--muted)]">How quickly each client moves from invoice to funded escrow.</p>
+          <div className="grid gap-2">
+            {insights.map((insight) => (
+              <div key={insight.clientName} className="flex flex-wrap items-center gap-4 rounded-xl border border-white/8 bg-white/3 px-4 py-3">
+                <div className="flex-1">
+                  <div className="text-[0.88rem] font-semibold">{insight.clientName}</div>
+                  <div className="text-[0.75rem] text-[var(--muted)]">
+                    {insight.invoiceCount} invoice{insight.invoiceCount !== 1 ? "s" : ""}
+                    {insight.lastInvoiceDate && ` · Last: ${new Date(insight.lastInvoiceDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold text-[var(--accent)]">
+                    {insight.totalPaid > 0 ? `${insight.totalPaid.toLocaleString()} ${insight.currency}` : "—"}
+                  </div>
+                  <div className="text-[0.75rem] text-[var(--muted)]">
+                    {insight.avgDaysToEscrow !== null
+                      ? `Avg ${insight.avgDaysToEscrow}d to pay`
+                      : "No payments yet"}
+                  </div>
+                </div>
+                <div className={`rounded-full px-3 py-1.5 text-[0.7rem] font-bold ${
+                  insight.avgDaysToEscrow === null ? "bg-white/5 text-[var(--muted-2)]"
+                  : insight.avgDaysToEscrow <= 1 ? "bg-[rgba(103,213,138,.12)] text-[var(--accent-2)]"
+                  : insight.avgDaysToEscrow <= 3 ? "bg-[rgba(201,255,96,.12)] text-[var(--accent)]"
+                  : "bg-[rgba(216,196,139,.12)] text-[var(--accent-3)]"
+                }`}>
+                  {insight.avgDaysToEscrow === null ? "Pending"
+                  : insight.avgDaysToEscrow <= 1 ? "Fast payer"
+                  : insight.avgDaysToEscrow <= 3 ? "Good"
+                  : "Slow"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Escrow breakdown */}
       {Object.keys(analytics.escrowTotals).length > 0 && (
