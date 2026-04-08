@@ -12,12 +12,14 @@ const coreNav = [
   { href: "/app/clients", label: "Clients" },
   { href: "/app/treasury", label: "Treasury" },
   { href: "/app/escrow-mini", label: "Escrow Mini" },
+  { href: "/app/templates", label: "Templates" },
 ];
 
 const revenueNav = [
   { href: "/app/ledger", label: "Ledger" },
   { href: "/app/analytics", label: "Analytics" },
   { href: "/app/arc", label: "Arc" },
+  { href: "/app/passport", label: "Revenue Passport" },
 ];
 
 const workspaceNav = [

@@ -134,13 +134,25 @@ export function ClientsManager() {
                       {client.client_wallet ? ` · ${client.client_wallet}` : ""}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => onDeleteClient(client.id)}
-                    className="rounded-full border border-white/8 bg-white/3 px-3 py-2 text-[0.78rem] font-semibold text-[var(--text)]"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = `${window.location.origin}/client/${client.id}`;
+                        navigator.clipboard?.writeText(url);
+                      }}
+                      className="rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.06)] px-3 py-2 text-[0.78rem] font-semibold text-[var(--accent)] transition hover:bg-[rgba(201,255,96,.1)]"
+                    >
+                      Portal ↗
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteClient(client.id)}
+                      className="rounded-full border border-white/8 bg-white/3 px-3 py-2 text-[0.78rem] font-semibold text-[var(--text)]"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
                 {client.notes ? (
                   <div className="mt-2 text-[0.82rem] leading-6 text-[var(--muted)]">{client.notes}</div>
