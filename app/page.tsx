@@ -17,10 +17,10 @@ const proofPoints = [
 ];
 
 const appMetrics = [
-  { label: "Received this month", value: "$18.2k", note: "Settled revenue across active workspaces" },
-  { label: "Locked in escrow", value: "$9.6k", note: "Client-committed before work started" },
-  { label: "Pending releases", value: "7", note: "Milestones awaiting approval" },
-  { label: "Repeat clients", value: "4", note: "Signals building toward credit access" },
+  { label: "Received this month", value: "$18.2k", note: "Sample: settled revenue across workspaces" },
+  { label: "Locked in escrow", value: "$9.6k", note: "Sample: client-committed before work started" },
+  { label: "Pending releases", value: "7", note: "Sample: milestones awaiting approval" },
+  { label: "Repeat clients", value: "4", note: "Sample: signals building toward credit access" },
 ];
 
 const recentInvoices = [
@@ -223,10 +223,10 @@ export default function HomePage() {
                   <div className="h-3 w-3 rounded-full bg-white/10" />
                 </div>
                 <div className="hidden rounded-lg border border-white/8 bg-white/3 px-4 py-1.5 text-[0.8rem] text-[var(--muted)] sm:block">
-                  app.stablelane.xyz/workspace
+                  stablelane.vercel.app/app
                 </div>
               </div>
-              <div className="rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-3 py-1.5 text-[0.7rem] font-extrabold uppercase tracking-[0.08em] text-[var(--accent)]">Arc testnet</div>
+<div className="flex items-center gap-2"><div className="rounded-full border border-white/8 bg-white/3 px-3 py-1.5 text-[0.7rem] font-bold text-[var(--muted-2)]">Sample data</div><div className="rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-3 py-1.5 text-[0.7rem] font-extrabold uppercase tracking-[0.08em] text-[var(--accent)]">Arc testnet</div></div>
             </div>
 
             <div className="grid lg:grid-cols-[220px_1fr]">
