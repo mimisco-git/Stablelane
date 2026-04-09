@@ -1,5 +1,7 @@
 "use client";
 
+import { ArcFaucetGuide } from "@/components/arc-faucet-guide";
+
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 import type { RemoteInvoiceDraftRow } from "@/lib/types";
@@ -30,6 +32,7 @@ export function ClientPaymentView({ invoiceId }: { invoiceId: string }) {
   const [step, setStep] = useState<Step>("loading");
   const [invoice, setInvoice] = useState<RemoteInvoiceDraftRow | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [usdcBalance, setUsdcBalance] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [txHash, setTxHash] = useState("");
   const [escrowAddress, setEscrowAddress] = useState("");
@@ -85,6 +88,20 @@ export function ClientPaymentView({ invoiceId }: { invoiceId: string }) {
       }
 
       setWalletAddress(accounts[0]);
+
+      // Check USDC balance on Arc testnet
+      try {
+        const { createPublicClient, http } = await import("viem");
+        const { arcTestnet, USDC_ADDRESS } = await import("@/lib/escrow-client");
+        const { USDC_ABI } = await import("@/lib/escrow-abi");
+        const client = createPublicClient({ chain: arcTestnet, transport: http("https://rpc.testnet.arc.network") });
+        const raw = await client.readContract({
+          address: USDC_ADDRESS, abi: USDC_ABI,
+          functionName: "balanceOf", args: [accounts[0] as `0x${string}`],
+        }) as bigint;
+        setUsdcBalance(Number(raw) / 1_000_000);
+      } catch { setUsdcBalance(null); }
+
       setStep("review");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Wallet connection failed.");
@@ -169,6 +186,23 @@ export function ClientPaymentView({ invoiceId }: { invoiceId: string }) {
       } catch {
         // Email failure should never break the payment flow
       }
+
+      // Push notification to localStorage for the workspace owner's bell
+      try {
+        const existingNotifs = JSON.parse(localStorage.getItem("stablelane_notifications") || "[]");
+        const notif = {
+          id: `notif_${Date.now()}`,
+          type: "payment",
+          title: "Escrow funded",
+          detail: `${invoice.client_name} locked ${invoice.amount} ${invoice.currency} into escrow for "${invoice.title}"`,
+          href: `/app/invoices/${invoiceId}`,
+          read: false,
+          createdAt: new Date().toISOString(),
+          amount: String(invoice.amount),
+          currency: invoice.currency,
+        };
+        localStorage.setItem("stablelane_notifications", JSON.stringify([notif, ...existingNotifs.slice(0, 49)]));
+      } catch {}
 
       setStep("paid");
       setMessage("Payment complete. Funds are locked in escrow on Arc testnet.");

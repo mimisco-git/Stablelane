@@ -1,5 +1,7 @@
 "use client";
 
+import { ArcFaucetGuide } from "@/components/arc-faucet-guide";
+
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -305,13 +307,7 @@ export function OnboardingFlow() {
         This wallet receives USDC when clients approve milestones on Arc testnet.
       </p>
 
-      <div className="mb-4 rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.04)] px-4 py-3 text-[0.8rem] text-[var(--muted)]">
-        <strong className="text-[var(--accent)]">Need testnet USDC?</strong> Get it free at{" "}
-        <a href="https://faucet.circle.com" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] underline underline-offset-2">
-          faucet.circle.com
-        </a>
-        . Select Arc Testnet and paste your wallet address.
-      </div>
+      <ArcFaucetGuide walletAddress={walletAddress || undefined} />
 
       <div className="grid gap-4">
         <div>

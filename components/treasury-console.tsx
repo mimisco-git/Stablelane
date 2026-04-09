@@ -1,5 +1,7 @@
 "use client";
 
+import { ArcFaucetGuide } from "@/components/arc-faucet-guide";
+
 import { useEffect, useState, useCallback } from "react";
 import { createPublicClient, http, parseUnits, createWalletClient, custom } from "viem";
 import { arcTestnet, USDC_ADDRESS } from "@/lib/escrow-client";
@@ -435,46 +437,7 @@ export function TreasuryConsole() {
 
       {/* Faucet tab */}
       {tab === "faucet" && (
-        <div className="rounded-[20px] border border-white/8 bg-white/3 p-5">
-          <h2 className="mb-1 text-base font-bold">Get testnet USDC</h2>
-          <p className="mb-5 text-[0.84rem] text-[var(--muted)]">Arc testnet uses USDC as the gas token. You need testnet USDC to deploy contracts, fund escrows, and send transfers. The Circle faucet gives you free testnet USDC instantly.</p>
-
-          <div className="grid gap-3 mb-5">
-            {[
-              { step: "1", title: "Copy your wallet address", detail: connectedAddress ? `Your connected wallet: ${shortAddr(connectedAddress)}` : "Connect your wallet above to see your address." },
-              { step: "2", title: "Go to the Circle Faucet", detail: "Click the button below to open faucet.circle.com." },
-              { step: "3", title: "Select Arc Testnet", detail: "Choose Arc Testnet from the network dropdown, then select USDC." },
-              { step: "4", title: "Paste your address and request", detail: "Paste your wallet address and click Send 10 USDC. Funds arrive in seconds." },
-            ].map((s) => (
-              <div key={s.step} className="flex gap-4 rounded-xl border border-white/8 bg-white/3 p-4">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgba(201,255,96,.12)] text-[0.78rem] font-bold text-[var(--accent)]">{s.step}</div>
-                <div>
-                  <div className="text-[0.88rem] font-semibold">{s.title}</div>
-                  <div className="text-[0.78rem] text-[var(--muted)]">{s.detail}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            {connectedAddress && (
-              <button
-                onClick={() => copyToClipboard(connectedAddress, "Wallet address")}
-                className="rounded-xl border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-4 py-3 text-[0.88rem] font-bold text-[var(--accent)] transition hover:bg-[rgba(201,255,96,.12)]"
-              >
-                Copy my address
-              </button>
-            )}
-            <a
-              href={FAUCET_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-xl bg-[var(--accent)] px-4 py-3 text-[0.88rem] font-bold text-[#08100b] transition hover:-translate-y-px"
-            >
-              Open Circle Faucet ↗
-            </a>
-          </div>
-        </div>
+        <ArcFaucetGuide walletAddress={connectedAddress || undefined} />
       )}
 
       {/* Message */}
