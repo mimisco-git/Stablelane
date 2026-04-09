@@ -488,7 +488,7 @@ export default function HomePage() {
         </section>
 
         {/* FAUCET */}
-        <section className="mx-auto w-[min(calc(100%-36px),1280px)] py-16">
+        <section id="faucet" className="mx-auto w-[min(calc(100%-36px),1280px)] py-16">
           <div className="overflow-hidden rounded-[28px] border border-[var(--line)] bg-[linear-gradient(135deg,rgba(14,25,18,.96),rgba(10,18,13,.92))] shadow-[0_28px_90px_rgba(0,0,0,.4)]">
             <div className="grid lg:grid-cols-[1fr_1fr]">
               {/* Left: explanation */}

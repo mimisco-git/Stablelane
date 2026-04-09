@@ -29,6 +29,7 @@ export const navLinks = [
   { href: "#preview", label: "Product" },
   { href: "#features", label: "Features" },
   { href: "#arc", label: "Why Arc" },
+  { href: "#faucet", label: "Faucet" },
   { href: "#waitlist", label: "Waitlist" },
 ];
 
