@@ -51,10 +51,12 @@ export default function AuthCallbackPage() {
         }
         clearPendingAuthMethod();
         clearPostAuthNextPath();
+        // Check if new user and redirect to onboarding
+        const isNew = data.session.user.created_at === data.session.user.last_sign_in_at;
+
         // Fire welcome email for new users (best effort)
-        try {
-          const isNew = data.session.user.created_at === data.session.user.last_sign_in_at;
-          if (isNew) {
+        if (isNew) {
+          try {
             fetch("/api/welcome", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -63,10 +65,14 @@ export default function AuthCallbackPage() {
                 name: data.session.user.user_metadata?.full_name || "",
               }),
             });
-          }
-        } catch {}
+          } catch {}
+        }
 
-        if (mounted) router.push(nextPath || "/app");
+        if (mounted) {
+          // New users go to onboarding, returning users go to their intended path
+          const destination = isNew && !nextPath ? "/app/start" : (nextPath || "/app");
+          router.push(destination);
+        }
         return;
       }
 

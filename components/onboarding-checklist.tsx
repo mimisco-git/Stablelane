@@ -187,12 +187,18 @@ export function OnboardingChecklist() {
       </div>
 
       {nextStep && (
-        <div className="mt-4">
+        <div className="mt-4 grid gap-2">
           <Link
             href={nextStep.href}
             className="inline-flex w-full items-center justify-center rounded-xl bg-[var(--accent)] px-4 py-3 text-[0.9rem] font-bold text-[#08100b] transition hover:-translate-y-px"
           >
             {nextStep.cta}: {nextStep.title}
+          </Link>
+          <Link
+            href="/app/start"
+            className="inline-flex w-full items-center justify-center rounded-xl border border-white/8 bg-white/3 px-4 py-2.5 text-[0.85rem] font-semibold text-[var(--muted)] transition hover:text-[var(--text)]"
+          >
+            Open guided setup
           </Link>
         </div>
       )}
