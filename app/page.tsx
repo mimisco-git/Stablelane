@@ -62,7 +62,7 @@ const arcPills = [
   { icon: "⇄", title: "Stablecoin-native rails", desc: "Arc is designed for payments, FX, lending, and capital movement, not generic onchain attention loops.", value: "Payments-first" },
 ];
 
-const workspaceNav = ["Overview", "Invoices", "Escrows", "Payouts", "Clients", "Ledger", "Settings"];
+const workspaceNav = ["Overview", "Invoices", "Escrows", "Clients", "Treasury", "Templates", "Recurring", "Analytics", "Passport", "Settings"];
 
 function toneClasses(tone: string) {
   if (tone === "live") return "bg-[rgba(103,213,138,.12)] text-[var(--accent-2)]";
@@ -171,7 +171,7 @@ export default function HomePage() {
               </div>
               <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto]">
                 <div className="rounded-[20px] border border-[var(--line)] bg-[rgba(201,255,96,.06)] p-4">
-                  <small className="mb-1 block text-[0.78rem] text-[var(--muted)]">Net settled this month</small>
+                  <small className="mb-1 block text-[0.78rem] text-[var(--muted)]">Sample: net settled this month</small>
                   <strong className="font-[family-name:var(--font-cormorant)] text-[2.2rem] tracking-[-0.05em] text-[var(--accent)]">$18,240</strong>
                   <p className="mt-1 text-[0.82rem] leading-6 text-[var(--muted)]">Every settled invoice becomes verifiable business proof.</p>
                 </div>

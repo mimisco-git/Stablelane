@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { navLinks } from "@/lib/site";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
@@ -11,6 +12,8 @@ export function SiteNav() {
   const [signedIn, setSignedIn] = useState(false);
   const [email, setEmail] = useState("");
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const pathname = usePathname();
+  const isHome = pathname === "/";
 
   useEffect(() => {
     if (!supabase) return;
@@ -35,7 +38,7 @@ export function SiteNav() {
         <ul className="hidden items-center gap-7 lg:flex">
           {navLinks.map((item) => (
             <li key={item.href} className="list-none">
-              <Link href={item.href} className="text-[0.92rem] text-[var(--muted)] transition hover:text-[var(--text)]">
+              <Link href={isHome ? item.href : `/${item.href}`} className="text-[0.92rem] text-[var(--muted)] transition hover:text-[var(--text)]">
                 {item.label}
               </Link>
             </li>
