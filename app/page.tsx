@@ -487,6 +487,96 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* FAUCET */}
+        <section className="mx-auto w-[min(calc(100%-36px),1280px)] py-16">
+          <div className="overflow-hidden rounded-[28px] border border-[var(--line)] bg-[linear-gradient(135deg,rgba(14,25,18,.96),rgba(10,18,13,.92))] shadow-[0_28px_90px_rgba(0,0,0,.4)]">
+            <div className="grid lg:grid-cols-[1fr_1fr]">
+              {/* Left: explanation */}
+              <div className="border-b border-white/8 p-8 lg:border-b-0 lg:border-r">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-3 py-1.5 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--accent)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                  Arc testnet
+                </div>
+                <h2 className="mb-4 font-[family-name:var(--font-cormorant)] text-[clamp(2rem,3vw,2.8rem)] leading-[0.97] tracking-[-0.05em]">
+                  Start with free testnet USDC.
+                </h2>
+                <p className="mb-6 text-[0.95rem] leading-7 text-[var(--muted)]">
+                  Stablelane runs on Arc testnet. You need testnet USDC to fund escrows and test the full invoice flow. The Circle Faucet gives you 10 USDC free in under 30 seconds.
+                </p>
+                <div className="grid gap-3">
+                  {[
+                    { icon: "▣", text: "No real money needed to test" },
+                    { icon: "◈", text: "Testnet USDC works exactly like real USDC" },
+                    { icon: "◎", text: "Sub-second settlement, same as mainnet" },
+                  ].map((item) => (
+                    <div key={item.text} className="flex items-center gap-3 text-[0.88rem] text-[var(--muted)]">
+                      <span className="text-[var(--accent)]">{item.icon}</span>
+                      {item.text}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right: step-by-step */}
+              <div className="p-8">
+                <div className="mb-5 text-[0.82rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">
+                  How to get testnet USDC
+                </div>
+                <div className="grid gap-3">
+                  {[
+                    {
+                      step: "1",
+                      title: "Sign up and create an invoice",
+                      detail: "Create a free account, go through setup, build your first invoice.",
+                    },
+                    {
+                      step: "2",
+                      title: "Open the Circle Faucet",
+                      detail: "Go to faucet.circle.com, select Arc Testnet, and paste your wallet address.",
+                    },
+                    {
+                      step: "3",
+                      title: "Request 10 USDC",
+                      detail: "Click Send. Funds arrive in your wallet in seconds. No gas needed.",
+                    },
+                    {
+                      step: "4",
+                      title: "Fund the escrow",
+                      detail: "Open your invoice payment link, connect wallet, and lock USDC into escrow.",
+                    },
+                  ].map((s) => (
+                    <div key={s.step} className="flex gap-4 rounded-2xl border border-white/8 bg-white/3 px-4 py-3">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgba(201,255,96,.12)] text-[0.78rem] font-bold text-[var(--accent)]">
+                        {s.step}
+                      </div>
+                      <div>
+                        <div className="text-[0.88rem] font-semibold text-[var(--text)]">{s.title}</div>
+                        <div className="text-[0.78rem] text-[var(--muted)]">{s.detail}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <a
+                    href="https://faucet.circle.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full bg-[var(--accent)] px-5 py-3 text-[0.92rem] font-bold text-[#08100b] transition hover:-translate-y-px"
+                  >
+                    Open Circle Faucet ↗
+                  </a>
+                  <a
+                    href="/auth"
+                    className="rounded-full border border-white/8 bg-white/3 px-5 py-3 text-[0.92rem] font-bold text-[var(--text)] transition hover:bg-white/5"
+                  >
+                    Create free account
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* WAITLIST */}
         <section id="waitlist" className="mx-auto w-[min(calc(100%-36px),1280px)] py-16">
           <div className="text-center">
