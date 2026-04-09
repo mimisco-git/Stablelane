@@ -9,6 +9,7 @@ import { DashboardLiveStats } from "@/components/dashboard-live-stats";
 import { DashboardMetricCards } from "@/components/dashboard-metric-cards";
 import { RecentInvoicesLive } from "@/components/recent-invoices-live";
 import { WalletConnectPanel } from "@/components/wallet-connect-panel";
+import { ReleaseQueue } from "@/components/release-queue";
 
 export default function AppOverviewPage() {
   return (
@@ -25,20 +26,29 @@ export default function AppOverviewPage() {
         <DashboardLiveStats />
         <WalletConnectPanel />
         <DashboardMetricCards />
-        <section className="rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,rgba(16,27,20,.88),rgba(10,18,13,.82))] p-5 shadow-[0_18px_60px_rgba(0,0,0,.2)]">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="mb-1 text-[0.74rem] font-extrabold uppercase tracking-[0.12em] text-[var(--accent)]">
-                Arc finance layer
-              </div>
-              <h2 className="mb-2 text-base font-bold tracking-normal">Stablecoin assets, finality, and funding lanes.</h2>
-              <p className="max-w-3xl text-[0.84rem] leading-6 text-[var(--muted)]">
-                Open the Arc workspace for stablecoin asset rules, finality-aware confirmations, native balance reading, funding lanes, operational activity feeds, and export-ready workspace workflows.
-              </p>
-            </div>
-            <Link href="/app/arc" className="rounded-full bg-[var(--accent)] px-4 py-3 text-[0.92rem] font-bold text-[#08100b]">
-              Open Arc finance
-            </Link>
+        <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
+          <h2 className="mb-1 text-base font-bold tracking-normal">Quick actions</h2>
+          <p className="mb-4 text-[0.82rem] text-[var(--muted)]">Jump to the tools you use most.</p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { label: "New invoice", sub: "Create and send", href: "/app/invoices/new", accent: true },
+              { label: "Treasury", sub: "Wallet balances", href: "/app/treasury", accent: false },
+              { label: "Escrow Mini", sub: "Quick escrow", href: "/app/escrow-mini", accent: false },
+              { label: "Revenue Passport", sub: "Your score", href: "/app/passport", accent: false },
+            ].map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className={`rounded-2xl border px-4 py-4 transition hover:-translate-y-px ${
+                  action.accent
+                    ? "border-[var(--line)] bg-[rgba(201,255,96,.08)] hover:bg-[rgba(201,255,96,.12)]"
+                    : "border-white/8 bg-white/3 hover:bg-white/5"
+                }`}
+              >
+                <div className={`text-[0.92rem] font-bold ${action.accent ? "text-[var(--accent)]" : "text-[var(--text)]"}`}>{action.label}</div>
+                <div className="text-[0.78rem] text-[var(--muted)]">{action.sub}</div>
+              </Link>
+            ))}
           </div>
         </section>
 
@@ -73,25 +83,7 @@ export default function AppOverviewPage() {
             </div>
           </section>
 
-          <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="mb-1 text-base font-bold tracking-normal">Release queue</h2>
-                <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-                  Milestone and settlement actions ready for your review.
-                </p>
-              </div>
-              <Link href="/app/escrows" className="rounded-full border border-[var(--line)] bg-[rgba(201,255,96,.08)] px-3 py-2 text-[0.72rem] font-extrabold uppercase tracking-[0.08em] text-[var(--accent)]">
-                Open escrows
-              </Link>
-            </div>
-            <div className="rounded-2xl border border-white/8 bg-white/3 p-5 text-center">
-              <p className="mb-3 text-[0.88rem] text-[var(--muted)]">Active escrow releases appear here. Open the escrows page to review and approve milestones.</p>
-              <Link href="/app/escrows" className="rounded-full bg-[var(--accent)] px-4 py-2 text-[0.82rem] font-bold text-[#08100b]">
-                Open escrows
-              </Link>
-            </div>
-          </section>
+          <ReleaseQueue />
         </div>
 
         <div className="grid gap-3 lg:grid-cols-[1.1fr_.9fr]">
