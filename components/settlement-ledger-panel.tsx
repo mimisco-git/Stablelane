@@ -1,147 +1,135 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { fetchSettlementLedger } from "@/lib/supabase-data";
-import { useAppEnvironment } from "@/lib/use-app-environment";
-import { EmptyState, LoadingState } from "@/components/ui-state";
+import { useEffect, useState } from "react";
+import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 import { StatusPill } from "@/components/status-pill";
 
 type LedgerEntry = {
   id: string;
-  invoice_id: string | null;
-  entry_type: "gateway_deposit" | "escrow_funding" | "release" | "crosschain" | "manual";
-  amount: number | null;
-  currency: "USDC" | "EURC";
-  tx_hash: string | null;
-  target_address: string | null;
-  note: string | null;
+  title: string;
+  client_name: string;
+  amount: number;
+  currency: string;
+  status: string;
+  escrow_status: string | null;
+  escrow_address: string | null;
   created_at: string;
+  updated_at: string;
 };
 
-function toneFor(type: LedgerEntry["entry_type"]) {
-  if (type === "release") return "done" as const;
-  if (type === "gateway_deposit" || type === "escrow_funding") return "live" as const;
-  return "neutral" as const;
-}
-
 export function SettlementLedgerPanel() {
-  const { network } = useAppEnvironment();
   const [rows, setRows] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "settled" | "escrow" | "pending">("all");
 
   useEffect(() => {
-    let mounted = true;
-
-    async function load() {
-      try {
-        const data = await fetchSettlementLedger(120);
-        if (mounted) setRows(data as LedgerEntry[]);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
     load();
-    return () => {
-      mounted = false;
-    };
   }, []);
 
-  const summary = useMemo(() => {
-    const totals = rows.reduce(
-      (acc, row) => {
-        const amount = Number(row.amount || 0);
-        if (row.entry_type === "release") acc.released += amount;
-        else acc.locked += amount;
-        return acc;
-      },
-      { locked: 0, released: 0 }
-    );
+  async function load() {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) { setLoading(false); return; }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
 
-    return {
-      entries: rows.length,
-      locked: totals.locked,
-      released: totals.released,
-    };
-  }, [rows]);
+    const { data } = await supabase
+      .from("invoice_drafts")
+      .select("id,title,client_name,amount,currency,status,escrow_status,escrow_address,created_at,updated_at")
+      .eq("owner_id", user.id)
+      .not("status", "eq", "Draft")
+      .order("updated_at", { ascending: false });
 
-  if (loading) {
-    return <LoadingState title="Loading settlement ledger" detail="Stablelane is reading database-backed settlement entries." />;
+    setRows((data || []) as LedgerEntry[]);
+    setLoading(false);
   }
 
-  if (!rows.length) {
-    return (
-      <EmptyState
-        title="No ledger entries yet"
-        detail="As Gateway deposits, funding actions, and releases happen, they will be written into the settlement ledger."
-      />
-    );
+  const filtered = rows.filter((r) => {
+    if (filter === "settled") return r.status === "Completed" || r.escrow_status === "released";
+    if (filter === "escrow") return r.escrow_status === "funded" || r.status === "In escrow";
+    if (filter === "pending") return r.status === "Sent";
+    return true;
+  });
+
+  const totalSettled = rows
+    .filter((r) => r.status === "Completed" || r.escrow_status === "released")
+    .reduce((s, r) => s + Number(r.amount || 0), 0);
+
+  const totalEscrow = rows
+    .filter((r) => r.escrow_status === "funded" || r.status === "In escrow")
+    .reduce((s, r) => s + Number(r.amount || 0), 0);
+
+  function tone(r: LedgerEntry) {
+    if (r.status === "Completed" || r.escrow_status === "released") return "done" as const;
+    if (r.status === "In escrow" || r.escrow_status === "funded") return "live" as const;
+    if (r.status === "Sent") return "lock" as const;
+    return "neutral" as const;
   }
+
+  const tabClass = (t: typeof filter) =>
+    `px-3 py-2 rounded-xl text-[0.82rem] font-semibold transition ${
+      filter === t ? "bg-[var(--accent)] text-[#08100b]" : "text-[var(--muted)] hover:bg-white/5"
+    }`;
 
   return (
     <div className="grid gap-4">
-      <div className="grid gap-3 md:grid-cols-3">
+      {/* Summary */}
+      <div className="grid gap-3 sm:grid-cols-3">
         {[
-          { label: "Ledger entries", value: String(summary.entries) },
-          { label: "Locked value", value: `$${summary.locked.toLocaleString("en-US", { maximumFractionDigits: 2 })}` },
-          { label: "Released value", value: `$${summary.released.toLocaleString("en-US", { maximumFractionDigits: 2 })}` },
-        ].map((card) => (
-          <div key={card.label} className="rounded-[18px] border border-white/8 bg-white/3 p-4">
-            <div className="mb-2 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">{card.label}</div>
-            <strong className="block font-[family-name:var(--font-cormorant)] text-[1.8rem] tracking-[-0.04em]">{card.value}</strong>
+          { label: "Total entries", value: rows.length, note: "Non-draft invoices" },
+          { label: "Settled", value: `${totalSettled.toLocaleString()} USDC`, note: "Completed on-chain" },
+          { label: "In escrow", value: `${totalEscrow.toLocaleString()} USDC`, note: "Locked, pending release" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-[18px] border border-white/8 bg-white/3 p-4">
+            <div className="mb-1 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[var(--muted-2)]">{s.label}</div>
+            <div className="font-[family-name:var(--font-cormorant)] text-[1.8rem] tracking-[-0.04em] text-[var(--accent)]">{s.value}</div>
+            <div className="text-[0.75rem] text-[var(--muted)]">{s.note}</div>
           </div>
         ))}
       </div>
 
-      <section className="rounded-[20px] border border-white/8 bg-white/3 p-5">
-        <div className="mb-4">
-          <h2 className="mb-1 text-base font-bold tracking-normal">Settlement ledger</h2>
-          <p className="text-[0.84rem] leading-6 text-[var(--muted)]">
-            A database-backed ledger of deposits, escrow funding, releases, and other stablecoin settlement events.
-          </p>
+      {/* Filter tabs */}
+      <div className="flex flex-wrap gap-2 rounded-[16px] border border-white/8 bg-white/3 p-2">
+        {(["all", "settled", "escrow", "pending"] as const).map((t) => (
+          <button key={t} className={tabClass(t)} onClick={() => setFilter(t)}>
+            {t === "all" ? `All (${rows.length})` : t === "settled" ? "Settled" : t === "escrow" ? "In escrow" : "Pending"}
+          </button>
+        ))}
+      </div>
+
+      {/* Entries */}
+      {loading ? (
+        <div className="py-10 text-center text-[0.9rem] text-[var(--muted)]">Loading ledger...</div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-[20px] border border-white/8 bg-white/3 p-10 text-center">
+          <div className="mb-2 text-3xl opacity-20">◌</div>
+          <p className="text-[0.88rem] text-[var(--muted)]">No entries yet. Send invoices to start building your revenue ledger.</p>
         </div>
-
-        <div className="grid gap-3">
-          {rows.map((row) => (
-            <div key={row.id} className="rounded-2xl border border-white/8 bg-white/3 p-4">
-              <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="font-semibold text-[var(--text)]">{row.entry_type.replaceAll("_", " ")}</div>
-                  <div className="text-[0.82rem] text-[var(--muted)]">{new Date(row.created_at).toLocaleString()}</div>
-                </div>
-                <StatusPill label={row.entry_type} tone={toneFor(row.entry_type)} />
-              </div>
-
-              <div className="mb-3 grid gap-2 md:grid-cols-3">
-                <div className="rounded-xl border border-white/8 bg-white/[.03] px-3 py-3 text-[0.82rem] text-[var(--muted)]">
-                  Amount: {Number(row.amount || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })} {row.currency}
-                </div>
-                <div className="rounded-xl border border-white/8 bg-white/[.03] px-3 py-3 text-[0.82rem] text-[var(--muted)]">
-                  Invoice: {row.invoice_id || "General ledger event"}
-                </div>
-                <div className="rounded-xl border border-white/8 bg-white/[.03] px-3 py-3 text-[0.82rem] text-[var(--muted)]">
-                  Target: {row.target_address || "No target recorded"}
+      ) : (
+        <div className="grid gap-2">
+          {filtered.map((row) => (
+            <Link
+              key={row.id}
+              href={`/app/invoices/${row.id}`}
+              className="grid items-center gap-3 rounded-2xl border border-white/8 bg-white/3 p-4 transition hover:border-white/12 md:grid-cols-[1fr_auto_auto_auto]"
+            >
+              <div>
+                <div className="font-semibold">{row.title}</div>
+                <div className="text-[0.78rem] text-[var(--muted)]">
+                  {row.client_name} · {new Date(row.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                 </div>
               </div>
-
-              <div className="flex flex-wrap gap-3">
-                {row.invoice_id ? (
-                  <Link href={`/app/invoices/${row.invoice_id}`} className="text-[0.82rem] font-semibold text-[var(--accent)]">
-                    Open invoice
-                  </Link>
-                ) : null}
-                {row.tx_hash ? (
-                  <Link href={`${network.explorerUrl}/tx/${row.tx_hash}`} target="_blank" className="text-[0.82rem] font-semibold text-[var(--accent)]">
-                    Open tx
-                  </Link>
-                ) : null}
-                {row.note ? <span className="text-[0.82rem] text-[var(--muted)]">{row.note}</span> : null}
-              </div>
-            </div>
+              <div className="font-semibold">{Number(row.amount || 0).toLocaleString()} {row.currency}</div>
+              {row.escrow_address && (
+                <div className="hidden font-mono text-[0.72rem] text-[var(--muted)] md:block">
+                  {row.escrow_address.slice(0, 8)}...{row.escrow_address.slice(-4)}
+                </div>
+              )}
+              <StatusPill label={row.status} tone={tone(row)} />
+            </Link>
           ))}
         </div>
-      </section>
+      )}
     </div>
   );
 }
