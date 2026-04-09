@@ -66,18 +66,30 @@ export default function PayoutsPage() {
               </div>
             ) : (
               <div className="grid gap-3">
+                {/* Total summary */}
+                <div className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[rgba(201,255,96,.04)] px-4 py-3">
+                  <span className="text-[0.8rem] font-bold uppercase tracking-[0.08em] text-[var(--muted-2)]">Total payable</span>
+                  <span className="font-[family-name:var(--font-cormorant)] text-[1.6rem] tracking-[-0.04em] text-[var(--accent)]">
+                    {Object.values(splitTotals).reduce((sum, d) => sum + d.total, 0).toFixed(2)} {Object.values(splitTotals)[0]?.currency || "USDC"}
+                  </span>
+                </div>
                 {Object.entries(splitTotals).map(([member, data]) => (
                   <div key={member} className="grid gap-2 rounded-2xl border border-white/8 bg-white/3 p-4">
                     <div className="flex items-center justify-between gap-3">
-                      <strong>{member}</strong>
-                      <span className="text-[0.92rem] font-extrabold">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/8 bg-white/5 text-[0.8rem] font-bold text-[var(--accent)]">
+                          {member.charAt(0).toUpperCase()}
+                        </div>
+                        <strong>{member}</strong>
+                      </div>
+                      <span className="font-[family-name:var(--font-cormorant)] text-[1.3rem] tracking-[-0.03em] text-[var(--accent)]">
                         {data.total.toFixed(2)} {data.currency}
                       </span>
                     </div>
-                    <div className="text-[0.8rem] text-[var(--muted)]">{data.percent}% split across {data.count} invoice{data.count !== 1 ? "s" : ""}</div>
-                    <div className="h-3 overflow-hidden rounded-full border border-white/5 bg-white/5">
-                      <span
-                        className="block h-full rounded-full bg-[linear-gradient(90deg,var(--accent),var(--accent-2))]"
+                    <div className="text-[0.78rem] text-[var(--muted)]">{data.percent}% across {data.count} invoice{data.count !== 1 ? "s" : ""}</div>
+                    <div className="h-2 overflow-hidden rounded-full bg-white/8">
+                      <div
+                        className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent),var(--accent-2))] transition-all duration-700"
                         style={{ width: `${Math.min(100, data.percent)}%` }}
                       />
                     </div>

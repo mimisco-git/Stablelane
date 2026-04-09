@@ -51,6 +51,21 @@ export default function AuthCallbackPage() {
         }
         clearPendingAuthMethod();
         clearPostAuthNextPath();
+        // Fire welcome email for new users (best effort)
+        try {
+          const isNew = data.session.user.created_at === data.session.user.last_sign_in_at;
+          if (isNew) {
+            fetch("/api/welcome", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: data.session.user.email,
+                name: data.session.user.user_metadata?.full_name || "",
+              }),
+            });
+          }
+        } catch {}
+
         if (mounted) router.push(nextPath || "/app");
         return;
       }

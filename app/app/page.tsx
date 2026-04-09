@@ -3,6 +3,8 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { StatusPill } from "@/components/status-pill";
 import { OverviewDraftNotice } from "@/components/overview-draft-notice";
 import { OnboardingChecklist } from "@/components/onboarding-checklist";
+import { OverdueBanner } from "@/components/overdue-banner";
+import { ArcBalanceWidget } from "@/components/arc-balance-widget";
 import { DashboardLiveStats } from "@/components/dashboard-live-stats";
 import { DashboardMetricCards } from "@/components/dashboard-metric-cards";
 import { RecentInvoicesLive } from "@/components/recent-invoices-live";
@@ -18,6 +20,7 @@ export default function AppOverviewPage() {
     >
       <div className="grid gap-4">
         <OverviewDraftNotice />
+        <OverdueBanner />
         <OnboardingChecklist />
         <DashboardLiveStats />
         <WalletConnectPanel />
