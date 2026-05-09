@@ -25,12 +25,8 @@ export const siteConfig = {
 };
 
 export const navLinks = [
-  { href: "#how", label: "How it works" },
-  { href: "#preview", label: "Product" },
-  { href: "#features", label: "Features" },
-  { href: "#arc", label: "Why Arc" },
-  { href: "#faucet", label: "Faucet" },
-  { href: "#waitlist", label: "Waitlist" },
+  { href: "#build", label: "What we built" },
+  { href: "#app", label: "Open app" },
 ];
 
 export const dashboardNav = [
