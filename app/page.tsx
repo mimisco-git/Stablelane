@@ -107,29 +107,47 @@ export default function HomePage() {
       <SiteNav />
 
       {/* ── TICKER ────────────────────────────────────────────────── */}
-      <div className="overflow-hidden border-b border-white/5 bg-[rgba(7,16,11,.9)] py-2.5">
-        <div className="flex animate-[ticker_40s_linear_infinite] items-center gap-16 whitespace-nowrap">
+      <div className="overflow-hidden border-b border-white/[0.06] py-2">
+        <div className="flex animate-[ticker_50s_linear_infinite] items-center gap-14 whitespace-nowrap">
           {[
-            "Arc testnet · Chain ID 5042002",
-            "USDC as gas · sub-second finality",
-            "Escrow factory deployed on-chain",
-            "AI agent · Claude Haiku 4.5",
-            "CCTP V2 · cross-chain settlement",
-            "Revenue Passport · on-chain credibility",
-            "USYC · tokenized yield on Arc",
-            "Circle Developer Grant Applicant 2026",
-            "Arc testnet · Chain ID 5042002",
-            "USDC as gas · sub-second finality",
-            "Escrow factory deployed on-chain",
-            "AI agent · Claude Haiku 4.5",
-            "CCTP V2 · cross-chain settlement",
-            "Revenue Passport · on-chain credibility",
-            "USYC · tokenized yield on Arc",
-            "Circle Developer Grant Applicant 2026",
+            { dot: true, text: "Arc Testnet" },
+            { dot: false, text: "Chain ID 5042002" },
+            { dot: true, text: "USDC gas token" },
+            { dot: false, text: "Sub-second finality" },
+            { dot: true, text: "Escrow factory live" },
+            { dot: false, text: "MilestoneEscrowFactory.sol" },
+            { dot: true, text: "AI Agent" },
+            { dot: false, text: "Claude Haiku 4.5" },
+            { dot: true, text: "CCTP V2" },
+            { dot: false, text: "Cross-chain settlement" },
+            { dot: true, text: "Revenue Passport" },
+            { dot: false, text: "On-chain credibility" },
+            { dot: true, text: "USYC" },
+            { dot: false, text: "Tokenized yield on Arc" },
+            { dot: true, text: "Circle Developer Grant" },
+            { dot: false, text: "2026 Applicant" },
+            { dot: true, text: "Arc Testnet" },
+            { dot: false, text: "Chain ID 5042002" },
+            { dot: true, text: "USDC gas token" },
+            { dot: false, text: "Sub-second finality" },
+            { dot: true, text: "Escrow factory live" },
+            { dot: false, text: "MilestoneEscrowFactory.sol" },
+            { dot: true, text: "AI Agent" },
+            { dot: false, text: "Claude Haiku 4.5" },
+            { dot: true, text: "CCTP V2" },
+            { dot: false, text: "Cross-chain settlement" },
+            { dot: true, text: "Revenue Passport" },
+            { dot: false, text: "On-chain credibility" },
+            { dot: true, text: "USYC" },
+            { dot: false, text: "Tokenized yield on Arc" },
+            { dot: true, text: "Circle Developer Grant" },
+            { dot: false, text: "2026 Applicant" },
           ].map((item, i) => (
-            <span key={i} className="flex items-center gap-3 text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-[var(--muted-2)]">
-              <span className="h-1 w-1 rounded-full bg-[var(--accent)] opacity-70" />
-              {item}
+            <span key={i} className="flex items-center gap-3">
+              {item.dot && <span className="h-1 w-1 shrink-0 rounded-full bg-[var(--accent)] opacity-50" />}
+              <span className={`text-[0.7rem] tracking-[0.12em] ${item.dot ? "font-semibold text-[var(--muted)] uppercase" : "text-[var(--muted-2)] uppercase font-normal"}`}>
+                {item.text}
+              </span>
             </span>
           ))}
         </div>
