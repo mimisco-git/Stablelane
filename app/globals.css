@@ -1,41 +1,41 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #07100b;
-  --bg-2: #0c1711;
-  --bg-3: #112017;
-  --surface: rgba(16, 27, 20, 0.8);
-  --surface-2: rgba(255, 255, 255, 0.045);
-  --line: rgba(201, 255, 96, 0.14);
-  --line-soft: rgba(255, 255, 255, 0.08);
-  --text: #ecf4ec;
-  --muted: #a5b4aa;
-  --muted-2: #85938b;
+  --bg: #060e09;
+  --bg-2: #0a1510;
+  --bg-3: #0f1d14;
+  --surface: rgba(12, 22, 15, 0.85);
+  --surface-2: rgba(255, 255, 255, 0.04);
+  --line: rgba(201, 255, 96, 0.12);
+  --line-soft: rgba(255, 255, 255, 0.07);
+  --text: #eaf3ea;
+  --muted: #9aab9f;
+  --muted-2: #748278;
   --accent: #c9ff60;
-  --accent-2: #67d58a;
+  --accent-2: #5fd88a;
   --accent-3: #d8c48b;
   --danger: #ff8b8b;
+  --font-size-base: 16px;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 
 body {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 10% 8%, rgba(103, 213, 138, 0.12), transparent 22%),
-    radial-gradient(circle at 88% 12%, rgba(201, 255, 96, 0.08), transparent 20%),
-    linear-gradient(180deg, #061009 0%, #09140d 30%, #050b08 100%);
+    radial-gradient(ellipse 120% 60% at 15% 0%, rgba(103,213,138,0.09) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 50% at 85% 5%, rgba(201,255,96,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 80% at 50% 100%, rgba(6,12,8,0.8) 0%, transparent 60%),
+    linear-gradient(180deg, #060e09 0%, #080f0b 40%, #050b07 100%);
   color: var(--text);
   font-family: var(--font-inter), system-ui, sans-serif;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* Premium grid overlay */
 body::before {
   content: "";
   position: fixed;
@@ -43,23 +43,53 @@ body::before {
   z-index: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px);
-  background-size: 60px 60px;
-  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.8), transparent 88%);
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 100% 100% at 50% 0%, rgba(0,0,0,0.7), transparent 85%);
 }
 
-body > * {
-  position: relative;
-  z-index: 1;
+/* Noise texture overlay */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
 }
 
-::selection {
-  background: rgba(201, 255, 96, 0.22);
-}
+body > * { position: relative; z-index: 1; }
 
-/* Ticker animation */
+::selection { background: rgba(201,255,96,0.2); }
+
+/* Ticker */
 @keyframes ticker {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+
+/* Premium scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(201,255,96,0.2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(201,255,96,0.35); }
+
+/* App shell transitions */
+.page-enter { animation: pageEnter 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Premium focus styles */
+*:focus-visible {
+  outline: 1.5px solid rgba(201,255,96,0.5);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Smooth hover transitions on interactive elements */
+button, a { transition-property: color, background-color, border-color, transform, box-shadow, opacity; transition-duration: 180ms; transition-timing-function: cubic-bezier(0.4,0,0.2,1); }
