@@ -104,8 +104,6 @@ const trustSignals = [
 export default function HomePage() {
   return (
     <div className="overflow-x-hidden">
-      <SiteNav />
-
       {/* ── TICKER ────────────────────────────────────────────────── */}
       <div className="overflow-hidden border-b border-white/[0.06] py-2">
         <div className="flex animate-[ticker_50s_linear_infinite] items-center gap-14 whitespace-nowrap">
@@ -152,6 +150,8 @@ export default function HomePage() {
           ))}
         </div>
       </div>
+
+      <SiteNav />
 
       <main>
 
