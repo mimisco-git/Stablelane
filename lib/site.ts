@@ -25,8 +25,9 @@ export const siteConfig = {
 };
 
 export const navLinks = [
-  { href: "#build", label: "What we built" },
-  { href: "#app", label: "Open app" },
+  { href: "#products", label: "Platform" },
+  { href: "#milestones", label: "Roadmap" },
+  { href: "#circle", label: "Circle stack" },
 ];
 
 export const dashboardNav = [

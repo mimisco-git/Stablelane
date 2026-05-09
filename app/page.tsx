@@ -306,7 +306,7 @@ export default function HomePage() {
         </section>
 
         {/* ── CIRCLE STACK ─────────────────────────────────────────── */}
-        <section className="mx-auto w-[min(calc(100%-36px),1280px)] pb-24">
+        <section id="circle" className="mx-auto w-[min(calc(100%-36px),1280px)] pb-24">
           <div className="overflow-hidden rounded-[32px] border border-[var(--line)] bg-[linear-gradient(135deg,rgba(14,25,18,.98),rgba(8,16,11,.95))]">
             <div className="grid lg:grid-cols-[400px_1fr]">
               <div className="border-b border-white/8 p-10 lg:border-b-0 lg:border-r">
@@ -343,7 +343,7 @@ export default function HomePage() {
         </section>
 
         {/* ── GRANT MILESTONES ─────────────────────────────────────── */}
-        <section className="mx-auto w-[min(calc(100%-36px),1280px)] pb-24">
+        <section id="milestones" className="mx-auto w-[min(calc(100%-36px),1280px)] pb-24">
           <div className="mb-12 text-center">
             <div className="mb-3 text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-[var(--muted-2)]">Circle Grants Program 2026</div>
             <h2 className="font-[family-name:var(--font-cormorant)] text-[clamp(2.4rem,4vw,3.8rem)] tracking-[-0.05em]">Three milestones. One vision.</h2>
