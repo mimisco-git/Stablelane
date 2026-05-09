@@ -41,6 +41,8 @@ export const dashboardNav = [
   { href: "/app/clients", label: "Clients" },
   { href: "/app/ledger", label: "Ledger" },
   { href: "/app/analytics", label: "Analytics" },
+  { href: "/app/agent", label: "Agent" },
+  { href: "/app/treasury-pro", label: "Treasury" },
   { href: "/app/arc", label: "Arc" },
   { href: "/app/settings", label: "Settings" },
   { href: "/app/account", label: "Account" },
