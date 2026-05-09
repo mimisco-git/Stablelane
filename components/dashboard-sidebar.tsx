@@ -10,10 +10,11 @@ const coreNav = [
   { href: "/app/escrows", label: "Escrows" },
   { href: "/app/clients", label: "Clients" },
   { href: "/app/payouts", label: "Payouts" },
+  { href: "/app/agent", label: "Agent ✦" },
 ];
 
 const toolsNav = [
-  { href: "/app/treasury", label: "Treasury" },
+  { href: "/app/treasury-pro", label: "Treasury" },
   { href: "/app/escrow-mini", label: "Escrow Mini" },
   { href: "/app/templates", label: "Templates" },
   { href: "/app/recurring", label: "Recurring" },

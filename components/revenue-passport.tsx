@@ -20,17 +20,33 @@ type PassportData = {
 
 function creditScore(data: PassportData): number {
   let score = 0;
-  if (data.totalInvoices >= 1) score += 20;
-  if (data.totalInvoices >= 5) score += 10;
+  // Invoice history (max 30)
+  if (data.totalInvoices >= 1) score += 10;
+  if (data.totalInvoices >= 3) score += 10;
   if (data.totalInvoices >= 10) score += 10;
-  if (data.released > 0) score += 20;
-  if (data.released >= 5000) score += 10;
-  if (data.released >= 20000) score += 10;
+  // On-chain settlement via Arc escrow (max 30)
+  if (data.released > 0) score += 15;
+  if (data.released >= 1000) score += 5;
+  if (data.released >= 5000) score += 5;
+  if (data.released >= 20000) score += 5;
+  // Escrow usage - signals trust (max 20)
+  if (data.inEscrow > 0) score += 10;
+  if (data.inEscrow >= 1000) score += 10;
+  // Client diversity (max 20)
   if (data.clientCount >= 1) score += 5;
   if (data.clientCount >= 3) score += 5;
   if (data.repeatClientCount >= 1) score += 5;
   if (data.repeatClientCount >= 3) score += 5;
   return Math.min(100, score);
+}
+
+function scoreBreakdown(data: PassportData): Array<{ label: string; points: number; max: number; earned: boolean }> {
+  return [
+    { label: "Invoice history", points: Math.min(30, (data.totalInvoices >= 1 ? 10 : 0) + (data.totalInvoices >= 3 ? 10 : 0) + (data.totalInvoices >= 10 ? 10 : 0)), max: 30, earned: data.totalInvoices >= 1 },
+    { label: "Arc escrow settlement", points: Math.min(30, (data.released > 0 ? 15 : 0) + (data.released >= 1000 ? 5 : 0) + (data.released >= 5000 ? 5 : 0) + (data.released >= 20000 ? 5 : 0)), max: 30, earned: data.released > 0 },
+    { label: "Funds locked in escrow", points: Math.min(20, (data.inEscrow > 0 ? 10 : 0) + (data.inEscrow >= 1000 ? 10 : 0)), max: 20, earned: data.inEscrow > 0 },
+    { label: "Client diversity", points: Math.min(20, (data.clientCount >= 1 ? 5 : 0) + (data.clientCount >= 3 ? 5 : 0) + (data.repeatClientCount >= 1 ? 5 : 0) + (data.repeatClientCount >= 3 ? 5 : 0)), max: 20, earned: data.clientCount >= 1 },
+  ];
 }
 
 function scoreLabel(score: number): string {
@@ -39,6 +55,13 @@ function scoreLabel(score: number): string {
   if (score >= 40) return "Building";
   if (score >= 20) return "Early stage";
   return "Getting started";
+}
+
+function scoreColor(score: number): string {
+  if (score >= 80) return "var(--accent)";
+  if (score >= 60) return "var(--accent-2)";
+  if (score >= 40) return "var(--accent-3)";
+  return "var(--muted)";
 }
 
 export function RevenuePassport() {
@@ -111,6 +134,7 @@ export function RevenuePassport() {
   );
 
   const score = creditScore(data);
+  const breakdown = scoreBreakdown(data);
   const fmt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
   const label = scoreLabel(score);
 

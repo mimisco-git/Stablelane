@@ -331,8 +331,13 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return NextResponse.json({
-        error: "Agent not configured. Add ANTHROPIC_API_KEY to Vercel environment variables."
+        error: "Agent not configured. Add ANTHROPIC_API_KEY to Vercel → Settings → Environment Variables, then redeploy."
       }, { status: 500 });
+    }
+
+    // Warn if service role key is missing
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.warn("SUPABASE_SERVICE_ROLE_KEY not set. Agent will use anon key which may have RLS restrictions.");
     }
 
     // Get authenticated user

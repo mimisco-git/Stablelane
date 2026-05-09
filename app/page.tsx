@@ -86,10 +86,10 @@ export default function HomePage() {
         <div className="flex animate-[ticker_30s_linear_infinite] items-center gap-12 whitespace-nowrap">
           {[
             "Arc testnet live", "USDC gas · Chain ID 5042002", "Sub-second finality",
-            "Escrow factory deployed", "AI Agent live", "CCTP integrated",
+            "Escrow factory deployed", "AI Agent live", "CCTP integrated", "ArcLume wallet intelligence",
             "Circle Developer Grant applicant", "Zero platform fees · First 12 months",
             "Arc testnet live", "USDC gas · Chain ID 5042002", "Sub-second finality",
-            "Escrow factory deployed", "AI Agent live", "CCTP integrated",
+            "Escrow factory deployed", "AI Agent live", "CCTP integrated", "ArcLume wallet intelligence",
             "Circle Developer Grant applicant", "Zero platform fees · First 12 months",
           ].map((item, i) => (
             <span key={i} className="flex items-center gap-3 text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--muted-2)]">
@@ -307,6 +307,7 @@ export default function HomePage() {
             <Link href="/terms" className="hover:text-[var(--text)] transition">Terms</Link>
             <a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer" className="hover:text-[var(--text)] transition">Arcscan</a>
             <a href="https://faucet.circle.com" target="_blank" rel="noreferrer" className="hover:text-[var(--text)] transition">Faucet</a>
+            <a href="https://mimisco-git.github.io/ArcLume/" target="_blank" rel="noreferrer" className="hover:text-[var(--text)] transition">ArcLume</a>
           </div>
           <div className="text-[0.72rem] text-[var(--muted-2)]">Built on Arc. Powered by Circle.</div>
         </div>
